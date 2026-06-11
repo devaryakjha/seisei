@@ -128,11 +128,12 @@ Deliver:
 Merged into `main` as neutral metadata and release-readiness documentation.
 Owner decisions later selected MIT and publisher transfer to `jha.sh`; the first
 publish wave completed at `0.1.0-dev.0`, and `seisei_apple` has advanced to
-`0.1.0-dev.3` for the native schema bridge, flat `ObjectSchema` mapper, and
+`0.1.0-dev.3` for the native schema bridge, initial `ObjectSchema` mapper, and
 system-model streaming.
-`seisei_schema` later advanced to `0.1.0-dev.1` for typed flat object fields,
-and `seisei_apple` advanced to `0.1.0-dev.4` for typed FoundationModels schema
-mapping.
+`seisei_schema` later advanced to `0.1.0-dev.1` for typed object fields, and
+`seisei_apple` advanced to `0.1.0-dev.4` for typed FoundationModels schema
+mapping. Nested objects and verified constraints now land as follow-on
+main-branch depth work without changing those published versions.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -163,9 +164,10 @@ instead of republishing the same artifacts.
 
 ### 11. Native Expansion
 
-Deliver after the generic APIs and native capabilities are ready:
+Deliver after the generic APIs and native capabilities are ready. Current focus
+after the nested-object and verified-constraint work:
 
-- deeper Dart schema-to-FoundationModels mapping for nested objects, unions, and constraints
+- unions beyond string choice enums
 - richer typed partial semantics for schema streaming
 - PCC support if a verified API path exists
 - Swift App Intents registration package

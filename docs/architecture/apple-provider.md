@@ -55,10 +55,10 @@ The provider should map Apple availability into Seisei capabilities:
 - native method-channel bridge: plain system-model text generation and
   schema-backed generation when the request supplies a JSON-encoded
   FoundationModels schema file.
-- `FoundationModelsSchemaEncoder`: maps the current flat `seisei_schema`
+- `FoundationModelsSchemaEncoder`: maps the generic `seisei_schema`
   `ObjectSchema` contract into FoundationModels schema JSON and provider
-  metadata, including strings, integers, numbers, booleans, arrays, and
-  optional fields.
+  metadata, including nested objects, string enums, numeric ranges, string
+  patterns, arrays, and optional fields.
 - streaming: `AppleFoundationModelsProvider.stream` uses backend streams that
   emit text deltas and a terminal decoded value for the system model.
 - `fm respond --image`: multimodal input support after the core request model includes media segments.
@@ -82,8 +82,8 @@ The router should be able to reject Apple modes before request execution:
    plain system-model generation, and provider-specific schema-backed
    generation.
 6. Add true streaming support only after a backend can surface incremental chunks through `GenerationChunk<T>`.
-7. Add a stable flat Dart schema-to-FoundationModels mapping after
-   `seisei_schema` grows beyond the MVP object-schema contract.
+7. Keep FoundationModels mapping limited to schema concepts with verified local
+   SDK JSON encodings.
 
 ## Remaining Native Blockers
 
@@ -91,10 +91,11 @@ The router should be able to reject Apple modes before request execution:
   sensitive here, and direct PCC generation currently returns
   `FoundationModels.PrivateCloudComputeLanguageModel.Error error 0`; no native
   PCC `FoundationModels` API path is verified.
-- Generic schema mapping depth: `FoundationModelsSchemaEncoder` supports flat
-  `ObjectSchema` values with strings, integers, numbers, booleans, arrays, and
-  optional fields. Nested objects, unions, enums, and richer constraints should
-  wait until `seisei_schema` grows matching generic contracts.
+- Generic schema mapping depth: `FoundationModelsSchemaEncoder` now supports
+  nested objects, string enums, numeric ranges, string patterns, arrays, and
+  optional fields. Unions beyond string choice enums and non-verified schema
+  forms should stay out of the Apple encoder until they are proven against the
+  local SDK.
 - Streaming depth: plain text streaming emits deltas. Schema-backed streaming
   can surface native partial values, but richer typed partial semantics should
   wait until `seisei_schema` models partial structured output.

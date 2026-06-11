@@ -25,10 +25,7 @@ void main() {
       availability.capabilities,
       contains(ModelCapability.onDeviceInference),
     );
-    expect(
-      availability.capabilities,
-      contains(ModelCapability.streaming),
-    );
+    expect(availability.capabilities, contains(ModelCapability.streaming));
   });
 
   test('pcc mode is availability gated', () async {
@@ -188,16 +185,79 @@ void main() {
     });
   });
 
+  test('encodes nested object schemas and verified constraints', () {
+    const schema = ObjectSchema(
+      name: 'Draft',
+      fields: {
+        'author': ObjectField.object(
+          schema: ObjectSchema(
+            name: 'Author',
+            fields: {
+              'name': ObjectField.string(pattern: r'^[A-Z][a-z]+$'),
+              'score': ObjectField.integer(
+                isRequired: false,
+                minimum: 0,
+                maximum: 100,
+              ),
+            },
+          ),
+        ),
+        'status': ObjectField.string(enumValues: ['draft', 'published']),
+        'tags': ObjectField.string(
+          isArray: true,
+          isRequired: false,
+          minItems: 1,
+          maxItems: 4,
+        ),
+        'title': ObjectField.string(),
+      },
+    );
+
+    final encoded = const FoundationModelsSchemaEncoder().encodeObject(schema);
+
+    expect(encoded, {
+      r'$defs': {
+        'Author': {
+          'additionalProperties': false,
+          'required': ['name'],
+          'type': 'object',
+          'properties': {
+            'name': {'type': 'string', 'pattern': r'^[A-Z][a-z]+$'},
+            'score': {'type': 'integer', 'minimum': 0, 'maximum': 100},
+          },
+          'x-order': ['name', 'score'],
+          'title': 'Author',
+        },
+      },
+      'additionalProperties': false,
+      'required': ['author', 'status', 'title'],
+      'type': 'object',
+      'properties': {
+        'author': {r'$ref': r'#/$defs/Author'},
+        'status': {
+          'type': 'string',
+          'enum': ['draft', 'published'],
+        },
+        'tags': {
+          'type': 'array',
+          'items': {'type': 'string'},
+          'minItems': 1,
+          'maxItems': 4,
+        },
+        'title': {'type': 'string'},
+      },
+      'x-order': ['author', 'status', 'tags', 'title'],
+      'title': 'Draft',
+    });
+  });
+
   test('writes FoundationModels schema files and provider metadata', () async {
     final directory = await Directory.systemTemp.createTemp(
       'seisei_afm_schema_test_',
     );
     addTearDown(() => directory.delete(recursive: true));
     const encoder = FoundationModelsSchemaEncoder();
-    const schema = ObjectSchema(
-      name: 'Draft',
-      requiredStringFields: {'title'},
-    );
+    const schema = ObjectSchema(name: 'Draft', requiredStringFields: {'title'});
 
     final file = await encoder.writeObjectFile(
       schema,
@@ -206,16 +266,13 @@ void main() {
     );
 
     expect(file.path, endsWith('/draft.json'));
-    expect(
-      await file.readAsString(),
-      contains('"title": "Draft"'),
-    );
+    expect(await file.readAsString(), contains('"title": "Draft"'));
     expect(encoder.metadataForFile(file), {
       AppleFoundationModelsProvider.schemaPathMetadataKey: file.path,
     });
   });
 
-  test('rejects nested fields until the generic schema supports them', () {
+  test('rejects dotted field paths in favor of nested object fields', () {
     const schema = ObjectSchema(
       name: 'Draft',
       requiredStringFields: {'author.name'},
@@ -226,6 +283,54 @@ void main() {
       throwsArgumentError,
     );
   });
+
+  test(
+    'schema-backed streams expose raw snapshots before the terminal value',
+    () async {
+      final provider = AppleFoundationModelsProvider(
+        backend: _FakeAppleBackend(
+          availabilityResult: const AppleFoundationModelsAvailability(
+            systemAvailable: true,
+            pccAvailable: false,
+          ),
+          streamValues: const [
+            {'title': 'He'},
+            {'title': 'Hello'},
+            {
+              'done': true,
+              'value': {'title': 'Hello'},
+            },
+          ],
+        ),
+      );
+
+      final chunks = await provider
+          .stream(
+            GenerationRequest<String>(
+              prompt: 'Reply as JSON.',
+              metadata: {
+                AppleFoundationModelsProvider.schemaPathMetadataKey:
+                    '/tmp/schema.json',
+              },
+              decode: (rawValue) => (rawValue! as Map)['title']! as String,
+            ),
+          )
+          .toList();
+
+      expect(chunks[0].rawValue, {'title': 'He'});
+      expect(chunks[0].delta, isNull);
+      expect(chunks[0].value, isNull);
+      expect(chunks[0].isDone, isFalse);
+
+      expect(chunks[1].rawValue, {'title': 'Hello'});
+      expect(chunks[1].delta, isNull);
+      expect(chunks[1].value, isNull);
+      expect(chunks[1].isDone, isFalse);
+
+      expect(chunks[2].value, 'Hello');
+      expect(chunks[2].isDone, isTrue);
+    },
+  );
 
   test('streams deltas and a terminal decoded value', () async {
     final provider = AppleFoundationModelsProvider(
@@ -336,11 +441,7 @@ void main() {
       call,
     ) async {
       expect(call.method, 'availability');
-      return {
-        'systemAvailable': true,
-        'pccAvailable': false,
-        'reason': null,
-      };
+      return {'systemAvailable': true, 'pccAvailable': false, 'reason': null};
     });
     addTearDown(() {
       binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
@@ -354,62 +455,72 @@ void main() {
     expect(availability.reason, isNull);
   });
 
-  test('method channel backend sends plain system generation requests',
-      () async {
-    const channel = MethodChannel('test.seisei/respond');
-    final binding = flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
-      call,
-    ) async {
-      expect(call.method, 'respond');
-      expect(call.arguments, {'prompt': 'Hello', 'mode': 'system'});
-      return 'native-ok';
-    });
-    addTearDown(() {
-      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
-    });
-
-    final backend = MethodChannelAppleFoundationModelsBackend(channel: channel);
-    final response = await backend.respond(
-      const AppleFoundationModelsRequest(
-        prompt: 'Hello',
-        mode: AppleFoundationModelsMode.system,
-      ),
-    );
-
-    expect(response, 'native-ok');
-  });
-
-  test('method channel backend forwards schema-backed generation requests',
-      () async {
-    const channel = MethodChannel('test.seisei/respond-schema');
-    final binding = flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
-    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
-      call,
-    ) async {
-      expect(call.method, 'respond');
-      expect(call.arguments, {
-        'prompt': 'Reply as JSON.',
-        'mode': 'system',
-        'schemaPath': '/tmp/schema.json',
+  test(
+    'method channel backend sends plain system generation requests',
+    () async {
+      const channel = MethodChannel('test.seisei/respond');
+      final binding =
+          flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+        call,
+      ) async {
+        expect(call.method, 'respond');
+        expect(call.arguments, {'prompt': 'Hello', 'mode': 'system'});
+        return 'native-ok';
       });
-      return {'answer': 'native-ok'};
-    });
-    addTearDown(() {
-      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
-    });
+      addTearDown(() {
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+      });
 
-    final backend = MethodChannelAppleFoundationModelsBackend(channel: channel);
-    final response = await backend.respond(
-      const AppleFoundationModelsRequest(
-        prompt: 'Reply as JSON.',
-        mode: AppleFoundationModelsMode.system,
-        schemaPath: '/tmp/schema.json',
-      ),
-    );
+      final backend = MethodChannelAppleFoundationModelsBackend(
+        channel: channel,
+      );
+      final response = await backend.respond(
+        const AppleFoundationModelsRequest(
+          prompt: 'Hello',
+          mode: AppleFoundationModelsMode.system,
+        ),
+      );
 
-    expect(response, {'answer': 'native-ok'});
-  });
+      expect(response, 'native-ok');
+    },
+  );
+
+  test(
+    'method channel backend forwards schema-backed generation requests',
+    () async {
+      const channel = MethodChannel('test.seisei/respond-schema');
+      final binding =
+          flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+        call,
+      ) async {
+        expect(call.method, 'respond');
+        expect(call.arguments, {
+          'prompt': 'Reply as JSON.',
+          'mode': 'system',
+          'schemaPath': '/tmp/schema.json',
+        });
+        return {'answer': 'native-ok'};
+      });
+      addTearDown(() {
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+      });
+
+      final backend = MethodChannelAppleFoundationModelsBackend(
+        channel: channel,
+      );
+      final response = await backend.respond(
+        const AppleFoundationModelsRequest(
+          prompt: 'Reply as JSON.',
+          mode: AppleFoundationModelsMode.system,
+          schemaPath: '/tmp/schema.json',
+        ),
+      );
+
+      expect(response, {'answer': 'native-ok'});
+    },
+  );
 
   test('method channel backend streams native events', () async {
     const channel = MethodChannel('test.seisei/stream-method');

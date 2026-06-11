@@ -41,40 +41,92 @@ enum ObjectFieldType {
 
   /// Boolean field.
   boolean,
+
+  /// Object field.
+  object,
 }
 
-/// A flat object field definition.
+/// An object field definition.
 final class ObjectField {
   /// Creates a field definition.
   const ObjectField({
     required this.type,
     this.isRequired = true,
     this.isArray = false,
+    this.objectSchema,
+    this.enumValues = const [],
+    this.minimum,
+    this.maximum,
+    this.pattern,
+    this.minItems,
+    this.maxItems,
   });
 
   /// Creates a string field.
   const ObjectField.string({
     this.isRequired = true,
     this.isArray = false,
-  }) : type = ObjectFieldType.string;
+    this.enumValues = const [],
+    this.pattern,
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.string,
+        objectSchema = null,
+        minimum = null,
+        maximum = null;
 
   /// Creates an integer field.
   const ObjectField.integer({
     this.isRequired = true,
     this.isArray = false,
-  }) : type = ObjectFieldType.integer;
+    this.minimum,
+    this.maximum,
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.integer,
+        objectSchema = null,
+        enumValues = const [],
+        pattern = null;
 
   /// Creates a floating-point number field.
   const ObjectField.number({
     this.isRequired = true,
     this.isArray = false,
-  }) : type = ObjectFieldType.number;
+    this.minimum,
+    this.maximum,
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.number,
+        objectSchema = null,
+        enumValues = const [],
+        pattern = null;
 
   /// Creates a boolean field.
   const ObjectField.boolean({
     this.isRequired = true,
     this.isArray = false,
-  }) : type = ObjectFieldType.boolean;
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.boolean,
+        objectSchema = null,
+        enumValues = const [],
+        minimum = null,
+        maximum = null,
+        pattern = null;
+
+  /// Creates a nested object field.
+  const ObjectField.object({
+    required ObjectSchema schema,
+    this.isRequired = true,
+    this.isArray = false,
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.object,
+        objectSchema = schema,
+        enumValues = const [],
+        minimum = null,
+        maximum = null,
+        pattern = null;
 
   /// Scalar element type.
   final ObjectFieldType type;
@@ -84,9 +136,30 @@ final class ObjectField {
 
   /// Whether the field value must be an array of [type].
   final bool isArray;
+
+  /// Nested object schema when [type] is [ObjectFieldType.object].
+  final ObjectSchema? objectSchema;
+
+  /// Allowed string values when [type] is [ObjectFieldType.string].
+  final List<String> enumValues;
+
+  /// Minimum numeric value for integer or number fields.
+  final num? minimum;
+
+  /// Maximum numeric value for integer or number fields.
+  final num? maximum;
+
+  /// String pattern when [type] is [ObjectFieldType.string].
+  final String? pattern;
+
+  /// Minimum item count when [isArray] is true.
+  final int? minItems;
+
+  /// Maximum item count when [isArray] is true.
+  final int? maxItems;
 }
 
-/// Object schema with flat typed fields.
+/// Object schema with typed fields.
 final class ObjectSchema implements SeiseiSchema {
   /// Creates an object schema.
   const ObjectSchema({
@@ -101,10 +174,10 @@ final class ObjectSchema implements SeiseiSchema {
   /// Required string fields.
   final Set<String> requiredStringFields;
 
-  /// Flat typed fields.
+  /// Typed fields, including nested objects.
   final Map<String, ObjectField> fields;
 
-  /// Flat field definitions, including legacy [requiredStringFields].
+  /// Field definitions, including legacy [requiredStringFields].
   Map<String, ObjectField> get fieldDefinitions {
     final definitions = <String, ObjectField>{
       for (final field in requiredStringFields)
@@ -112,9 +185,7 @@ final class ObjectSchema implements SeiseiSchema {
       ...fields,
     };
     final sortedKeys = definitions.keys.toList()..sort();
-    return {
-      for (final key in sortedKeys) key: definitions[key]!,
-    };
+    return {for (final key in sortedKeys) key: definitions[key]!};
   }
 
   @override
@@ -148,46 +219,13 @@ final class ObjectSchema implements SeiseiSchema {
         continue;
       }
 
-      if (definition.isArray) {
-        if (fieldValue is! List) {
-          errors.add(
-            SchemaValidationError(
-              code: 'array.expected',
-              path: '$_jsonRoot.$field',
-              message: 'Expected an array field.',
-            ),
-          );
-          continue;
-        }
-
-        for (var index = 0; index < fieldValue.length; index += 1) {
-          if (!_matchesType(fieldValue[index], definition.type)) {
-            errors.add(
-              SchemaValidationError(
-                code: '${_scalarTypeName(definition.type)}.expected',
-                path: '$_jsonRoot.$field[$index]',
-                message:
-                    'Expected a ${_scalarTypeName(definition.type)} value.',
-              ),
-            );
-          }
-        }
-        continue;
-      }
-
-      if (!_matchesType(fieldValue, definition.type)) {
-        errors.add(
-          SchemaValidationError(
-            code: definition.isRequired
-                ? '${_typeName(definition)}.required'
-                : '${_typeName(definition)}.expected',
-            path: '$_jsonRoot.$field',
-            message: definition.isRequired
-                ? 'Expected a required ${_typeName(definition)} field.'
-                : 'Expected a ${_typeName(definition)} field.',
-          ),
-        );
-      }
+      _validateFieldValue(
+        definition,
+        fieldValue,
+        path: '$_jsonRoot.$field',
+        isRequired: definition.isRequired,
+        errors: errors,
+      );
     }
 
     return errors;
@@ -209,12 +247,165 @@ final class ObjectSchema implements SeiseiSchema {
 
 const _jsonRoot = r'$';
 
+void _validateFieldValue(
+  ObjectField definition,
+  Object? value, {
+  required String path,
+  required bool isRequired,
+  required List<SchemaValidationError> errors,
+}) {
+  if (definition.isArray) {
+    if (value is! List) {
+      errors.add(
+        SchemaValidationError(
+          code: 'array.expected',
+          path: path,
+          message: 'Expected an array field.',
+        ),
+      );
+      return;
+    }
+
+    if (definition.minItems case final minItems?) {
+      if (value.length < minItems) {
+        errors.add(
+          SchemaValidationError(
+            code: 'array.min_items',
+            path: path,
+            message: 'Expected at least $minItems item(s).',
+          ),
+        );
+      }
+    }
+    if (definition.maxItems case final maxItems?) {
+      if (value.length > maxItems) {
+        errors.add(
+          SchemaValidationError(
+            code: 'array.max_items',
+            path: path,
+            message: 'Expected at most $maxItems item(s).',
+          ),
+        );
+      }
+    }
+
+    for (var index = 0; index < value.length; index += 1) {
+      _validateSingleValue(
+        definition,
+        value[index],
+        path: '$path[$index]',
+        isRequired: false,
+        useItemType: true,
+        errors: errors,
+      );
+    }
+    return;
+  }
+
+  _validateSingleValue(
+    definition,
+    value,
+    path: path,
+    isRequired: isRequired,
+    errors: errors,
+  );
+}
+
+void _validateSingleValue(
+  ObjectField definition,
+  Object? value, {
+  required String path,
+  required bool isRequired,
+  bool useItemType = false,
+  required List<SchemaValidationError> errors,
+}) {
+  if (!_matchesType(value, definition.type)) {
+    final typeName =
+        useItemType ? _scalarTypeName(definition.type) : _typeName(definition);
+    errors.add(
+      SchemaValidationError(
+        code: isRequired ? '$typeName.required' : '$typeName.expected',
+        path: path,
+        message: isRequired
+            ? 'Expected a required $typeName field.'
+            : 'Expected a $typeName field.',
+      ),
+    );
+    return;
+  }
+
+  if (definition.type == ObjectFieldType.object) {
+    final nestedSchema = definition.objectSchema!;
+    for (final error in nestedSchema.validate(value)) {
+      errors.add(
+        SchemaValidationError(
+          code: error.code,
+          path: _prefixPath(path, error.path),
+          message: error.message,
+        ),
+      );
+    }
+    return;
+  }
+
+  if (value is String) {
+    if (definition.enumValues.isNotEmpty &&
+        !definition.enumValues.contains(value)) {
+      errors.add(
+        SchemaValidationError(
+          code: 'string.enum',
+          path: path,
+          message: 'Expected one of ${definition.enumValues.join(', ')}.',
+        ),
+      );
+    }
+    if (definition.pattern case final pattern?) {
+      if (!RegExp(pattern).hasMatch(value)) {
+        errors.add(
+          SchemaValidationError(
+            code: 'string.pattern',
+            path: path,
+            message: 'Expected a value matching $pattern.',
+          ),
+        );
+      }
+    }
+    return;
+  }
+
+  if (value is num) {
+    if (definition.minimum case final minimum?) {
+      if (value < minimum) {
+        errors.add(
+          SchemaValidationError(
+            code: '${_scalarTypeName(definition.type)}.minimum',
+            path: path,
+            message: 'Expected a value greater than or equal to $minimum.',
+          ),
+        );
+      }
+    }
+    if (definition.maximum case final maximum?) {
+      if (value > maximum) {
+        errors.add(
+          SchemaValidationError(
+            code: '${_scalarTypeName(definition.type)}.maximum',
+            path: path,
+            message: 'Expected a value less than or equal to $maximum.',
+          ),
+        );
+      }
+    }
+  }
+}
+
 bool _matchesType(Object? value, ObjectFieldType type) {
   return switch (type) {
     ObjectFieldType.string => value is String,
     ObjectFieldType.integer => value is int,
     ObjectFieldType.number => value is num,
     ObjectFieldType.boolean => value is bool,
+    ObjectFieldType.object => value is Map,
   };
 }
 
@@ -231,7 +422,18 @@ String _scalarTypeName(ObjectFieldType type) {
     ObjectFieldType.integer => 'integer',
     ObjectFieldType.number => 'number',
     ObjectFieldType.boolean => 'boolean',
+    ObjectFieldType.object => 'object',
   };
+}
+
+String _prefixPath(String parentPath, String childPath) {
+  if (childPath == _jsonRoot) {
+    return parentPath;
+  }
+  if (childPath.startsWith(_jsonRoot)) {
+    return '$parentPath${childPath.substring(_jsonRoot.length)}';
+  }
+  return '$parentPath.$childPath';
 }
 
 Map<String, Object?> _stringKeyed(Map value) {

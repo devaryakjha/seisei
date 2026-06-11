@@ -83,8 +83,17 @@ const encoder = FoundationModelsSchemaEncoder();
 const schema = ObjectSchema(
   name: 'Draft',
   fields: {
-    'count': ObjectField.integer(),
+    'author': ObjectField.object(
+      schema: ObjectSchema(
+        name: 'Author',
+        fields: {
+          'name': ObjectField.string(),
+        },
+      ),
+    ),
+    'count': ObjectField.integer(minimum: 0, maximum: 10),
     'published': ObjectField.boolean(),
+    'status': ObjectField.string(enumValues: ['draft', 'published']),
     'title': ObjectField.string(),
   },
 );
@@ -110,9 +119,9 @@ and sends plain system-model prompts through
 `FoundationModels.LanguageModelSession`. It can also send schema-backed system
 model requests when `schemaPath` points to a JSON-encoded FoundationModels
 schema file, and it streams system-model text through a Flutter event channel.
-The current `FoundationModelsSchemaEncoder` covers flat `ObjectSchema` values
-with string, integer, number, boolean, array, and optional fields. PCC is not
-implemented in the native bridge yet.
+`FoundationModelsSchemaEncoder` covers verified generic `ObjectSchema` features:
+nested objects, string enums, numeric ranges, string patterns, arrays, and
+optional fields. PCC is not implemented in the native bridge yet.
 
 If you want the typed Seisei client layer, add a direct `seisei` dependency in
 the host app and build `AppleFoundationModelsProvider` on top of the native

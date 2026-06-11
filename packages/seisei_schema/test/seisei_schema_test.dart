@@ -4,13 +4,12 @@ import 'package:test/test.dart';
 
 void main() {
   test('validates structured output before decoding', () {
-    const schema = ObjectSchema(
-      name: 'Draft',
-      requiredStringFields: {'title'},
-    );
+    const schema = ObjectSchema(name: 'Draft', requiredStringFields: {'title'});
 
     final draft = schema.decode(
-      {'title': 'Hello'},
+      {
+        'title': 'Hello',
+      },
       (object) => _Draft(object['title']! as String),
     );
 
@@ -50,6 +49,55 @@ void main() {
     expect(draft.tags, ['afm', 'dart']);
   });
 
+  test('validates nested objects and constrained fields before decoding', () {
+    const schema = ObjectSchema(
+      name: 'Draft',
+      fields: {
+        'author': ObjectField.object(
+          schema: ObjectSchema(
+            name: 'Author',
+            fields: {
+              'name': ObjectField.string(pattern: r'^[A-Z][a-z]+$'),
+              'score': ObjectField.integer(
+                isRequired: false,
+                minimum: 0,
+                maximum: 100,
+              ),
+            },
+          ),
+        ),
+        'status': ObjectField.string(enumValues: ['draft', 'published']),
+        'tags': ObjectField.string(
+          isArray: true,
+          isRequired: false,
+          minItems: 1,
+          maxItems: 3,
+        ),
+        'title': ObjectField.string(),
+      },
+    );
+
+    final draft = schema.decode(
+      {
+        'author': {'name': 'Aria', 'score': 99},
+        'status': 'draft',
+        'tags': ['afm'],
+        'title': 'Hello',
+      },
+      (object) => _NestedDraft(
+        authorName: ((object['author']! as Map)['name']! as String),
+        status: object['status']! as String,
+        tags: (object['tags']! as List).cast<String>(),
+        title: object['title']! as String,
+      ),
+    );
+
+    expect(draft.authorName, 'Aria');
+    expect(draft.status, 'draft');
+    expect(draft.tags, ['afm']);
+    expect(draft.title, 'Hello');
+  });
+
   test('reports stable errors for typed fields', () {
     const schema = ObjectSchema(
       name: 'Draft',
@@ -79,6 +127,45 @@ void main() {
     );
   });
 
+  test('reports stable errors for nested and constrained fields', () {
+    const schema = ObjectSchema(
+      name: 'Draft',
+      fields: {
+        'author': ObjectField.object(
+          schema: ObjectSchema(
+            name: 'Author',
+            fields: {
+              'name': ObjectField.string(pattern: r'^[A-Z][a-z]+$'),
+              'score': ObjectField.integer(
+                isRequired: false,
+                minimum: 0,
+                maximum: 100,
+              ),
+            },
+          ),
+        ),
+        'status': ObjectField.string(enumValues: ['draft', 'published']),
+        'tags': ObjectField.string(isArray: true, minItems: 1),
+        'title': ObjectField.string(),
+      },
+    );
+
+    expect(
+      schema.validate({
+        'author': {'name': 'aria', 'score': 101},
+        'status': 'queued',
+        'tags': [],
+      }).map((error) => '${error.path}: ${error.code}'),
+      [
+        r'$.author.name: string.pattern',
+        r'$.author.score: integer.maximum',
+        r'$.status: string.enum',
+        r'$.tags: array.min_items',
+        r'$.title: string.required',
+      ],
+    );
+  });
+
   test('exposes deterministic field definitions', () {
     const schema = ObjectSchema(
       name: 'Draft',
@@ -94,10 +181,7 @@ void main() {
   });
 
   test('throws stable decode failures for invalid output', () {
-    const schema = ObjectSchema(
-      name: 'Draft',
-      requiredStringFields: {'title'},
-    );
+    const schema = ObjectSchema(name: 'Draft', requiredStringFields: {'title'});
 
     expect(
       () => schema.decode({'title': 42}, (object) => object),
@@ -130,4 +214,18 @@ final class _RichDraft {
   final int count;
   final bool published;
   final List<String> tags;
+}
+
+final class _NestedDraft {
+  const _NestedDraft({
+    required this.authorName,
+    required this.status,
+    required this.tags,
+    required this.title,
+  });
+
+  final String authorName;
+  final String status;
+  final List<String> tags;
+  final String title;
 }

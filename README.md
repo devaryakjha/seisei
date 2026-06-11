@@ -90,7 +90,8 @@ Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts,
 deterministic tests, an offline example, validation tooling, Apple provider
 architecture notes, generic app-action/tool bridge contracts, and a native Apple
 bridge for system-model availability, plain prompts, provider-specific
-FoundationModels schema requests, flat typed `ObjectSchema` mapping into
-FoundationModels schema files, and system-model streaming. PCC generation,
-system App Intents registration, cloud providers, production RAG, and Tagflow
-integration are not implemented yet.
+FoundationModels schema requests, nested and constrained `ObjectSchema` mapping
+into FoundationModels schema files, and system-model streaming. PCC generation,
+system App Intents registration, cloud providers, production RAG, provider-
+neutral typed partial schema streaming, and Tagflow integration are not
+implemented yet.
