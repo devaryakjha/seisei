@@ -118,7 +118,9 @@ Deliver:
 - explicit license/publisher/API-review blockers
 - CI annotation review and safe workflow updates if verified
 
-Merged into `main` as neutral metadata and release-readiness documentation. Publishing remains blocked on owner-approved license and publisher decisions.
+Merged into `main` as neutral metadata and release-readiness documentation.
+Owner decisions later selected MIT and publisher transfer to `jha.sh`; the first
+publish wave is now complete at `0.1.0-dev.0`.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -130,18 +132,22 @@ Deliver:
 
 Merged into `main` as a docs-only optional adapter SPEC. Tagflow remains optional and outside core packages.
 
-## Remaining Workstreams
+## Completed Owner-Gated Workstreams
 
 ### 10. Owner-Gated Release
 
-Deliver after owner decision:
+Delivered after owner decision:
 
 - selected repository and package license material
 - publisher/ownership settings
 - package API review for the first publish wave
 - `dart tool/validate.dart --release` passing
 
-Do not invent a license.
+Merged into `main`. The released package set is published at `0.1.0-dev.0` under
+verified publisher `jha.sh`; future release work should advance versions
+deliberately instead of republishing the same artifacts.
+
+## Remaining Workstreams
 
 ### 11. Native Expansion
 
@@ -154,10 +160,9 @@ Deliver after the generic APIs and native capabilities are ready:
 
 ## Merge Order
 
-1. Owner-gated release decisions.
-2. Native expansion work that has verified API support.
-3. Optional Tagflow adapter only after Tagflow's renderer API is stable enough for compileable adapter code.
-4. Final validation pass after each merged workstream.
+1. Native expansion work that has verified API support.
+2. Optional Tagflow adapter only after Tagflow's renderer API is stable enough for compileable adapter code.
+3. Final validation pass after each merged workstream.
 
 ## Coordinator Review Checklist
 

@@ -18,8 +18,8 @@ unless the release process is deliberately changed.
 - [x] `dart tool/validate.dart` passes locally.
 - [x] `dart tool/validate.dart --release` passes locally.
 - [x] Public API docs match exported classes.
-- [ ] The README names unsupported integrations honestly.
-- [ ] CI actions use supported runtimes with no Node deprecation annotations.
+- [x] The README names unsupported integrations honestly.
+- [x] CI actions use supported runtimes with no Node deprecation annotations.
 
 ## Package
 
@@ -30,17 +30,20 @@ unless the release process is deliberately changed.
 - [x] Package-root `LICENSE` files are present for every package intended for
       pub.dev.
 - [x] Package manifests are no longer marked `publish_to: none`.
-- [ ] Versioning follows Dart package conventions.
+- [x] Versioning follows Dart package conventions.
 - [x] `dart pub publish --dry-run` has no errors for every package intended for
       publication.
-- [ ] Test-only helpers are exported only from `seisei_test`.
+- [x] Test helpers are intentionally scoped: generic provider fakes live in
+      `seisei_test`, while package-specific fakes such as
+      `FakeAppActionBridge` live with the package contract they exercise.
 
 ## Product
 
-- [ ] Apple provider claims are backed by local AFM probes or native plugin tests.
-- [ ] Router fallback and privacy claims are backed by tests.
-- [ ] UI blocks can be validated before rendering.
-- [ ] Tagflow is optional and appears only as a future adapter path.
+- [x] Apple provider claims are backed by local AFM probes or native plugin
+      tests.
+- [x] Router fallback and privacy claims are backed by tests.
+- [x] UI blocks can be validated before rendering.
+- [x] Tagflow is optional and appears only as a future adapter path.
 
 ## Dry-Run Evidence
 
@@ -55,3 +58,17 @@ dart tool/validate.dart --release
 After the first publish, the expected remaining blocker for another release is
 intentional version advancement. Package ownership and publisher transfer are
 already complete for the current package set.
+
+## Verified Evidence
+
+Last verified on 2026-06-11 from `main`:
+
+- `dart tool/validate.dart --local-afm` passed locally. The system model smoke
+  returned `seisei-ok`; PCC remained unavailable in this shell context and is
+  documented as capability-gated.
+- `dart tool/validate.dart --release` passed locally with zero publish dry-run
+  warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
+  `seisei_ui`, `seisei_apple`, and `seisei_intents`.
+- GitHub Actions `Validate` completed successfully on the default branch.
+- The pub.dev package API reports `0.1.0-dev.0` as the latest version for each
+  released package in the first publish wave.
