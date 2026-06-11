@@ -9,7 +9,6 @@ topics:
   - flutter
   - generation
   - typed-output
-publish_to: none
 
 environment:
   sdk: ">=3.6.0 <4.0.0"

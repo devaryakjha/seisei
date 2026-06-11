@@ -9,7 +9,6 @@ topics:
   - json-schema
   - structured-output
   - validation
-publish_to: none
 
 environment:
   sdk: ">=3.6.0 <4.0.0"

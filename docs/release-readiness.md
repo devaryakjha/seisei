@@ -12,31 +12,33 @@ currently fails on the same pub requirement:
 You must have a LICENSE file in the root directory.
 ```
 
-Do not add a license text as a mechanical release fix. Before any package is
-published, the owner must choose the project license, confirm package ownership
-and publisher settings, then add the selected license material to the repository
-and to each package root that will be published.
+The owner selected MIT for the first publish wave. Each publishable package has
+a package-root `LICENSE` file because pub.dev validates the package archive from
+that package root.
+
+The intended verified publisher is `aryak.dev`. The current `dart pub publish`
+workflow creates new packages under the logged-in Google account first; new
+packages then need to be transferred to the verified publisher from the pub.dev
+package admin page.
 
 ## Repository
 
 - [ ] Default branch CI is green.
 - [ ] `dart tool/validate.dart` passes locally.
-- [ ] `dart tool/validate.dart --release` passes locally after legal and
-      publisher decisions are complete.
+- [ ] `dart tool/validate.dart --release` passes locally.
 - [ ] Public API docs match exported classes.
 - [ ] The README names unsupported integrations honestly.
 - [ ] CI actions use supported runtimes with no Node deprecation annotations.
 
 ## Package
 
-- [ ] Package ownership and publisher are confirmed.
-- [ ] License policy is selected by the owner; no worker should invent it.
-- [ ] Root repository license file is present if the selected policy requires
-      one.
-- [ ] Package-root `LICENSE` files are present for every package intended for
-      pub.dev, or an equivalent owner-approved packaging policy is documented.
-- [ ] `publish_to: none` remains in place until ownership, publisher, and
-      license decisions are complete.
+- [ ] Package ownership is confirmed after first publish.
+- [ ] Package transfer to verified publisher `aryak.dev` is complete.
+- [x] License policy is selected by the owner: MIT.
+- [x] Root repository license file is present.
+- [x] Package-root `LICENSE` files are present for every package intended for
+      pub.dev.
+- [x] Package manifests are no longer marked `publish_to: none`.
 - [ ] Versioning follows Dart package conventions.
 - [ ] `dart pub publish --dry-run` has no errors for every package intended for
       publication.
@@ -59,5 +61,6 @@ one pass:
 dart tool/validate.dart --release
 ```
 
-Expected blocker until the owner resolves licensing: each command exits with
-code 65 and reports a missing package-root `LICENSE`.
+Before the first publish, the expected remaining blockers are pub.dev account
+authorization, package-name availability, and post-publish transfer to
+`aryak.dev`.

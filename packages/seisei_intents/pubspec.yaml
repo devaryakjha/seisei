@@ -9,7 +9,6 @@ topics:
   - intents
   - tool-calling
   - app-actions
-publish_to: none
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
