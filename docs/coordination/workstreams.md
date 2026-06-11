@@ -123,7 +123,8 @@ Deliver:
 
 Merged into `main` as neutral metadata and release-readiness documentation.
 Owner decisions later selected MIT and publisher transfer to `jha.sh`; the first
-publish wave is now complete at `0.1.0-dev.0`.
+publish wave completed at `0.1.0-dev.0`, and `seisei_apple` has advanced to
+`0.1.0-dev.1` for the native schema bridge.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -146,9 +147,9 @@ Delivered after owner decision:
 - package API review for the first publish wave
 - `dart tool/validate.dart --release` passing
 
-Merged into `main`. The released package set is published at `0.1.0-dev.0` under
-verified publisher `jha.sh`; future release work should advance versions
-deliberately instead of republishing the same artifacts.
+Merged into `main`. The released package set is published under verified
+publisher `jha.sh`; future release work should advance versions deliberately
+instead of republishing the same artifacts.
 
 ## Remaining Workstreams
 

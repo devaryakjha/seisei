@@ -13,7 +13,7 @@ This package contains:
 On macOS 27 machines that provide `/usr/bin/fm`, the fastest smoke path is:
 
 ```sh
-fm available
+fm available --model system
 fm respond --no-stream 'Reply with exactly: seisei-ok'
 ```
 
@@ -33,10 +33,14 @@ To verify PCC from the same Seisei path, run:
 dart run bin/local_afm_smoke.dart --mode pcc
 ```
 
-That command requires `fm available` to report PCC availability in the same
-terminal/process context. If it fails with `PCC inference is not available in
-this context`, the local system model can still work while PCC is unavailable
-to that shell.
+That command requires `fm available --model pcc` to report PCC availability in
+the same terminal/process context. If it fails with `PCC inference is not
+available in this context`, the local system model can still work while PCC is
+unavailable to that shell.
+
+From the repository root, `dart tool/validate.dart --local-afm` checks only the
+system-model path. Use `dart tool/validate.dart --local-pcc` when you want PCC
+to be a required local smoke test.
 
 For a minimal Flutter host, create an app and point `seisei_apple` at this
 workspace with a path dependency:

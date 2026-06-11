@@ -143,7 +143,9 @@ The coordinator can call the MVP finished only when all of the following are tru
 
 - Whether generated schema adapters live in `seisei_schema` or a separate builder package after the MVP.
 - Whether `seisei_ui` ships in the first publish wave or remains pre-release until a real adapter exists.
-- Whether `seisei_apple` expands beyond the current narrow system-model bridge into schema-backed generation and streaming.
+- Whether `seisei_apple` expands from provider-specific FoundationModels schema
+  files into a stable Dart schema mapper, and whether native streaming should
+  use an event-channel backend.
 
 ## Resolved Decisions
 

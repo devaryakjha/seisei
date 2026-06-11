@@ -26,7 +26,7 @@ The current workspace contains:
 - `seisei_router`: provider routing, fallback policies, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
 - `seisei_ui`: renderer-neutral UI blocks and adapter contracts
-- `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and a narrow iOS/macOS Flutter bridge
+- `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
 - `seisei_intents`: generic app-action contracts, tool-call mapping, and fake bridges for future platform intent adapters
 
 Future packages may include:
@@ -63,6 +63,8 @@ dart tool/validate.dart --local-afm
 These checks are not CI gates because CI runners are not expected to provide AFM.
 They include a real Seisei provider call through
 `packages/seisei_apple/bin/local_afm_smoke.dart`, not only fake clients.
+Use `dart tool/validate.dart --local-pcc` when PCC should be a required local
+smoke test in the same terminal/process context.
 For a supported Flutter host path that exercises the native `seisei_apple`
 bridge, see `packages/seisei_apple/README.md`. The offline CLI example in
 `examples/basic_cli` intentionally stays provider-free and does not call AFM.

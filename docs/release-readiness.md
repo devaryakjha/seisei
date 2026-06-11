@@ -4,10 +4,11 @@ Use this checklist before tagging or publishing any Seisei package.
 
 ## Current Release Gate
 
-The first publish wave is complete at `0.1.0-dev.0`. All publishable packages
-have package-root MIT `LICENSE` files, `dart tool/validate.dart --release`
-passes locally, and the released packages are published under the verified
-publisher `jha.sh`.
+The first publish wave is complete. All publishable packages have package-root
+MIT `LICENSE` files, `dart tool/validate.dart --release` passes locally, and
+the released packages are published under the verified publisher `jha.sh`.
+The current published package line is `0.1.0-dev.0` for the first wave, with
+`seisei_apple` advanced to `0.1.0-dev.1` for the native schema bridge.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -70,5 +71,5 @@ Last verified on 2026-06-11 from `main`:
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_apple`, and `seisei_intents`.
 - GitHub Actions `Validate` completed successfully on the default branch.
-- The pub.dev package API reports `0.1.0-dev.0` as the latest version for each
-  released package in the first publish wave.
+- The pub.dev package API reports `seisei_apple` latest as `0.1.0-dev.1`; the
+  other released packages remain at `0.1.0-dev.0`.

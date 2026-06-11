@@ -38,7 +38,12 @@ Future<void> main(List<String> args) async {
   stdout.writeln('mode: ${mode.name}');
   stdout.writeln('systemAvailable: ${availability.systemAvailable}');
   stdout.writeln('pccAvailable: ${availability.pccAvailable}');
-  if (availability.reason case final reason?) {
+  final requestedModeAvailable = switch (mode) {
+    AppleFoundationModelsMode.system => availability.systemAvailable,
+    AppleFoundationModelsMode.pcc => availability.pccAvailable,
+  };
+  final reason = availability.reason;
+  if (!requestedModeAvailable && reason != null) {
     stdout.writeln('availabilityReason: $reason');
   }
 

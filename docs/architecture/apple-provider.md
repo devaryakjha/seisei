@@ -11,8 +11,8 @@ The current worker machine provides a usable Apple Foundation Models path:
 - `/usr/bin/fm` is installed as the Apple Foundation Models CLI.
 - `find /Applications/Xcode.app/Contents/Developer/Platforms -path '*FoundationModels.framework*'` finds public FoundationModels SDK frameworks for macOS, iOS, and iOS Simulator.
 - A Swift compile/run probe against `SystemLanguageModel.default.availability` compiled with the macOS SDK and returned `available`.
-- `fm available` reports `System model available`.
-- `fm available` also reports that PCC inference is not available in this shell context.
+- `fm available --model system` reports `System model available`.
+- `fm available --model pcc` reports that PCC inference is not available in this shell context.
 - `fm respond --no-stream 'Reply with exactly: seisei-ok'` returned `seisei-ok`.
 
 This means Seisei can use local AFM as a real implementation target during development, but PCC must remain capability-gated and optional.
@@ -77,7 +77,7 @@ The router should be able to reject Apple modes before request execution:
 
 ## Remaining Native Blockers
 
-- PCC generation: `/usr/bin/fm available` says PCC inference is unavailable in this shell context, and no native PCC `FoundationModels` API path is verified.
+- PCC generation: `/usr/bin/fm available --model pcc` says PCC inference is unavailable in this shell context, and no native PCC `FoundationModels` API path is verified.
 - Generic schema mapping: native schema-backed generation accepts
   FoundationModels `GenerationSchema` JSON, but Seisei does not yet have a
   stable Dart schema mapping into that Swift type.
@@ -91,7 +91,8 @@ Current local probes:
 ```sh
 sw_vers
 command -v fm
-fm available
+fm available --model system
+fm available --model pcc
 fm respond --no-stream 'Reply with exactly: seisei-ok'
 PATH=/Users/arya/fvm/cache.git/bin:$PATH flutter test packages/seisei_apple
 ```

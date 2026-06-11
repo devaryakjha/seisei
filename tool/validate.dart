@@ -2,11 +2,12 @@ import 'dart:io';
 
 Future<void> main(List<String> args) async {
   final includeLocalAfm = args.contains('--local-afm');
+  final includeLocalPcc = args.contains('--local-pcc');
   final includeRelease = args.contains('--release');
   final root = Directory.current.path;
 
   final checks = <_Check>[
-    _Check(root, ['dart', 'pub', 'get']),
+    _Check(root, ['flutter', 'pub', 'get']),
     _Check(root, ['dart', 'format', '--set-exit-if-changed', '.']),
     _Check(root, ['dart', 'analyze', '--fatal-infos']),
     _Check('$root/packages/seisei', ['dart', 'test']),
@@ -21,7 +22,7 @@ Future<void> main(List<String> args) async {
 
   if (includeLocalAfm) {
     checks.addAll([
-      _Check(root, ['fm', 'available'], allowFailure: true),
+      _Check(root, ['fm', 'available', '--model', 'system']),
       _Check(root, [
         'fm',
         'respond',
@@ -32,6 +33,27 @@ Future<void> main(List<String> args) async {
         'dart',
         'run',
         'bin/local_afm_smoke.dart',
+      ]),
+    ]);
+  }
+
+  if (includeLocalPcc) {
+    checks.addAll([
+      _Check(root, ['fm', 'available', '--model', 'pcc']),
+      _Check(root, [
+        'fm',
+        'respond',
+        '--model',
+        'pcc',
+        '--no-stream',
+        'Reply with exactly: seisei-pcc-ok',
+      ]),
+      _Check('$root/packages/seisei_apple', [
+        'dart',
+        'run',
+        'bin/local_afm_smoke.dart',
+        '--mode',
+        'pcc',
       ]),
     ]);
   }
@@ -112,15 +134,10 @@ Future<void> main(List<String> args) async {
 }
 
 final class _Check {
-  const _Check(
-    this.workingDirectory,
-    this.command, {
-    this.allowFailure = false,
-  });
+  const _Check(this.workingDirectory, this.command);
 
   final String workingDirectory;
   final List<String> command;
-  final bool allowFailure;
 
   Future<int> run({bool failFast = true}) async {
     stdout.writeln('\n> ${command.join(' ')}');
@@ -134,7 +151,7 @@ final class _Check {
     );
 
     final exitCode = await process.exitCode;
-    if (exitCode == 0 || allowFailure) {
+    if (exitCode == 0) {
       return exitCode;
     }
 

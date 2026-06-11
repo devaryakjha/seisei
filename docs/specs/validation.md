@@ -31,6 +31,18 @@ provide Apple Foundation Models. It runs both a direct `fm respond` smoke check
 and `packages/seisei_apple/bin/local_afm_smoke.dart`, which calls local AFM
 through `FmCliBackend`, `AppleFoundationModelsProvider`, and `SeiseiClient`.
 
+PCC is checked separately because the `fm` CLI can expose a working system model
+while reporting `PCC inference is not available in this context` for the same
+process:
+
+```sh
+dart tool/validate.dart --local-pcc
+```
+
+That mode requires PCC to be available to the current terminal/process context.
+It runs `fm available --model pcc`, a direct PCC generation smoke, and the same
+Seisei smoke path with `--mode pcc`.
+
 Release dry-runs are intentionally a readiness gate, not part of normal validation:
 
 ```sh
