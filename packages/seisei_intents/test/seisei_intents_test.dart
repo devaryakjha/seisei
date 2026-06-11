@@ -101,4 +101,111 @@ void main() {
       ),
     );
   });
+
+  test('generates build-time Swift App Intent source from app actions', () {
+    const action = AppActionDefinition(
+      id: 'create_note',
+      title: 'Create Note',
+      description: 'Create a note in the host app.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'title': {'type': 'string', 'title': 'Title'},
+          'priority': {'type': 'integer', 'title': 'Priority'},
+          'score': {'type': 'number', 'title': 'Score'},
+          'archived': {'type': 'boolean', 'title': 'Archived'},
+        },
+        'required': ['title', 'score', 'archived'],
+      },
+    );
+
+    final source = AppleAppIntentSourceGenerator.sourceForAction(
+      action,
+      typeName: 'CreateNoteIntent',
+      shortcut: const AppleAppShortcutDefinition(
+        phrases: ['Create a note in \\(.applicationName)'],
+        shortTitle: 'Create Note',
+        systemImageName: 'note.text',
+      ),
+    );
+
+    expect(source, contains('public struct CreateNoteIntent: AppIntent'));
+    expect(
+      source,
+      contains(
+        'public static let title: LocalizedStringResource = "Create Note"',
+      ),
+    );
+    expect(source, contains('public var title: String'));
+    expect(source, contains('public var priority: Int?'));
+    expect(source, contains('public var score: Double'));
+    expect(source, contains('public var archived: Bool'));
+    expect(source, contains('"title": .string(title)'));
+    expect(
+      source,
+      contains(r'"priority": priority.map { .integer($0) } ?? .null'),
+    );
+    expect(source, contains('"score": .number(score)'));
+    expect(source, contains('"archived": .boolean(archived)'));
+    expect(
+      source,
+      contains(
+        'public struct CreateNoteIntentShortcuts: AppShortcutsProvider',
+      ),
+    );
+    expect(
+      source,
+      contains('phrases: ["Create a note in \\\\(.applicationName)"]'),
+    );
+  });
+
+  test('derives Swift intent type names from app action ids', () {
+    const action = AppActionDefinition(
+      id: 'summarize_note',
+      title: 'Summarize Note',
+      description: 'Summarize the selected note.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'noteID': {'type': 'string'},
+        },
+        'required': ['noteID'],
+      },
+    );
+
+    final source = AppleAppIntentSourceGenerator.sourceForAction(action);
+
+    expect(source, contains('public struct SummarizeNoteIntent: AppIntent'));
+    expect(source, contains('@Parameter(title: "Note ID")'));
+    expect(source, contains('actionID: "summarize_note"'));
+  });
+
+  test('rejects unsupported App Intent source parameter schemas', () {
+    const action = AppActionDefinition(
+      id: 'create_note',
+      title: 'Create Note',
+      description: 'Create a note in the host app.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'payload': {'type': 'object'},
+          'invalid-name': {'type': 'string'},
+        },
+      },
+    );
+
+    expect(
+      () => AppleAppIntentSourceGenerator.sourceForAction(action),
+      throwsA(
+        isA<AppleAppIntentSourceException>().having(
+          (error) => error.issues,
+          'issues',
+          containsAll([
+            'payload: unsupported App Intent parameter type object',
+            'invalid-name: Swift parameter names must be valid identifiers',
+          ]),
+        ),
+      ),
+    );
+  });
 }

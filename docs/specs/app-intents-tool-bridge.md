@@ -39,12 +39,18 @@ Apple's current developer material says App Intents expose app actions and data 
 - `AppActionBridge`: interface for listing capabilities, listing actions, and invoking actions.
 - `FakeAppActionBridge`: deterministic fake for tests.
 - Mapping helpers between `ToolDefinition` / `ToolCall` and app actions / invocations.
+- `AppleAppIntentSourceGenerator`: a pure Dart source generator that emits
+  conservative scalar Swift `AppIntent` and `AppShortcutsProvider` wrappers
+  from `AppActionDefinition` JSON schema data.
 
 The package depends on `seisei` only.
 
 ## Native Adapter Boundary
 
-Native App Intents registration is not implemented in this package because App Intents are Swift types discovered and processed at build time. A pure Dart package cannot dynamically register those Swift types into an app bundle or extension.
+A pure Dart package cannot dynamically register App Intents into an app bundle
+or extension because App Intents are Swift types discovered and processed at
+build time. The supported Dart-side path is static source generation: host apps
+must write the generated Swift into a target that Xcode compiles and indexes.
 
 The minimal native registration path now lives in the optional Swift package
 `packages/seisei_apple_intents`. It proves the smallest viable boundary:
@@ -55,7 +61,6 @@ for a conservative scalar-parameter wrapper subset.
 
 Later native work can still:
 
-- generate Swift wrappers directly from Dart `AppActionDefinition` data;
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
 - bridge `perform()` calls into Flutter/Dart or host-native handlers;
@@ -65,7 +70,9 @@ Later native work can still:
 ## Acceptance Criteria
 
 - `seisei_intents` is a workspace package.
-- Package tests cover tool-definition mapping, tool-call mapping, fake bridge invocation, and missing-action failures.
+- Package tests cover tool-definition mapping, tool-call mapping, fake bridge
+  invocation, missing-action failures, Dart-side Swift source generation, and
+  stable source-generation failures for unsupported parameter schemas.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

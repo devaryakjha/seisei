@@ -62,10 +62,15 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
   `AppIntent` and `AppShortcutsProvider` source for a conservative scalar
   parameter subset.
+- `AppleAppIntentSourceGenerator` in `seisei_intents`: pure Dart source
+  generation from generic `AppActionDefinition` JSON schema data into the same
+  conservative Swift wrapper shape.
 
 ## Boundary Decisions
 
-- `seisei_intents` remains pure Dart and unchanged as the generic architecture.
+- `seisei_intents` remains pure Dart and owns generic action contracts plus
+  static Swift source generation. It does not import Apple frameworks or perform
+  native registration.
 - `seisei_apple` remains focused on Foundation Models and Flutter platform
   channels; App Intents are not added there.
 - The new package is Swift-only and optional. It is not part of the Dart pub
@@ -79,11 +84,13 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 
 - No Tagflow dependency or adapter work.
 - No PCC assumptions or APIs.
-- No direct Dart-schema-to-Swift generator in this change.
+- No direct Dart `ObjectSchema`-to-Swift generator in this change; the shipped
+  Dart generator consumes generic `AppActionDefinition.parameters` JSON schema
+  data.
 - No Flutter method-channel invocation from `perform()` in this change.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
-  into App Intent parameters automatically; the current generator covers scalar
-  string, integer, number, and boolean parameters only.
+  into App Intent parameters automatically; the current Dart and Swift
+  generators cover scalar string, integer, number, and boolean parameters only.
 
 ## Acceptance Criteria
 
@@ -99,6 +106,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - generated source contains stable `AppIntent` and `AppShortcutsProvider`
     wrappers for scalar parameters;
   - a generated-style wrapper shape compiles with optional parameter forwarding.
+- `seisei_intents` tests prove Dart-side generation from
+  `AppActionDefinition` data and stable rejection of unsupported parameter
+  schemas.
 - Repository docs stop describing all native App Intents registration as purely
   future work and instead describe the new minimal native path plus remaining
   gaps.

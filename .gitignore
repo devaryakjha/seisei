@@ -1,4 +1,5 @@
 .codex/
 .dart_tool/
 build/
+.build/
 pubspec.lock

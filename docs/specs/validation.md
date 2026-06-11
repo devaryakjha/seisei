@@ -17,7 +17,8 @@ It runs:
 - static analysis
 - Dart package tests
 - Flutter plugin tests for `seisei_apple`
-- `seisei_intents` app-action bridge contract tests
+- `seisei_intents` app-action bridge and Apple App Intent source generation
+  tests
 - `swift test` for `packages/seisei_apple_intents` on macOS
 - the offline CLI example
 
