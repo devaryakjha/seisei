@@ -137,6 +137,9 @@ verified constraints, and `seisei_apple` advanced to `0.1.0-dev.5` for the
 matching FoundationModels schema mapper updates and PCC diagnostics.
 `seisei` and `seisei_test` later advanced to `0.1.0-dev.1` for typed partial
 stream snapshots and fake-provider partial scripting.
+`seisei_schema` then advanced to `0.1.0-dev.3` for field-level unions, with
+`seisei_apple` at `0.1.0-dev.6` for the matching FoundationModels `anyOf`
+mapping.
 
 ### 9. Optional Tagflow Adapter Path
 
