@@ -1,3 +1,8 @@
+## 0.1.0-dev.3
+
+- Add generated Apple `AppEnum` support for string enum JSON schema
+  parameters.
+
 ## 0.1.0-dev.2
 
 - Add manifest-driven Apple App Intent Swift source generation and the

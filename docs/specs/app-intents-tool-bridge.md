@@ -40,8 +40,8 @@ Apple's current developer material says App Intents expose app actions and data 
 - `FakeAppActionBridge`: deterministic fake for tests.
 - Mapping helpers between `ToolDefinition` / `ToolCall` and app actions / invocations.
 - `AppleAppIntentSourceGenerator`: a pure Dart source generator that emits
-  conservative scalar Swift `AppIntent` and `AppShortcutsProvider` wrappers
-  from `AppActionDefinition` JSON schema data.
+  conservative scalar and string-backed `AppEnum` Swift `AppIntent` /
+  `AppShortcutsProvider` wrappers from `AppActionDefinition` JSON schema data.
 - `AppleAppIntentManifest` and `generate_apple_intents`: a repeatable
   manifest-driven source generation path for host projects.
 
@@ -59,14 +59,15 @@ The minimal native registration path now lives in the optional Swift package
 handwritten Swift `AppIntent` types, host-owned executor injection through
 `AppDependencyManager`, and host-defined `AppShortcutsProvider` /
 `AppIntentsPackage` roots. It also includes a build-time Swift source generator
-for a conservative scalar-parameter wrapper subset.
+for a conservative scalar and string-enum parameter wrapper subset.
 
 Later native work can still:
 
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
 - bridge `perform()` calls into Flutter/Dart or host-native handlers;
-- map App Entities/App Enums to future typed Seisei action/entity contracts when needed;
+- map App Entities and richer platform-specific parameters to future typed
+  Seisei action/entity contracts when needed;
 - keep `seisei_intents` as the source of generic Dart-side behavior.
 
 ## Acceptance Criteria
@@ -76,7 +77,7 @@ Later native work can still:
   invocation, missing-action failures, Dart-side Swift source generation, and
   stable source-generation failures for unsupported parameter schemas.
 - Manifest generation tests cover JSON-compatible action manifests and generated
-  Swift file output.
+  Swift file output, including string enum parameter generation.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

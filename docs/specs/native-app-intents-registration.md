@@ -60,11 +60,12 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `SeiseiAppIntentBridge.perform(...)`: helper used by handwritten Swift
   intents to forward execution into the registered executor;
 - `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
-  `AppIntent` and `AppShortcutsProvider` source for a conservative scalar
-  parameter subset.
+  `AppIntent`, `AppShortcutsProvider`, and string-backed `AppEnum` source for a
+  conservative parameter subset.
 - `AppleAppIntentSourceGenerator` in `seisei_intents`: pure Dart source
   generation from generic `AppActionDefinition` JSON schema data into the same
-  conservative Swift wrapper shape.
+  conservative Swift wrapper shape, including string enum JSON schema
+  parameters.
 - `generate_apple_intents`: a Dart executable that writes those generated Swift
   files from a JSON manifest into a host app, extension, framework, or Swift
   package target.
@@ -93,7 +94,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - No Flutter method-channel invocation from `perform()` in this change.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
-  generators cover scalar string, integer, number, and boolean parameters only.
+  generators cover scalar string, integer, number, boolean, and string enum
+  parameters only.
 
 ## Acceptance Criteria
 
@@ -106,8 +108,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - a handwritten `AppIntent` type compiles around the Seisei helper types;
   - a handwritten `AppShortcutsProvider` compiles with a Seisei-backed intent;
   - a handwritten `AppIntentsPackage` compiles and exposes included packages.
-  - generated source contains stable `AppIntent` and `AppShortcutsProvider`
-    wrappers for scalar parameters;
+  - generated source contains stable `AppIntent`, `AppShortcutsProvider`, and
+    string-backed `AppEnum` wrappers for supported parameters;
   - a generated-style wrapper shape compiles with optional parameter forwarding.
 - `seisei_intents` tests prove Dart-side generation from
   `AppActionDefinition` data and stable rejection of unsupported parameter

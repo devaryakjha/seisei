@@ -108,6 +108,11 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
     case integer
     case number
     case boolean
+    case stringEnum(
+        typeName: String,
+        cases: [SeiseiGeneratedAppIntentEnumCase],
+        displayName: String
+    )
 
     fileprivate var swiftType: String {
         switch self {
@@ -119,6 +124,8 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
             return "Double"
         case .boolean:
             return "Bool"
+        case let .stringEnum(typeName, _, _):
+            return typeName
         }
     }
 
@@ -132,8 +139,26 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
             return ".number(\(name))"
         case .boolean:
             return ".boolean(\(name))"
+        case .stringEnum:
+            return ".string(\(name).rawValue)"
         }
     }
+}
+
+public struct SeiseiGeneratedAppIntentEnumCase: Sendable, Equatable {
+    public init(
+        name: String,
+        rawValue: String,
+        title: String
+    ) {
+        self.name = name
+        self.rawValue = rawValue
+        self.title = title
+    }
+
+    public let name: String
+    public let rawValue: String
+    public let title: String
 }
 
 public struct SeiseiGeneratedAppIntentParameter: Sendable, Equatable {
@@ -210,6 +235,17 @@ public enum SeiseiAppIntentSourceGenerator {
             "    \(accessLevel) static let description = IntentDescription(\(definition.description.swiftStringLiteral))",
             "",
         ]
+
+        var emittedEnumTypeNames = Set<String>()
+        for parameter in definition.parameters {
+            guard let enumSource = parameter.enumSource(accessLevel: accessLevel) else {
+                continue
+            }
+            if emittedEnumTypeNames.insert(parameter.type.swiftType).inserted {
+                lines.append(enumSource)
+                lines.append("")
+            }
+        }
 
         for parameter in definition.parameters {
             lines.append("    @Parameter(title: \(parameter.title.swiftStringLiteral))")
@@ -291,6 +327,35 @@ private extension SeiseiGeneratedAppIntentParameter {
             return type.invocationValueExpression(for: name)
         }
         return "\(name).map { \(type.invocationValueExpression(for: "$0")) } ?? .null"
+    }
+
+    func enumSource(accessLevel: String) -> String? {
+        guard case let .stringEnum(typeName, cases, displayName) = type else {
+            return nil
+        }
+
+        var lines = [
+            "\(accessLevel) enum \(typeName): String, AppEnum {",
+            "    \(accessLevel) static var typeDisplayRepresentation = TypeDisplayRepresentation(name: \(displayName.swiftStringLiteral))",
+            "",
+            "    \(accessLevel) static var caseDisplayRepresentations: [\(typeName): DisplayRepresentation] {",
+            "        [",
+        ]
+
+        for enumCase in cases {
+            lines.append("            .\(enumCase.name): \(enumCase.title.swiftStringLiteral),")
+        }
+
+        lines.append("        ]")
+        lines.append("    }")
+        lines.append("")
+
+        for enumCase in cases {
+            lines.append("    case \(enumCase.name) = \(enumCase.rawValue.swiftStringLiteral)")
+        }
+
+        lines.append("}")
+        return lines.joined(separator: "\n")
     }
 }
 

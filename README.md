@@ -28,7 +28,7 @@ The current workspace contains:
 - `seisei_ui`: renderer-neutral UI blocks and adapter contracts
 - `seisei_tagflow`: experimental optional adapter from `seisei_ui` blocks into Tagflow runtime documents
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
-- `seisei_intents`: generic app-action contracts, tool-call mapping, fake bridges, scalar Apple App Intent source generation, and a manifest-driven generation executable for future platform intent adapters
+- `seisei_intents`: generic app-action contracts, tool-call mapping, fake bridges, scalar and string-enum Apple App Intent source generation, and a manifest-driven generation executable for future platform intent adapters
 
 Optional native support packages include:
 
@@ -105,10 +105,11 @@ into FoundationModels schema files including field-level explicit null and
 discriminated object unions, system-model streaming with typed partial
 snapshots and path-level structured patches for safe schema-backed chunks, and a
 minimal native App Intents registration helper package for handwritten Swift
-intents and generated-source scalar wrappers from either Swift definitions or
-Dart `AppActionDefinition` data or a manifest-driven Dart executable, plus an
-experimental optional Tagflow document adapter for `seisei_ui` blocks.
+intents and generated-source scalar/string-enum wrappers from either Swift
+definitions or Dart `AppActionDefinition` data or a manifest-driven Dart
+executable, plus an experimental optional Tagflow document adapter for
+`seisei_ui` blocks.
 PCC generation, Flutter runtime invocation from generated App Intents, rich App
-Entity/App Enum wrappers, cloud providers, production RAG, provider-native
-patch streams, and broader renderer integration beyond the narrow Tagflow
-content adapter are not implemented yet.
+Entity wrappers, richer platform-specific intent parameters, cloud providers,
+production RAG, provider-native patch streams, and broader renderer integration
+beyond the narrow Tagflow content adapter are not implemented yet.

@@ -9,7 +9,8 @@ This package is the smallest real native registration path that fits Seisei:
 - `SeiseiAppleIntents` only provides payload, executor, and dependency helpers
   so those intents can forward work into app-owned Seisei handlers.
 - Apps that want generated wrappers can use the source generator to emit
-  build-time Swift source for a conservative scalar-parameter subset.
+  build-time Swift source for a conservative scalar and string-enum parameter
+  subset.
 
 ## What It Includes
 
@@ -27,7 +28,8 @@ This package is the smallest real native registration path that fits Seisei:
 - register intents dynamically from Dart or Flutter
 - replace app-owned `AppIntent`, `AppShortcutsProvider`, or
   `AppIntentsPackage` source
-- model App Entities, App Enums, or rich platform-specific parameters
+- model App Entities or rich platform-specific parameters beyond generated
+  string-backed App Enums
 - add PCC or Tagflow behavior
 
 ## Example
@@ -84,7 +86,7 @@ SeiseiAppIntentDependencies.configure(
 )
 ```
 
-Generate build-time Swift source for a scalar wrapper:
+Generate build-time Swift source for a scalar and string-enum wrapper:
 
 ```swift
 let source = SeiseiAppIntentSourceGenerator.source(
@@ -98,6 +100,26 @@ let source = SeiseiAppIntentSourceGenerator.source(
                 name: "title",
                 title: "Title",
                 type: .string
+            ),
+            SeiseiGeneratedAppIntentParameter(
+                name: "status",
+                title: "Status",
+                type: .stringEnum(
+                    typeName: "NoteStatus",
+                    cases: [
+                        SeiseiGeneratedAppIntentEnumCase(
+                            name: "draft",
+                            rawValue: "draft",
+                            title: "Draft"
+                        ),
+                        SeiseiGeneratedAppIntentEnumCase(
+                            name: "published",
+                            rawValue: "published",
+                            title: "Published"
+                        ),
+                    ],
+                    displayName: "Note Status"
+                )
             ),
         ],
         shortcut: SeiseiGeneratedAppShortcutDefinition(

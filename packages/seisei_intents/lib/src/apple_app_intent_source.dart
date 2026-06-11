@@ -72,13 +72,32 @@ abstract final class AppleAppIntentSourceGenerator {
       'import AppIntents',
       'import SeiseiAppleIntents',
       '',
-      '$accessLevel struct $resolvedTypeName: AppIntent {',
-      '    $accessLevel static let title: LocalizedStringResource = '
-          '${_swiftStringLiteral(action.title)}',
-      '    $accessLevel static let description = '
-          'IntentDescription(${_swiftStringLiteral(action.description)})',
-      '',
     ];
+
+    final emittedEnumTypeNames = <String>{};
+    for (final parameter in parameters) {
+      final enumSource = parameter.enumSource(accessLevel);
+      if (enumSource == null) {
+        continue;
+      }
+      if (emittedEnumTypeNames.add(parameter.enumDefinition!.typeName)) {
+        lines
+          ..add(enumSource)
+          ..add('');
+      }
+    }
+
+    lines
+      ..add('$accessLevel struct $resolvedTypeName: AppIntent {')
+      ..add(
+        '    $accessLevel static let title: LocalizedStringResource = '
+        '${_swiftStringLiteral(action.title)}',
+      )
+      ..add(
+        '    $accessLevel static let description = '
+        'IntentDescription(${_swiftStringLiteral(action.description)})',
+      )
+      ..add('');
 
     for (final parameter in parameters) {
       lines
@@ -220,12 +239,14 @@ abstract final class AppleAppIntentSourceGenerator {
       }
 
       final title = propertySchema['title'];
+      final enumCases = _parseEnumCases(name, propertySchema, issues);
       parameters.add(
         _AppleAppIntentParameter(
           name: name,
           title: title is String ? title : _humanizeParameterName(name),
           type: type,
           isRequired: required.contains(name),
+          enumDefinition: enumCases,
         ),
       );
     }
@@ -266,14 +287,23 @@ final class _AppleAppIntentParameter {
     required this.title,
     required this.type,
     required this.isRequired,
+    this.enumDefinition,
   });
 
   final String name;
   final String title;
   final _AppleAppIntentParameterType type;
   final bool isRequired;
+  final _AppleAppIntentEnumDefinition? enumDefinition;
 
   String get swiftDeclarationType {
+    final enumDefinition = this.enumDefinition;
+    if (enumDefinition != null) {
+      if (isRequired) {
+        return enumDefinition.typeName;
+      }
+      return '${enumDefinition.typeName}?';
+    }
     if (isRequired) {
       return type.swiftType;
     }
@@ -283,11 +313,146 @@ final class _AppleAppIntentParameter {
   String get initializerParameter => '$name: $swiftDeclarationType';
 
   String get argumentExpression {
+    if (enumDefinition != null) {
+      if (isRequired) {
+        return '.string($name.rawValue)';
+      }
+      return '$name.map { .string(${r'$0'}.rawValue) } ?? .null';
+    }
     if (isRequired) {
       return type.invocationValueExpression(name);
     }
     return '$name.map { ${type.invocationValueExpression(r'$0')} } ?? .null';
   }
+
+  String? enumSource(String accessLevel) {
+    final enumDefinition = this.enumDefinition;
+    if (enumDefinition == null) {
+      return null;
+    }
+
+    final lines = <String>[
+      '$accessLevel enum ${enumDefinition.typeName}: String, AppEnum {',
+      '    $accessLevel static var typeDisplayRepresentation = '
+          'TypeDisplayRepresentation(name: '
+          '${_swiftStringLiteral(enumDefinition.displayName)})',
+      '',
+      '    $accessLevel static var caseDisplayRepresentations: '
+          '[${enumDefinition.typeName}: DisplayRepresentation] {',
+      '        [',
+    ];
+
+    for (final enumCase in enumDefinition.cases) {
+      lines.add(
+        '            .${enumCase.name}: ${_swiftStringLiteral(enumCase.title)},',
+      );
+    }
+
+    lines
+      ..add('        ]')
+      ..add('    }')
+      ..add('');
+
+    for (final enumCase in enumDefinition.cases) {
+      lines.add(
+        '    case ${enumCase.name} = ${_swiftStringLiteral(enumCase.rawValue)}',
+      );
+    }
+
+    lines.add('}');
+    return lines.join('\n');
+  }
+}
+
+final class _AppleAppIntentEnumDefinition {
+  const _AppleAppIntentEnumDefinition({
+    required this.typeName,
+    required this.displayName,
+    required this.cases,
+  });
+
+  final String typeName;
+  final String displayName;
+  final List<_AppleAppIntentEnumCase> cases;
+}
+
+final class _AppleAppIntentEnumCase {
+  const _AppleAppIntentEnumCase({
+    required this.name,
+    required this.rawValue,
+    required this.title,
+  });
+
+  final String name;
+  final String rawValue;
+  final String title;
+}
+
+_AppleAppIntentEnumDefinition? _parseEnumCases(
+  String parameterName,
+  Map<Object?, Object?> propertySchema,
+  List<String> issues,
+) {
+  final values = propertySchema['enum'];
+  if (values == null) {
+    return null;
+  }
+  if (propertySchema['type'] != 'string') {
+    issues.add('$parameterName: App Intent enums require string type');
+    return null;
+  }
+  if (values is! List || values.isEmpty) {
+    issues.add('$parameterName: enum must be a non-empty list of strings');
+    return null;
+  }
+
+  final typeName = switch (propertySchema['x-seisei-app-intent-typeName']) {
+    final String value => value,
+    _ => _swiftTypeNameFromParameterName(parameterName),
+  };
+  if (!_isSwiftIdentifier(typeName)) {
+    issues
+        .add('$parameterName: enum type name must be a valid Swift identifier');
+  }
+
+  final displayName =
+      switch (propertySchema['x-seisei-app-intent-displayName']) {
+    final String value => value,
+    _ => _humanizeParameterName(parameterName),
+  };
+
+  final titleMap = switch (propertySchema['x-seisei-app-intent-enumTitles']) {
+    final Map value => value,
+    _ => const {},
+  };
+
+  final cases = <_AppleAppIntentEnumCase>[];
+  final seenNames = <String>{};
+  for (final value in values) {
+    if (value is! String) {
+      issues.add('$parameterName: enum entries must be strings');
+      continue;
+    }
+    final caseName = _swiftCaseNameFromRawValue(value);
+    if (!seenNames.add(caseName)) {
+      issues.add('$parameterName: duplicate enum case name $caseName');
+    }
+    cases.add(
+      _AppleAppIntentEnumCase(
+        name: caseName,
+        rawValue: value,
+        title: titleMap[value] is String
+            ? titleMap[value]! as String
+            : _humanizeParameterName(value),
+      ),
+    );
+  }
+
+  return _AppleAppIntentEnumDefinition(
+    typeName: typeName,
+    displayName: displayName,
+    cases: List.unmodifiable(cases),
+  );
 }
 
 String _argumentsExpression(List<_AppleAppIntentParameter> parameters) {
@@ -311,6 +476,88 @@ String _typeNameFromActionId(String actionId) {
   }
   return '${joined}Intent';
 }
+
+String _swiftTypeNameFromParameterName(String name) {
+  final words = name
+      .split(RegExp(r'[^A-Za-z0-9]+'))
+      .where((word) => word.isNotEmpty)
+      .map(_capitalizeAscii)
+      .join();
+  if (words.isEmpty) {
+    return 'GeneratedEnum';
+  }
+  if (RegExp(r'^[0-9]').hasMatch(words)) {
+    return 'Generated$words';
+  }
+  return words;
+}
+
+String _swiftCaseNameFromRawValue(String rawValue) {
+  final words = rawValue
+      .split(RegExp(r'[^A-Za-z0-9]+'))
+      .where((word) => word.isNotEmpty)
+      .toList();
+  if (words.isEmpty) {
+    return 'value';
+  }
+
+  final first = words.first.toLowerCase();
+  final rest = words.skip(1).map(_capitalizeAscii).join();
+  var name = '$first$rest';
+  if (RegExp(r'^[0-9]').hasMatch(name)) {
+    name = 'value${_capitalizeAscii(name)}';
+  }
+  if (_swiftReservedWords.contains(name)) {
+    name = '${name}Value';
+  }
+  return name;
+}
+
+const _swiftReservedWords = {
+  'associatedtype',
+  'class',
+  'deinit',
+  'enum',
+  'extension',
+  'fileprivate',
+  'func',
+  'import',
+  'init',
+  'inout',
+  'internal',
+  'let',
+  'open',
+  'operator',
+  'private',
+  'precedencegroup',
+  'protocol',
+  'public',
+  'rethrows',
+  'static',
+  'struct',
+  'subscript',
+  'typealias',
+  'var',
+  'break',
+  'case',
+  'catch',
+  'continue',
+  'default',
+  'defer',
+  'do',
+  'else',
+  'fallthrough',
+  'for',
+  'guard',
+  'if',
+  'in',
+  'repeat',
+  'return',
+  'throw',
+  'switch',
+  'where',
+  'while',
+};
 
 String _humanizeParameterName(String name) {
   final words = <String>[];

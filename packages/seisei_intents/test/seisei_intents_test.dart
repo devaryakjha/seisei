@@ -161,6 +161,48 @@ void main() {
     );
   });
 
+  test('generates AppEnum Swift source from string enum schemas', () {
+    const action = AppActionDefinition(
+      id: 'update_note',
+      title: 'Update Note',
+      description: 'Update note status.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'status': {
+            'type': 'string',
+            'title': 'Status',
+            'enum': ['draft', 'published'],
+            'x-seisei-app-intent-typeName': 'NoteStatus',
+            'x-seisei-app-intent-displayName': 'Note Status',
+            'x-seisei-app-intent-enumTitles': {
+              'draft': 'Draft',
+              'published': 'Published',
+            },
+          },
+        },
+        'required': ['status'],
+      },
+    );
+
+    final source = AppleAppIntentSourceGenerator.sourceForAction(
+      action,
+      typeName: 'UpdateNoteIntent',
+    );
+
+    expect(source, contains('public enum NoteStatus: String, AppEnum {'));
+    expect(
+      source,
+      contains(
+        'public static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Note Status")',
+      ),
+    );
+    expect(source, contains('case draft = "draft"'));
+    expect(source, contains('.published: "Published"'));
+    expect(source, contains('public var status: NoteStatus'));
+    expect(source, contains('"status": .string(status.rawValue)'));
+  });
+
   test('derives Swift intent type names from app action ids', () {
     const action = AppActionDefinition(
       id: 'summarize_note',
@@ -232,9 +274,15 @@ void main() {
           'parameters': {
             'type': 'object',
             'properties': {
-              'title': {'type': 'string', 'title': 'Title'},
+              'status': {
+                'type': 'string',
+                'title': 'Status',
+                'enum': ['draft', 'published'],
+                'x-seisei-app-intent-typeName': 'NoteStatus',
+                'x-seisei-app-intent-displayName': 'Note Status',
+              },
             },
-            'required': ['title'],
+            'required': ['status'],
           },
           'shortcut': {
             'phrases': ['Create a note in \\(.applicationName)'],
@@ -253,9 +301,10 @@ void main() {
     expect(files, hasLength(1));
     expect(files.single.path.endsWith('CreateNoteIntent.swift'), isTrue);
     final source = await files.single.readAsString();
+    expect(source, contains('public enum NoteStatus: String, AppEnum {'));
     expect(source, contains('public struct CreateNoteIntent: AppIntent'));
     expect(source, contains('actionID: "create_note"'));
-    expect(source, contains('"title": .string(title)'));
+    expect(source, contains('"status": .string(status.rawValue)'));
     expect(
       await File('${directory.path}/CreateNoteIntent.swift').exists(),
       isTrue,

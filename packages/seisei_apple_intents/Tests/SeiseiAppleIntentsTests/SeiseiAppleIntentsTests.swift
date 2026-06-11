@@ -104,6 +104,47 @@ struct SeiseiAppleIntentsTests {
         #expect(source.contains("phrases: [\"Create a note in \\\\(.applicationName)\"]"))
     }
 
+    @Test("source generator emits AppEnum wrappers for string enum parameters")
+    func sourceGeneratorEmitsAppEnumWrapper() {
+        let source = SeiseiAppIntentSourceGenerator.source(
+            for: SeiseiGeneratedAppIntentDefinition(
+                typeName: "UpdateNoteIntent",
+                actionID: "update_note",
+                title: "Update Note",
+                description: "Update note status.",
+                parameters: [
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "status",
+                        title: "Status",
+                        type: .stringEnum(
+                            typeName: "NoteStatus",
+                            cases: [
+                                SeiseiGeneratedAppIntentEnumCase(
+                                    name: "draft",
+                                    rawValue: "draft",
+                                    title: "Draft"
+                                ),
+                                SeiseiGeneratedAppIntentEnumCase(
+                                    name: "published",
+                                    rawValue: "published",
+                                    title: "Published"
+                                ),
+                            ],
+                            displayName: "Note Status"
+                        )
+                    ),
+                ]
+            )
+        )
+
+        #expect(source.contains("public enum NoteStatus: String, AppEnum {"))
+        #expect(source.contains("public static var typeDisplayRepresentation = TypeDisplayRepresentation(name: \"Note Status\")"))
+        #expect(source.contains("case draft = \"draft\""))
+        #expect(source.contains(".published: \"Published\""))
+        #expect(source.contains("public var status: NoteStatus"))
+        #expect(source.contains("\"status\": .string(status.rawValue)"))
+    }
+
     @Test("generated-style AppIntent wrappers compile")
     func generatedStyleIntentCompiles() {
         let intent = GeneratedStyleCreateNoteIntent(
@@ -119,6 +160,20 @@ struct SeiseiAppleIntentsTests {
 
         #expect(intent.title == "Roadmap")
         #expect(intent.priority == nil)
+    }
+
+    @Test("generated-style AppIntent enum wrappers compile")
+    func generatedStyleEnumIntentCompiles() {
+        let intent = GeneratedStyleUpdateNoteIntent(
+            status: .published,
+            executor: SeiseiAppIntentExecutor { invocation in
+                #expect(invocation.id == "update_note")
+                #expect(invocation.arguments["status"] == .string("published"))
+                return SeiseiAppIntentResult()
+            }
+        )
+
+        #expect(intent.status == .published)
     }
 
     @Test("generated-style shortcut providers compile")
@@ -239,6 +294,51 @@ private struct GeneratedStyleCreateNoteIntentShortcuts: AppShortcutsProvider {
             shortTitle: "Create Note",
             systemImageName: "note.text"
         )
+    }
+}
+
+private enum GeneratedStyleNoteStatus: String, AppEnum {
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Note Status")
+
+    static var caseDisplayRepresentations: [GeneratedStyleNoteStatus: DisplayRepresentation] {
+        [
+            .draft: "Draft",
+            .published: "Published",
+        ]
+    }
+
+    case draft = "draft"
+    case published = "published"
+}
+
+private struct GeneratedStyleUpdateNoteIntent: AppIntent {
+    static let title: LocalizedStringResource = "Update Note"
+    static let description = IntentDescription("Update note status.")
+
+    @Parameter(title: "Status")
+    var status: GeneratedStyleNoteStatus
+
+    @AppDependency
+    private var executor: SeiseiAppIntentExecutor
+
+    init() {
+        self._executor = AppDependency(default: SeiseiAppIntentExecutor { _ in
+            throw TestIntentError.unconfiguredExecutor
+        })
+    }
+
+    init(status: GeneratedStyleNoteStatus, executor: SeiseiAppIntentExecutor) {
+        self.status = status
+        self._executor = AppDependency(default: executor)
+    }
+
+    func perform() async throws -> some IntentResult {
+        _ = try await SeiseiAppIntentBridge.perform(
+            actionID: "update_note",
+            arguments: ["status": .string(status.rawValue)],
+            executor: executor
+        )
+        return .result()
     }
 }
 

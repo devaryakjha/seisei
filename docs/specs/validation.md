@@ -18,7 +18,7 @@ It runs:
 - Dart package tests
 - Flutter plugin tests for `seisei_apple`
 - `seisei_intents` app-action bridge and Apple App Intent source generation
-  tests, including manifest-driven Swift file generation
+  tests, including string enum and manifest-driven Swift file generation
 - `swift test` for `packages/seisei_apple_intents` on macOS
 - the offline CLI example
 
