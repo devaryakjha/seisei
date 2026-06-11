@@ -32,6 +32,9 @@ final class SeiseiBlockAdapterCapabilities {
     required this.blockTypes,
     required this.actionTypes,
     required this.supportsStreamingUpdates,
+    this.layoutPrimitives = const {},
+    this.supportsMedia = false,
+    this.supportsForms = false,
   });
 
   /// Supported block types.
@@ -42,4 +45,29 @@ final class SeiseiBlockAdapterCapabilities {
 
   /// Whether the adapter can apply streaming block updates.
   final bool supportsStreamingUpdates;
+
+  /// Supported layout primitive names.
+  final Set<String> layoutPrimitives;
+
+  /// Whether media blocks can be rendered.
+  final bool supportsMedia;
+
+  /// Whether form blocks and submit-like interactions can be rendered.
+  final bool supportsForms;
+
+  /// Stable mismatch descriptions for an unsupported schema.
+  List<String> unsupportedBy(SeiseiBlockSchema schema) {
+    final unsupportedBlocks = schema.blockTypes.difference(blockTypes);
+    final unsupportedActions = schema.actionTypes.difference(actionTypes);
+
+    return [
+      for (final block in unsupportedBlocks) 'block:$block',
+      for (final action in unsupportedActions) 'action:$action',
+    ];
+  }
+
+  /// Whether this capability set can support [schema].
+  bool supports(SeiseiBlockSchema schema) {
+    return unsupportedBy(schema).isEmpty;
+  }
 }

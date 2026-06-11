@@ -6,6 +6,8 @@ final class SeiseiBlockSchema {
   const SeiseiBlockSchema({
     required this.blockTypes,
     this.actionTypes = const {},
+    this.requiredPropsByType = const {},
+    this.allowedChildTypesByType = const {},
   });
 
   /// Allowed block types.
@@ -13,6 +15,12 @@ final class SeiseiBlockSchema {
 
   /// Allowed action types.
   final Set<String> actionTypes;
+
+  /// Required property keys for each block type.
+  final Map<String, Set<String>> requiredPropsByType;
+
+  /// Allowed direct child types for each parent block type.
+  final Map<String, Set<String>> allowedChildTypesByType;
 
   /// Validates a block tree.
   List<SeiseiBlockValidationError> validate(SeiseiBlock block) {
@@ -50,8 +58,33 @@ final class SeiseiBlockSchema {
       }
     }
 
+    final requiredProps = requiredPropsByType[block.type] ?? const {};
+    for (final prop in requiredProps) {
+      if (!block.props.containsKey(prop)) {
+        errors.add(
+          SeiseiBlockValidationError(
+            code: 'prop.required',
+            path: '$path.props.$prop',
+            message: 'Missing required property: $prop',
+          ),
+        );
+      }
+    }
+
+    final allowedChildTypes = allowedChildTypesByType[block.type];
     for (var i = 0; i < block.children.length; i += 1) {
-      _validateBlock(block.children[i], '$path.children[$i]', errors);
+      final child = block.children[i];
+      if (allowedChildTypes != null &&
+          !allowedChildTypes.contains(child.type)) {
+        errors.add(
+          SeiseiBlockValidationError(
+            code: 'child.unsupported_type',
+            path: '$path.children[$i]',
+            message: 'Unsupported child type: ${child.type}',
+          ),
+        );
+      }
+      _validateBlock(child, '$path.children[$i]', errors);
     }
   }
 }

@@ -20,6 +20,10 @@ void main() {
       availability.capabilities,
       contains(ModelCapability.onDeviceInference),
     );
+    expect(
+      availability.capabilities,
+      isNot(contains(ModelCapability.streaming)),
+    );
   });
 
   test('pcc mode is availability gated', () async {

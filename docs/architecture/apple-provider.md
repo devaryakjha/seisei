@@ -30,7 +30,7 @@ The provider should map Apple availability into Seisei capabilities:
 - `system` available: structured generation, text generation, local inference, privacy-compatible on-device execution.
 - `pcc` available: structured generation and larger-context cloud execution, subject to user privacy policy.
 - `fm respond --schema`: structured output support once schema package APIs are stable.
-- `fm respond --stream`: streaming support once core stream contracts are stable.
+- streaming: deferred until the provider has a backend that emits incremental chunks. The current `FmCliBackend` uses `fm respond --no-stream`, so `seisei_apple` must not advertise `ModelCapability.streaming` yet.
 - `fm respond --image`: multimodal input support after the core request model includes media segments.
 
 ## Routing Rules
@@ -48,7 +48,8 @@ The router should be able to reject Apple modes before request execution:
 2. Define an `AppleFoundationModelsBackend` abstraction so tests do not shell out.
 3. Add an `FmCliBackend` for local development and smoke tests.
 4. Add tests for system availability, PCC unavailability, privacy rejection, and schema-backed generation.
-5. Add native Swift plugin implementation once the package boundary is stable.
+5. Add true streaming support only after a backend can surface incremental chunks through `GenerationChunk<T>`.
+6. Add native Swift plugin implementation once the package boundary is stable.
 
 ## Validation Commands
 

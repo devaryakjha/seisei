@@ -16,7 +16,9 @@ Seisei must let model workflows produce typed UI descriptions that Flutter apps 
 
 ### `SeiseiBlock`
 
-A serializable UI node.
+A serializable UI node. The current compileable MVP API treats one
+`SeiseiBlock` as the root of the renderable tree. A separate document wrapper
+can be added later if adapter metadata or multi-root documents need it.
 
 Required fields:
 
@@ -63,6 +65,10 @@ Adapters must declare capabilities before rendering:
 - streaming update support
 
 The router or caller can use this declaration to reject unsupported UI output before it reaches a renderer.
+
+The current `SeiseiBlockSchema.validate(...)` API validates a single root block
+and its descendants. Adapter implementations should call it before rendering or
+document why validation is handled by the host application.
 
 ## Tagflow Compatibility
 

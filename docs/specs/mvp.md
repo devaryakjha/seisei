@@ -126,8 +126,12 @@ The coordinator can call the MVP finished only when all of the following are tru
 
 ## Open Decisions
 
-- Whether to use Melos or Dart pub workspaces as the primary monorepo workflow.
-- The minimum Dart and Flutter SDK constraints.
 - Whether generated schema adapters live in `seisei_schema` or a separate builder package after the MVP.
 - Whether `seisei_ui` ships in the first publish wave or remains pre-release until a real adapter exists.
 - Whether `seisei_apple` starts as documentation plus platform channel stubs or waits for a confirmed buildable native API.
+
+## Resolved Decisions
+
+- The MVP scaffold uses Dart pub workspaces, not Melos.
+- The current package SDK constraint is `>=3.6.0 <4.0.0`.
+- Current packages are pure Dart. Flutter-specific SDK constraints are deferred until a package actually imports Flutter.

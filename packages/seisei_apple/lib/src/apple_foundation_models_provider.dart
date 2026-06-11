@@ -35,7 +35,6 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
     final capabilities = {
       ModelCapability.structuredGeneration,
-      ModelCapability.streaming,
       if (mode == AppleFoundationModelsMode.system)
         ModelCapability.onDeviceInference,
     };

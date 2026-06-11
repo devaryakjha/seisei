@@ -24,6 +24,9 @@ void main() {
     const schema = SeiseiBlockSchema(
       blockTypes: {'text'},
       actionTypes: {'submit'},
+      requiredPropsByType: {
+        'text': {'value'},
+      },
     );
 
     final errors = schema.validate(
@@ -37,6 +40,34 @@ void main() {
     expect(errors.map((error) => error.code), [
       'block.unsupported_type',
       'action.unsupported_type',
+    ]);
+  });
+
+  test('validates required props and child rules', () {
+    const schema = SeiseiBlockSchema(
+      blockTypes: {'column', 'text', 'image'},
+      requiredPropsByType: {
+        'text': {'value'},
+      },
+      allowedChildTypesByType: {
+        'column': {'text'},
+      },
+    );
+
+    final errors = schema.validate(
+      const SeiseiBlock(
+        id: 'root',
+        type: 'column',
+        children: [
+          SeiseiBlock(id: 'title', type: 'text'),
+          SeiseiBlock(id: 'hero', type: 'image'),
+        ],
+      ),
+    );
+
+    expect(errors.map((error) => error.code), [
+      'prop.required',
+      'child.unsupported_type',
     ]);
   });
 
@@ -60,6 +91,24 @@ void main() {
       'Hello',
     );
   });
+
+  test('capabilities report stable mismatch labels', () {
+    const capabilities = SeiseiBlockAdapterCapabilities(
+      blockTypes: {'text'},
+      actionTypes: {'submit'},
+      supportsStreamingUpdates: false,
+    );
+    const schema = SeiseiBlockSchema(
+      blockTypes: {'text', 'image'},
+      actionTypes: {'submit', 'openUrl'},
+    );
+
+    expect(
+      capabilities.unsupportedBy(schema),
+      ['block:image', 'action:openUrl'],
+    );
+    expect(capabilities.supports(schema), isFalse);
+  });
 }
 
 final class _StringAdapter implements SeiseiBlockAdapter<String> {
@@ -77,8 +126,7 @@ final class _StringAdapter implements SeiseiBlockAdapter<String> {
 
   @override
   bool supports(SeiseiBlockSchema schema) {
-    return capabilities.blockTypes.containsAll(schema.blockTypes) &&
-        capabilities.actionTypes.containsAll(schema.actionTypes);
+    return capabilities.supports(schema);
   }
 
   @override
