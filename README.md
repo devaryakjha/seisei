@@ -86,6 +86,6 @@ deterministic tests, an offline example, validation tooling, Apple provider
 architecture notes, generic app-action/tool bridge contracts, and a native Apple
 bridge for system-model availability, plain prompts, provider-specific
 FoundationModels schema requests, and flat `ObjectSchema` mapping into
-FoundationModels schema files. PCC generation, native streaming, system App
-Intents registration, cloud providers, production RAG, and Tagflow integration
-are not implemented yet.
+FoundationModels schema files, plus system-model streaming. PCC generation,
+system App Intents registration, cloud providers, production RAG, and Tagflow
+integration are not implemented yet.

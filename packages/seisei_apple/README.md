@@ -22,13 +22,15 @@ To verify Seisei itself can use local AFM, run the package smoke command:
 ```sh
 dart run bin/local_afm_smoke.dart
 dart run bin/local_afm_smoke.dart --schema
+dart run bin/local_afm_smoke.dart --stream
 ```
 
 That command uses `FmCliBackend`, `AppleFoundationModelsProvider`, and
 `SeiseiClient` to send the prompt through the local system model. A passing run
 prints `providerId: apple_system` and `response: seisei-ok`. The `--schema`
 variant also writes a temporary `ObjectSchema` FoundationModels schema file and
-expects `response: seisei-schema-ok`.
+expects `response: seisei-schema-ok`. The `--stream` variant verifies that
+real streaming chunks arrive and that Seisei emits a terminal value.
 
 To verify PCC from the same Seisei path, run:
 
@@ -101,13 +103,13 @@ The native bridge is intentionally narrow. It checks system-model availability
 and sends plain system-model prompts through
 `FoundationModels.LanguageModelSession`. It can also send schema-backed system
 model requests when `schemaPath` points to a JSON-encoded FoundationModels
-schema file. The current `FoundationModelsSchemaEncoder` covers flat
-`ObjectSchema` values with required string fields. PCC and streaming are not
-implemented in the native bridge yet.
+schema file, and it streams system-model text through a Flutter event channel.
+The current `FoundationModelsSchemaEncoder` covers flat `ObjectSchema` values
+with required string fields. PCC is not implemented in the native bridge yet.
 
 If you want the typed Seisei client layer, add a direct `seisei` dependency in
 the host app and build `AppleFoundationModelsProvider` on top of the native
-backend. Keep the request in system mode and avoid streaming or PCC settings.
+backend. Keep the request in system mode and avoid PCC settings.
 For schema-backed requests outside `FoundationModelsSchemaEncoder`, use
 `AppleFoundationModelsProvider.schemaPathMetadataKey` with a provider-specific
 FoundationModels schema file.

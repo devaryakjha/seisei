@@ -8,14 +8,22 @@ final class MethodChannelAppleFoundationModelsBackend
   /// Creates a method-channel Apple backend.
   MethodChannelAppleFoundationModelsBackend({
     MethodChannel? channel,
-  }) : _channel = channel ?? defaultChannel;
+    EventChannel? streamChannel,
+  })  : _channel = channel ?? defaultChannel,
+        _streamChannel = streamChannel ?? defaultStreamChannel;
 
   /// Channel used by the native iOS and macOS plugin implementations.
   static const defaultChannel = MethodChannel(
     'dev.jha.seisei/seisei_apple',
   );
 
+  /// Event channel used by native iOS and macOS streaming implementations.
+  static const defaultStreamChannel = EventChannel(
+    'dev.jha.seisei/seisei_apple/stream',
+  );
+
   final MethodChannel _channel;
+  final EventChannel _streamChannel;
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
@@ -46,11 +54,26 @@ final class MethodChannelAppleFoundationModelsBackend
     }
     if (request.stream) {
       throw UnsupportedError(
-        'The native Apple bridge does not support streaming generation yet.',
+        'Use stream() for native Apple streaming generation.',
       );
     }
 
     return _channel.invokeMethod<Object?>('respond', {
+      'prompt': request.prompt,
+      'mode': request.mode.name,
+      if (request.schemaPath case final schemaPath?) 'schemaPath': schemaPath,
+    });
+  }
+
+  @override
+  Stream<Object?> stream(AppleFoundationModelsRequest request) {
+    if (request.mode == AppleFoundationModelsMode.pcc) {
+      throw UnsupportedError(
+        'The native Apple bridge does not support PCC generation yet.',
+      );
+    }
+
+    return _streamChannel.receiveBroadcastStream({
       'prompt': request.prompt,
       'mode': request.mode.name,
       if (request.schemaPath case final schemaPath?) 'schemaPath': schemaPath,

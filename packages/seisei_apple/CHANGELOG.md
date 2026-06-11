@@ -1,3 +1,9 @@
+## 0.1.0-dev.3
+
+- Add streaming generation support for the system Apple model through
+  `AppleFoundationModelsBackend.stream`, `AppleFoundationModelsProvider.stream`,
+  the local `fm` CLI backend, and native iOS/macOS Flutter event channels.
+
 ## 0.1.0-dev.2
 
 - Add `FoundationModelsSchemaEncoder` for mapping the current

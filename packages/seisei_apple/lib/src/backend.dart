@@ -5,6 +5,9 @@ abstract interface class AppleFoundationModelsBackend {
 
   /// Generates a response with the selected Apple mode.
   Future<Object?> respond(AppleFoundationModelsRequest request);
+
+  /// Streams response chunks with the selected Apple mode.
+  Stream<Object?> stream(AppleFoundationModelsRequest request);
 }
 
 /// Apple model mode.

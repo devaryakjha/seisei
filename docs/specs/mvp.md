@@ -145,7 +145,7 @@ The coordinator can call the MVP finished only when all of the following are tru
 - Whether `seisei_ui` ships in the first publish wave or remains pre-release until a real adapter exists.
 - Whether `seisei_apple` expands beyond flat `ObjectSchema` mapping into
   nested objects, optional fields, arrays, unions, and non-string primitives,
-  and whether native streaming should use an event-channel backend.
+  and whether schema streaming should expose typed partial values.
 
 ## Resolved Decisions
 

@@ -22,6 +22,8 @@ This file is the coordinator-owned source of truth for parallel Codex work.
 - A native iOS/macOS Apple Foundation Models bridge for availability, plain
   system-model prompts, schema-backed FoundationModels requests, and flat
   `ObjectSchema` mapping into FoundationModels schema files.
+- System-model streaming through `seisei_apple` backends and native Flutter
+  event channels.
 - Tagflow kept optional and adapter-oriented.
 
 The first wave is complete. New work should start from the current `main` branch and avoid recreating the scaffold.
@@ -100,8 +102,8 @@ Deliver:
 
 Merged into `main` as a Flutter plugin bridge for system-model availability,
 plain prompts, schema-backed FoundationModels generation, and flat
-`ObjectSchema` mapping. PCC, richer schema mapping, and native streaming remain
-future work.
+`ObjectSchema` mapping. A later native expansion added system-model streaming.
+PCC and richer schema mapping remain future work.
 
 ### 7. App Intents and Tool Bridge
 
@@ -160,7 +162,7 @@ instead of republishing the same artifacts.
 Deliver after the generic APIs and native capabilities are ready:
 
 - richer Dart schema-to-FoundationModels mapping
-- native streaming
+- richer typed partial semantics for schema streaming
 - PCC support if a verified API path exists
 - Swift App Intents registration package
 

@@ -36,7 +36,8 @@ The current native bridge is a compileable Flutter plugin scaffold for iOS and m
 - Swift API used: `SystemLanguageModel.default.availability`,
   `LanguageModelSession(model: .default).respond(to:)`, and
   `LanguageModelSession(model: .default).respond(to:schema:)` for
-  FoundationModels schemas.
+  FoundationModels schemas. Streaming uses `streamResponse(to:)` and
+  `streamResponse(to:schema:)` behind a Flutter event channel.
 - Availability guard: FoundationModels requires iOS/macOS `26.0` or newer.
 - PCC availability is reported as false because no native PCC API path has been verified.
 
@@ -53,7 +54,8 @@ The provider should map Apple availability into Seisei capabilities:
 - `FoundationModelsSchemaEncoder`: maps the current flat `seisei_schema`
   `ObjectSchema` contract into FoundationModels schema JSON and provider
   metadata.
-- streaming: deferred until the provider has a backend that emits incremental chunks. The current `FmCliBackend` uses `fm respond --no-stream`, so `seisei_apple` must not advertise `ModelCapability.streaming` yet.
+- streaming: `AppleFoundationModelsProvider.stream` uses backend streams that
+  emit text deltas and a terminal decoded value for the system model.
 - `fm respond --image`: multimodal input support after the core request model includes media segments.
 
 ## Routing Rules
@@ -85,7 +87,9 @@ The router should be able to reject Apple modes before request execution:
   `ObjectSchema` values with required string fields. Nested objects, optional
   fields, arrays, unions, and non-string primitives should wait until
   `seisei_schema` grows matching generic contracts.
-- Streaming: the native API exposes response streams, but the Dart backend does not yet expose event-channel streaming into `GenerationChunk<T>`.
+- Streaming depth: plain text streaming emits deltas. Schema-backed streaming
+  can surface native partial values, but richer typed partial semantics should
+  wait until `seisei_schema` models partial structured output.
 - Podspec release metadata: the repository intentionally does not choose license policy in this workstream, so local plugin metadata is not a release-readiness decision.
 
 ## Validation Commands

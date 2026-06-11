@@ -16,7 +16,9 @@ Future<void> main(List<String> args) async {
 
   final mode = _modeFromArgs(args);
   final schemaSmoke = args.contains('--schema');
-  final expect = _optionValue(args, '--expect') ??
+  final streamSmoke = args.contains('--stream');
+  final explicitExpect = _optionValue(args, '--expect');
+  final expect = explicitExpect ??
       switch ((mode, schemaSmoke)) {
         (AppleFoundationModelsMode.system, true) => 'seisei-schema-ok',
         (AppleFoundationModelsMode.system, false) => 'seisei-ok',
@@ -33,15 +35,20 @@ Future<void> main(List<String> args) async {
     if (arg == '--schema') {
       continue;
     }
+    if (arg == '--stream') {
+      continue;
+    }
     if (arg.startsWith('--mode=') || arg.startsWith('--expect=')) {
       continue;
     }
     promptParts.add(arg);
   }
   final prompt = promptParts.isEmpty
-      ? schemaSmoke
-          ? 'Return JSON with title exactly $expect'
-          : 'Reply with exactly: $expect'
+      ? streamSmoke && explicitExpect == null
+          ? 'Say hello in a short sentence.'
+          : schemaSmoke
+              ? 'Return JSON with title exactly $expect'
+              : 'Reply with exactly: $expect'
       : promptParts.join(' ');
   final backend = FmCliBackend();
   final availability = await backend.availability();
@@ -74,20 +81,35 @@ Future<void> main(List<String> args) async {
   final schemaFile = schemaDirectory == null
       ? null
       : await encoder.writeObjectFile(schema, directory: schemaDirectory);
-  final GenerationResponse<String> response;
+  final String responseValue;
+  var streamDeltas = 0;
   try {
-    response = await client.generate(
-      GenerationRequest<String>(
-        prompt: prompt,
-        privacyPolicy: switch (mode) {
-          AppleFoundationModelsMode.system => PrivacyPolicy.onDeviceOnly,
-          AppleFoundationModelsMode.pcc => PrivacyPolicy.cloudAllowed,
-        },
-        metadata:
-            schemaFile == null ? const {} : encoder.metadataForFile(schemaFile),
-        decode: (rawValue) => _decode(rawValue, schemaSmoke: schemaSmoke),
-      ),
+    final request = GenerationRequest<String>(
+      prompt: prompt,
+      privacyPolicy: switch (mode) {
+        AppleFoundationModelsMode.system => PrivacyPolicy.onDeviceOnly,
+        AppleFoundationModelsMode.pcc => PrivacyPolicy.cloudAllowed,
+      },
+      metadata:
+          schemaFile == null ? const {} : encoder.metadataForFile(schemaFile),
+      decode: (rawValue) => _decode(rawValue, schemaSmoke: schemaSmoke),
     );
+
+    if (streamSmoke) {
+      String? finalValue;
+      await for (final chunk in client.stream(request)) {
+        if (chunk.delta != null) {
+          streamDeltas += 1;
+        }
+        if (chunk.isDone) {
+          finalValue = chunk.value;
+        }
+      }
+      responseValue = finalValue ?? '';
+    } else {
+      final response = await client.generate(request);
+      responseValue = response.value;
+    }
   } on Object catch (error) {
     stderr.writeln('local AFM smoke failed: $error');
     exitCode = 1;
@@ -96,15 +118,26 @@ Future<void> main(List<String> args) async {
     await schemaDirectory?.delete(recursive: true);
   }
 
-  stdout.writeln('providerId: ${response.providerId}');
+  stdout.writeln('providerId: ${provider.id}');
+  if (streamSmoke) {
+    stdout.writeln('streamDeltas: $streamDeltas');
+  }
   if (schemaFile != null) {
     stdout.writeln('schema: ObjectSchema(title)');
   }
-  stdout.writeln('response: ${response.value}');
+  stdout.writeln('response: $responseValue');
 
-  if (response.value.trim() != expect) {
+  if (streamSmoke && explicitExpect == null) {
+    if (streamDeltas == 0 || responseValue.trim().isEmpty) {
+      stderr.writeln('Expected local AFM stream to emit deltas and a value.');
+      exitCode = 1;
+    }
+    return;
+  }
+
+  if (responseValue.trim() != expect) {
     stderr.writeln(
-      'Expected exactly "$expect" from local AFM, got: ${response.value}',
+      'Expected exactly "$expect" from local AFM, got: $responseValue',
     );
     exitCode = 1;
   }
@@ -158,10 +191,12 @@ void _printUsage() {
   );
   stdout
       .writeln('  --schema           Use a Seisei ObjectSchema-backed prompt.');
+  stdout.writeln('  --stream           Verify streaming transport.');
   stdout.writeln('  --expect VALUE      Exact expected response text.');
   stdout.writeln('');
   stdout.writeln('Examples:');
   stdout.writeln('  dart run bin/local_afm_smoke.dart');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --schema');
+  stdout.writeln('  dart run bin/local_afm_smoke.dart --stream');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --mode pcc');
 }

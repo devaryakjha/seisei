@@ -27,7 +27,7 @@ void main() {
     );
     expect(
       availability.capabilities,
-      isNot(contains(ModelCapability.streaming)),
+      contains(ModelCapability.streaming),
     );
   });
 
@@ -215,12 +215,43 @@ void main() {
     );
   });
 
-  test('stream rejects until Apple backend exposes streaming', () async {
+  test('streams deltas and a terminal decoded value', () async {
     final provider = AppleFoundationModelsProvider(
       backend: _FakeAppleBackend(
         availabilityResult: const AppleFoundationModelsAvailability(
           systemAvailable: true,
           pccAvailable: false,
+        ),
+        streamValues: const [
+          'hel',
+          'lo',
+          {'done': true, 'value': 'hello'},
+        ],
+      ),
+    );
+
+    final chunks = await provider
+        .stream(
+          GenerationRequest<String>(
+            prompt: 'Hello',
+            decode: (rawValue) => rawValue! as String,
+          ),
+        )
+        .toList();
+
+    expect(chunks.map((chunk) => chunk.delta), ['hel', 'lo', null]);
+    expect(chunks.last.value, 'hello');
+    expect(chunks.last.isDone, isTrue);
+  });
+
+  test('pcc stream remains availability gated', () async {
+    final provider = AppleFoundationModelsProvider(
+      mode: AppleFoundationModelsMode.pcc,
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: false,
+          reason: 'PCC unavailable.',
         ),
       ),
     );
@@ -234,7 +265,7 @@ void main() {
             ),
           )
           .toList(),
-      throwsA(isA<UnsupportedCapabilityException>()),
+      throwsA(isA<SeiseiException>()),
     );
   });
 
@@ -256,7 +287,7 @@ void main() {
     expect(availability.reason, contains('PCC inference is not available'));
   });
 
-  test('fm backend builds stream and schema response arguments', () async {
+  test('fm backend builds schema response arguments', () async {
     final calls = <List<String>>[];
     final backend = FmCliBackend(
       executable: 'fm',
@@ -271,14 +302,13 @@ void main() {
         prompt: 'Reply with exactly: seisei-ok',
         mode: AppleFoundationModelsMode.pcc,
         schemaPath: '/tmp/schema.json',
-        stream: true,
       ),
     );
 
     expect(response, 'seisei-ok');
     expect(calls.single, [
       'respond',
-      '--stream',
+      '--no-stream',
       '--model',
       'pcc',
       '--schema',
@@ -369,6 +399,51 @@ void main() {
     expect(response, {'answer': 'native-ok'});
   });
 
+  test('method channel backend streams native events', () async {
+    const channel = MethodChannel('test.seisei/stream-method');
+    const streamChannel = EventChannel('test.seisei/stream-events');
+    final binding = flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+    binding.defaultBinaryMessenger.setMockStreamHandler(
+      streamChannel,
+      flutter_test.MockStreamHandler.inline(
+        onListen: (arguments, events) {
+          expect(arguments, {
+            'prompt': 'Hello',
+            'mode': 'system',
+            'schemaPath': '/tmp/schema.json',
+          });
+          events.success('he');
+          events.success('llo');
+          events.success({'done': true, 'value': 'hello'});
+          events.endOfStream();
+        },
+      ),
+    );
+    addTearDown(() {
+      binding.defaultBinaryMessenger.setMockStreamHandler(streamChannel, null);
+    });
+
+    final backend = MethodChannelAppleFoundationModelsBackend(
+      channel: channel,
+      streamChannel: streamChannel,
+    );
+    final chunks = await backend
+        .stream(
+          const AppleFoundationModelsRequest(
+            prompt: 'Hello',
+            mode: AppleFoundationModelsMode.system,
+            schemaPath: '/tmp/schema.json',
+          ),
+        )
+        .toList();
+
+    expect(chunks, [
+      'he',
+      'llo',
+      {'done': true, 'value': 'hello'},
+    ]);
+  });
+
   test('method channel backend rejects unsupported native bridge paths', () {
     final backend = MethodChannelAppleFoundationModelsBackend(
       channel: const MethodChannel('test.seisei/rejects'),
@@ -393,13 +468,26 @@ void main() {
       ),
       throwsUnsupportedError,
     );
+    expect(
+      () => backend.stream(
+        const AppleFoundationModelsRequest(
+          prompt: 'Hello',
+          mode: AppleFoundationModelsMode.pcc,
+        ),
+      ),
+      throwsUnsupportedError,
+    );
   });
 }
 
 final class _FakeAppleBackend implements AppleFoundationModelsBackend {
-  _FakeAppleBackend({required this.availabilityResult});
+  _FakeAppleBackend({
+    required this.availabilityResult,
+    this.streamValues = const [],
+  });
 
   final AppleFoundationModelsAvailability availabilityResult;
+  final List<Object?> streamValues;
   final List<AppleFoundationModelsRequest> requests = [];
 
   @override
@@ -411,5 +499,13 @@ final class _FakeAppleBackend implements AppleFoundationModelsBackend {
   Future<Object?> respond(AppleFoundationModelsRequest request) async {
     requests.add(request);
     return 'ok';
+  }
+
+  @override
+  Stream<Object?> stream(AppleFoundationModelsRequest request) async* {
+    requests.add(request);
+    for (final value in streamValues) {
+      yield value;
+    }
   }
 }

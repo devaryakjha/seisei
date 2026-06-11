@@ -36,19 +36,7 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
 
   @override
   Future<Object?> respond(AppleFoundationModelsRequest request) async {
-    final args = [
-      'respond',
-      if (request.stream) '--stream' else '--no-stream',
-      if (request.mode == AppleFoundationModelsMode.pcc) ...[
-        '--model',
-        'pcc',
-      ],
-      if (request.schemaPath case final schemaPath?) ...[
-        '--schema',
-        schemaPath,
-      ],
-      request.prompt,
-    ];
+    final args = _respondArgs(request, stream: false);
 
     final result = await _processRunner(executable, args);
     if (result.exitCode != 0) {
@@ -61,5 +49,48 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
     }
 
     return '${result.stdout}'.trim();
+  }
+
+  @override
+  Stream<Object?> stream(AppleFoundationModelsRequest request) async* {
+    final args = _respondArgs(request, stream: true);
+    final process = await Process.start(executable, args);
+    final chunks = <String>[];
+
+    await for (final text in process.stdout.transform(systemEncoding.decoder)) {
+      chunks.add(text);
+      yield text;
+    }
+
+    final stderr =
+        await process.stderr.transform(systemEncoding.decoder).join();
+    final exitCode = await process.exitCode;
+    if (exitCode != 0) {
+      throw ProcessException(executable, args, stderr, exitCode);
+    }
+
+    yield {
+      'done': true,
+      'value': chunks.join().trim(),
+    };
+  }
+
+  List<String> _respondArgs(
+    AppleFoundationModelsRequest request, {
+    required bool stream,
+  }) {
+    return [
+      'respond',
+      if (stream) '--stream' else '--no-stream',
+      if (request.mode == AppleFoundationModelsMode.pcc) ...[
+        '--model',
+        'pcc',
+      ],
+      if (request.schemaPath case final schemaPath?) ...[
+        '--schema',
+        schemaPath,
+      ],
+      request.prompt,
+    ];
   }
 }

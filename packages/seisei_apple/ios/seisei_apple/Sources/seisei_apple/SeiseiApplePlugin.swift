@@ -2,7 +2,9 @@ import Flutter
 import FoundationModels
 import UIKit
 
-public class SeiseiApplePlugin: NSObject, FlutterPlugin {
+public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
+  private var streamTask: Task<Void, Never>?
+
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(
       name: "dev.jha.seisei/seisei_apple",
@@ -10,6 +12,12 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin {
     )
     let instance = SeiseiApplePlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
+
+    let streamChannel = FlutterEventChannel(
+      name: "dev.jha.seisei/seisei_apple/stream",
+      binaryMessenger: registrar.messenger()
+    )
+    streamChannel.setStreamHandler(instance)
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -21,6 +29,109 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin {
     default:
       result(FlutterMethodNotImplemented)
     }
+  }
+
+  public func onListen(
+    withArguments arguments: Any?,
+    eventSink events: @escaping FlutterEventSink
+  ) -> FlutterError? {
+    guard let arguments = arguments as? [String: Any],
+          let prompt = arguments["prompt"] as? String else {
+      return FlutterError(
+        code: "invalid_arguments",
+        message: "Expected a string prompt.",
+        details: nil
+      )
+    }
+
+    let mode = arguments["mode"] as? String ?? "system"
+    guard mode == "system" else {
+      return FlutterError(
+        code: "unsupported_mode",
+        message: "The native Apple bridge only supports the system model.",
+        details: nil
+      )
+    }
+
+    guard #available(iOS 26.0, *) else {
+      return FlutterError(
+        code: "foundation_models_unavailable",
+        message: "FoundationModels requires iOS 26.0 or newer.",
+        details: nil
+      )
+    }
+
+    streamTask?.cancel()
+    streamTask = Task {
+      do {
+        let session = LanguageModelSession(model: .default)
+        if let schemaPath = arguments["schemaPath"] as? String {
+          let schema = try self.schema(at: schemaPath)
+          var latestValue: Any?
+          let stream = session.streamResponse(to: prompt, schema: schema)
+          for try await partial in stream {
+            if Task.isCancelled {
+              return
+            }
+            let value = self.flutterValue(from: partial.content)
+            latestValue = value
+            await MainActor.run {
+              events(value)
+            }
+          }
+          await MainActor.run {
+            events([
+              "done": true,
+              "value": latestValue ?? NSNull(),
+            ])
+            events(FlutterEndOfEventStream)
+          }
+          return
+        }
+
+        var previousContent = ""
+        let stream = session.streamResponse(to: prompt)
+        for try await partial in stream {
+          if Task.isCancelled {
+            return
+          }
+          let content = partial.content
+          let delta: String
+          if content.hasPrefix(previousContent) {
+            delta = String(content.dropFirst(previousContent.count))
+          } else {
+            delta = content
+          }
+          previousContent = content
+          await MainActor.run {
+            events(delta)
+          }
+        }
+        await MainActor.run {
+          events([
+            "done": true,
+            "value": previousContent,
+          ])
+          events(FlutterEndOfEventStream)
+        }
+      } catch {
+        await MainActor.run {
+          events(FlutterError(
+            code: "generation_failed",
+            message: String(describing: error),
+            details: nil
+          ))
+        }
+      }
+    }
+
+    return nil
+  }
+
+  public func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    streamTask?.cancel()
+    streamTask = nil
+    return nil
   }
 
   private func availability() -> [String: Any] {

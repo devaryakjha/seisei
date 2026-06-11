@@ -41,6 +41,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
     final capabilities = {
       ModelCapability.structuredGeneration,
+      if (mode == AppleFoundationModelsMode.system) ModelCapability.streaming,
       if (mode == AppleFoundationModelsMode.system)
         ModelCapability.onDeviceInference,
     };
@@ -71,21 +72,23 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   @override
   Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
     await _check(request, additionalCapabilities: {ModelCapability.streaming});
-    final rawValue = await backend.respond(
+    await for (final rawValue in backend.stream(
       AppleFoundationModelsRequest(
         prompt: request.prompt,
         mode: mode,
         schemaPath: _schemaPath(request),
         stream: true,
       ),
-    );
-
-    yield GenerationChunk<T>(
-      providerId: id,
-      value: request.decode(rawValue),
-      rawValue: rawValue,
-      isDone: true,
-    );
+    )) {
+      final done = _isDone(rawValue);
+      yield GenerationChunk<T>(
+        providerId: id,
+        delta: rawValue is String && !done ? rawValue : null,
+        value: done ? request.decode(_doneValue(rawValue)) : null,
+        rawValue: rawValue,
+        isDone: done,
+      );
+    }
   }
 
   Future<void> _check<T>(
@@ -125,6 +128,14 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
   String? _schemaPath<T>(GenerationRequest<T> request) {
     return request.metadata[schemaPathMetadataKey] as String?;
+  }
+
+  bool _isDone(Object? rawValue) {
+    return rawValue is Map && rawValue['done'] == true;
+  }
+
+  Object? _doneValue(Object? rawValue) {
+    return rawValue is Map ? rawValue['value'] : rawValue;
   }
 
   String _unavailableReason(AppleFoundationModelsAvailability availability) {
