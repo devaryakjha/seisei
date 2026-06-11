@@ -37,6 +37,11 @@ final class AppleAppIntentSourceException implements Exception {
 
 /// Generates static Swift source for optional Apple App Intent wrappers.
 abstract final class AppleAppIntentSourceGenerator {
+  /// Returns the default Swift App Intent type name for an app action id.
+  static String typeNameForActionId(String actionId) {
+    return _typeNameFromActionId(actionId);
+  }
+
   /// Returns Swift source for a generated App Intent wrapper around [action].
   ///
   /// The generated source is intentionally static: host apps must write it into
@@ -50,7 +55,7 @@ abstract final class AppleAppIntentSourceGenerator {
     String accessLevel = 'public',
   }) {
     final issues = <String>[];
-    final resolvedTypeName = typeName ?? _typeNameFromActionId(action.id);
+    final resolvedTypeName = typeName ?? typeNameForActionId(action.id);
     if (!_isSwiftIdentifier(resolvedTypeName)) {
       issues.add('typeName: Swift type names must be valid identifiers');
     }

@@ -42,6 +42,8 @@ Apple's current developer material says App Intents expose app actions and data 
 - `AppleAppIntentSourceGenerator`: a pure Dart source generator that emits
   conservative scalar Swift `AppIntent` and `AppShortcutsProvider` wrappers
   from `AppActionDefinition` JSON schema data.
+- `AppleAppIntentManifest` and `generate_apple_intents`: a repeatable
+  manifest-driven source generation path for host projects.
 
 The package depends on `seisei` only.
 
@@ -73,6 +75,8 @@ Later native work can still:
 - Package tests cover tool-definition mapping, tool-call mapping, fake bridge
   invocation, missing-action failures, Dart-side Swift source generation, and
   stable source-generation failures for unsupported parameter schemas.
+- Manifest generation tests cover JSON-compatible action manifests and generated
+  Swift file output.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

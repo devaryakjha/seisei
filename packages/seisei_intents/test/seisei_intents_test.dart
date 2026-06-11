@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:seisei/seisei.dart';
 import 'package:seisei_intents/seisei_intents.dart';
 import 'package:test/test.dart';
@@ -203,6 +205,86 @@ void main() {
           containsAll([
             'payload: unsupported App Intent parameter type object',
             'invalid-name: Swift parameter names must be valid identifiers',
+          ]),
+        ),
+      ),
+    );
+  });
+
+  test('writes Swift App Intent sources from a manifest', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'seisei_intents_manifest_test_',
+    );
+    addTearDown(() async {
+      if (await directory.exists()) {
+        await directory.delete(recursive: true);
+      }
+    });
+
+    final manifest = AppleAppIntentManifest.fromJson(const {
+      'accessLevel': 'public',
+      'actions': [
+        {
+          'id': 'create_note',
+          'title': 'Create Note',
+          'description': 'Create a note in the host app.',
+          'typeName': 'CreateNoteIntent',
+          'parameters': {
+            'type': 'object',
+            'properties': {
+              'title': {'type': 'string', 'title': 'Title'},
+            },
+            'required': ['title'],
+          },
+          'shortcut': {
+            'phrases': ['Create a note in \\(.applicationName)'],
+            'shortTitle': 'Create Note',
+            'systemImageName': 'note.text',
+          },
+        },
+      ],
+    });
+
+    final files = await AppleAppIntentManifestGenerator.writeSources(
+      manifest,
+      outputDirectory: directory,
+    );
+
+    expect(files, hasLength(1));
+    expect(files.single.path.endsWith('CreateNoteIntent.swift'), isTrue);
+    final source = await files.single.readAsString();
+    expect(source, contains('public struct CreateNoteIntent: AppIntent'));
+    expect(source, contains('actionID: "create_note"'));
+    expect(source, contains('"title": .string(title)'));
+    expect(
+      await File('${directory.path}/CreateNoteIntent.swift').exists(),
+      isTrue,
+    );
+  });
+
+  test('manifest parser reports stable errors', () {
+    expect(
+      () => AppleAppIntentManifest.fromJson(const {
+        'actions': [
+          {
+            'id': 'create_note',
+            'description': 'Create a note in the host app.',
+            'parameters': {'type': 'array'},
+            'shortcut': {
+              'phrases': ['Create a note in \\(.applicationName)', 42],
+              'shortTitle': 'Create Note',
+            },
+          },
+        ],
+      }),
+      throwsA(
+        isA<AppleAppIntentManifestException>().having(
+          (error) => error.issues,
+          'issues',
+          containsAll([
+            'actions[0].title: expected string',
+            'actions[0].shortcut.phrases[1]: expected string',
+            'actions[0].shortcut.systemImageName: expected string',
           ]),
         ),
       ),

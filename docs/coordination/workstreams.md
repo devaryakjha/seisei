@@ -118,9 +118,10 @@ Merged into `main` as generic pure-Dart app-action contracts. Native Swift App
 Intents registration later shipped as optional Swift helpers, and the native
 package now includes a build-time Swift source generator for scalar wrapper
 source. `seisei_intents` later added pure Dart generation of the same scalar
-Swift wrapper source from `AppActionDefinition` JSON schema data. Flutter
-runtime invocation from those generated wrappers and richer App Entity/App Enum
-wrappers remain future plugin/native work.
+Swift wrapper source from `AppActionDefinition` JSON schema data, then added a
+manifest-driven executable that writes generated Swift files for host targets.
+Flutter runtime invocation from those generated wrappers and richer App
+Entity/App Enum wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
 
@@ -162,7 +163,9 @@ FoundationModels `{"type":"null"}` `anyOf` mapping.
 `SeiseiAppleIntents` later added a Swift source generator for build-time scalar
 `AppIntent` wrappers and matching generated-style compile tests. `seisei_intents`
 later advanced to `0.1.0-dev.1` for Dart-side scalar Swift source generation
-from generic app-action JSON schemas.
+from generic app-action JSON schemas, then to `0.1.0-dev.2` for
+manifest-driven Swift file generation and the `generate_apple_intents`
+executable.
 
 ### 9. Optional Tagflow Adapter Path
 

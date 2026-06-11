@@ -1,6 +1,6 @@
 name: seisei_intents
 description: Generic app action and intent bridge contracts for Seisei tools.
-version: 0.1.0-dev.1
+version: 0.1.0-dev.2
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:
@@ -13,6 +13,9 @@ topics:
 environment:
   sdk: ">=3.6.0 <4.0.0"
 resolution: workspace
+
+executables:
+  generate_apple_intents:
 
 dependencies:
   seisei: ^0.1.0-dev.0

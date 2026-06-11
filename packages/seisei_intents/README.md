@@ -40,3 +40,39 @@ package target that Xcode compiles and indexes. The generator intentionally
 supports only `string`, `integer`, `number`, and `boolean` JSON schema
 parameters, with unsupported shapes reported as
 `AppleAppIntentSourceException`.
+
+For a project-level generation step, create a manifest:
+
+```json
+{
+  "accessLevel": "public",
+  "actions": [
+    {
+      "id": "create_note",
+      "title": "Create Note",
+      "description": "Create a note in the host app.",
+      "typeName": "CreateNoteIntent",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string", "title": "Title" }
+        },
+        "required": ["title"]
+      },
+      "shortcut": {
+        "phrases": ["Create a note in \\(.applicationName)"],
+        "shortTitle": "Create Note",
+        "systemImageName": "note.text"
+      }
+    }
+  ]
+}
+```
+
+Then generate Swift files into the host target:
+
+```sh
+dart run seisei_intents:generate_apple_intents \
+  --manifest seisei_intents.json \
+  --out ios/Runner/GeneratedIntents
+```

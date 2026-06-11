@@ -65,12 +65,15 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `AppleAppIntentSourceGenerator` in `seisei_intents`: pure Dart source
   generation from generic `AppActionDefinition` JSON schema data into the same
   conservative Swift wrapper shape.
+- `generate_apple_intents`: a Dart executable that writes those generated Swift
+  files from a JSON manifest into a host app, extension, framework, or Swift
+  package target.
 
 ## Boundary Decisions
 
 - `seisei_intents` remains pure Dart and owns generic action contracts plus
-  static Swift source generation. It does not import Apple frameworks or perform
-  native registration.
+  static Swift source generation from code or manifests. It does not import
+  Apple frameworks or perform native registration.
 - `seisei_apple` remains focused on Foundation Models and Flutter platform
   channels; App Intents are not added there.
 - The new package is Swift-only and optional. It is not part of the Dart pub
@@ -109,6 +112,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `seisei_intents` tests prove Dart-side generation from
   `AppActionDefinition` data and stable rejection of unsupported parameter
   schemas.
+- Manifest tests prove generated Swift files can be written from a
+  JSON-compatible action manifest.
 - Repository docs stop describing all native App Intents registration as purely
   future work and instead describe the new minimal native path plus remaining
   gaps.
