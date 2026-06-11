@@ -18,8 +18,9 @@ tagged `anyOf` mapping for discriminated object unions, and explicit
 partial stream snapshots.
 `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental optional
 Tagflow document adapter.
-`seisei_intents` is at `0.1.0-dev.1` for Dart-side scalar Apple App Intent
-Swift source generation from generic app-action JSON schemas.
+`seisei_intents` is at `0.1.0-dev.2` for Dart-side scalar Apple App Intent
+Swift source generation from generic app-action JSON schemas and a
+manifest-driven generation executable.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -57,7 +58,7 @@ unless the release process is deliberately changed.
 - [x] UI blocks can be validated before rendering.
 - [x] Tagflow remains optional and is isolated in `seisei_tagflow`.
 - [x] Native App Intent helper claims are backed by Swift compile tests and
-      `seisei_intents` source-generation tests.
+      `seisei_intents` source-generation and manifest-generation tests.
 
 ## Dry-Run Evidence
 
@@ -92,17 +93,19 @@ Last verified on 2026-06-12 from `main`:
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
-- `seisei_intents` `0.1.0-dev.1` was published successfully.
+- `seisei_intents` `0.1.0-dev.2` was published successfully.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent` /
   `AppShortcutsProvider` compile tests.
 - `seisei_intents` tests passed locally with Dart-side Swift source generation
-  assertions and stable source-generation failures for unsupported parameter
-  schemas.
-- GitHub Actions `Validate` run `27383351970` completed successfully on the
-  default branch for `4de69e2`.
+  assertions, manifest-driven Swift file generation, and stable
+  source-generation failures for unsupported parameter schemas.
+- `dart run seisei_intents:generate_apple_intents --manifest ... --out ...`
+  generated a `CreateNoteIntent.swift` file from a temporary manifest.
+- GitHub Actions `Validate` run `27383829566` completed successfully on the
+  default branch for `cbf5a6f`.
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
-  `seisei_intents` latest as `0.1.0-dev.1`; `seisei_router`, `seisei_ui`, and
+  `seisei_intents` latest as `0.1.0-dev.2`; `seisei_router`, `seisei_ui`, and
   `seisei_tagflow` remain at `0.1.0-dev.0`.
