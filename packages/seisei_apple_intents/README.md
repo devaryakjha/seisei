@@ -18,6 +18,7 @@ This package is the smallest real native registration path that fits Seisei:
 - `SeiseiAppIntentInvocation`
 - `SeiseiAppIntentResult`
 - `SeiseiAppIntentExecutor`
+- `SeiseiAppIntentExecutorError`
 - `SeiseiAppIntentDependencies.configure(...)`
 - `SeiseiAppIntentBridge.perform(...)`
 - `SeiseiAppIntentSourceGenerator.source(...)`
@@ -133,7 +134,10 @@ let source = SeiseiAppIntentSourceGenerator.source(
 
 The generated source is still ordinary Swift that must be written into an app,
 extension, framework, or package target compiled by Xcode so App Intents can
-index it at build time.
+index it at build time. Generated wrappers include an executor-injection
+initializer for host tests and a `seiseiInvocation()` helper so apps can verify
+payload construction without directly calling `perform()` outside Apple's App
+Intents runtime.
 
 ## Validation
 

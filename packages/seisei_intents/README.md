@@ -52,6 +52,15 @@ supports only `string`, `integer`, `number`, `boolean`, and string `enum` JSON
 schema parameters, with unsupported shapes reported as
 `AppleAppIntentSourceException`.
 
+Generated wrappers include:
+
+- a default `init()` with an unconfigured executor fallback;
+- an initializer that accepts `executor: SeiseiAppIntentExecutor` for host
+  tests and app-owned wiring;
+- a dependency-free `seiseiInvocation()` helper that builds the exact
+  `SeiseiAppIntentInvocation` payload without entering Apple's App Intents
+  runtime.
+
 For a project-level generation step, create a manifest:
 
 ```json

@@ -63,6 +63,16 @@ public final class SeiseiAppIntentExecutor: @unchecked Sendable {
     public func run(_ invocation: SeiseiAppIntentInvocation) async throws -> SeiseiAppIntentResult {
         try await runHandler(invocation)
     }
+
+    public static func unconfigured(actionID: String) -> SeiseiAppIntentExecutor {
+        SeiseiAppIntentExecutor { _ in
+            throw SeiseiAppIntentExecutorError.unconfigured(actionID: actionID)
+        }
+    }
+}
+
+public enum SeiseiAppIntentExecutorError: Error, Sendable, Equatable {
+    case unconfigured(actionID: String)
 }
 
 public enum SeiseiAppIntentDependencies {
@@ -256,27 +266,38 @@ public enum SeiseiAppIntentSourceGenerator {
         lines.append("    @AppDependency")
         lines.append("    private var executor: SeiseiAppIntentExecutor")
         lines.append("")
-        lines.append("    \(accessLevel) init() {}")
+        lines.append("    \(accessLevel) init() {")
+        lines.append("        self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: \(definition.actionID.swiftStringLiteral)))")
+        lines.append("    }")
         lines.append("")
 
         if !definition.parameters.isEmpty {
             lines.append(
-                "    \(accessLevel) init(\(definition.parameters.map(\.initializerParameter).joined(separator: ", "))) {"
+                "    \(accessLevel) init(\((definition.parameters.map(\.initializerParameter) + ["executor: SeiseiAppIntentExecutor"]).joined(separator: ", "))) {"
             )
             for parameter in definition.parameters {
                 lines.append("        self.\(parameter.name) = \(parameter.name)")
             }
+            lines.append("        self._executor = AppDependency(default: executor)")
+            lines.append("    }")
+            lines.append("")
+        } else {
+            lines.append("    \(accessLevel) init(executor: SeiseiAppIntentExecutor) {")
+            lines.append("        self._executor = AppDependency(default: executor)")
             lines.append("    }")
             lines.append("")
         }
 
         lines.append("    \(accessLevel) func perform() async throws -> some IntentResult {")
-        lines.append("        _ = try await SeiseiAppIntentBridge.perform(")
-        lines.append("            actionID: \(definition.actionID.swiftStringLiteral),")
-        lines.append("            arguments: \(definition.argumentsExpression),")
-        lines.append("            executor: executor")
-        lines.append("        )")
+        lines.append("        _ = try await executor.run(seiseiInvocation())")
         lines.append("        return .result()")
+        lines.append("    }")
+        lines.append("")
+        lines.append("    \(accessLevel) func seiseiInvocation() -> SeiseiAppIntentInvocation {")
+        lines.append("        SeiseiAppIntentBridge.invocation(")
+        lines.append("            actionID: \(definition.actionID.swiftStringLiteral),")
+        lines.append("            arguments: \(definition.argumentsExpression)")
+        lines.append("        )")
         lines.append("    }")
         lines.append("}")
 

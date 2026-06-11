@@ -59,13 +59,14 @@ The minimal native registration path now lives in the optional Swift package
 handwritten Swift `AppIntent` types, host-owned executor injection through
 `AppDependencyManager`, and host-defined `AppShortcutsProvider` /
 `AppIntentsPackage` roots. It also includes a build-time Swift source generator
-for a conservative scalar and string-enum parameter wrapper subset.
+for a conservative scalar and string-enum parameter wrapper subset, including
+executor-injection initializers and dependency-free invocation payload helpers.
 
 Later native work can still:
 
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
-- bridge `perform()` calls into Flutter/Dart or host-native handlers;
+- bridge `perform()` calls into Flutter/Dart through a host app runtime path;
 - map App Entities and richer platform-specific parameters to future typed
   Seisei action/entity contracts when needed;
 - keep `seisei_intents` as the source of generic Dart-side behavior.
@@ -77,7 +78,8 @@ Later native work can still:
   invocation, missing-action failures, Dart-side Swift source generation, and
   stable source-generation failures for unsupported parameter schemas.
 - Manifest generation tests cover JSON-compatible action manifests and generated
-  Swift file output, including string enum parameter generation.
+  Swift file output, including string enum parameter generation and generated
+  invocation helper wiring.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

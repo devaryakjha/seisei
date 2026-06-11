@@ -105,11 +105,11 @@ into FoundationModels schema files including field-level explicit null and
 discriminated object unions, system-model streaming with typed partial
 snapshots and path-level structured patches for safe schema-backed chunks, and a
 minimal native App Intents registration helper package for handwritten Swift
-intents and generated-source scalar/string-enum wrappers from either Swift
-definitions or Dart `AppActionDefinition` data or a manifest-driven Dart
-executable, plus an experimental optional Tagflow document adapter for
-`seisei_ui` blocks.
-PCC generation, Flutter runtime invocation from generated App Intents, rich App
-Entity wrappers, richer platform-specific intent parameters, cloud providers,
-production RAG, provider-native patch streams, and broader renderer integration
-beyond the narrow Tagflow content adapter are not implemented yet.
+intents and generated-source scalar/string-enum wrappers with executor
+injection and testable invocation payload helpers from either Swift definitions
+or Dart `AppActionDefinition` data or a manifest-driven Dart executable, plus an
+experimental optional Tagflow document adapter for `seisei_ui` blocks.
+PCC generation, a full Flutter runtime bridge from Apple's App Intents runtime,
+rich App Entity wrappers, richer platform-specific intent parameters, cloud
+providers, production RAG, provider-native patch streams, and broader renderer
+integration beyond the narrow Tagflow content adapter are not implemented yet.

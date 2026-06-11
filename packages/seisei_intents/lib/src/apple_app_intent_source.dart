@@ -113,18 +113,34 @@ abstract final class AppleAppIntentSourceGenerator {
       ..add('    @AppDependency')
       ..add('    private var executor: SeiseiAppIntentExecutor')
       ..add('')
-      ..add('    $accessLevel init() {}')
+      ..add('    $accessLevel init() {')
+      ..add(
+        '        self._executor = AppDependency(default: '
+        'SeiseiAppIntentExecutor.unconfigured(actionID: '
+        '${_swiftStringLiteral(action.id)}))',
+      )
+      ..add('    }')
       ..add('');
 
     if (parameters.isNotEmpty) {
       lines.add(
         '    $accessLevel init('
-        '${parameters.map((parameter) => parameter.initializerParameter).join(', ')}) {',
+        '${[
+          ...parameters.map((parameter) => parameter.initializerParameter),
+          'executor: SeiseiAppIntentExecutor',
+        ].join(', ')}) {',
       );
       for (final parameter in parameters) {
         lines.add('        self.${parameter.name} = ${parameter.name}');
       }
       lines
+        ..add('        self._executor = AppDependency(default: executor)')
+        ..add('    }')
+        ..add('');
+    } else {
+      lines
+        ..add('    $accessLevel init(executor: SeiseiAppIntentExecutor) {')
+        ..add('        self._executor = AppDependency(default: executor)')
         ..add('    }')
         ..add('');
     }
@@ -133,12 +149,18 @@ abstract final class AppleAppIntentSourceGenerator {
       ..add(
         '    $accessLevel func perform() async throws -> some IntentResult {',
       )
-      ..add('        _ = try await SeiseiAppIntentBridge.perform(')
-      ..add('            actionID: ${_swiftStringLiteral(action.id)},')
-      ..add('            arguments: ${_argumentsExpression(parameters)},')
-      ..add('            executor: executor')
-      ..add('        )')
+      ..add('        _ = try await executor.run(seiseiInvocation())')
       ..add('        return .result()')
+      ..add('    }')
+      ..add('')
+      ..add(
+        '    $accessLevel func seiseiInvocation() -> '
+        'SeiseiAppIntentInvocation {',
+      )
+      ..add('        SeiseiAppIntentBridge.invocation(')
+      ..add('            actionID: ${_swiftStringLiteral(action.id)},')
+      ..add('            arguments: ${_argumentsExpression(parameters)}')
+      ..add('        )')
       ..add('    }')
       ..add('}');
 

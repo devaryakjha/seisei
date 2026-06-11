@@ -1,3 +1,8 @@
+## 0.1.0-dev.4
+
+- Generate App Intent wrappers with executor-injection initializers,
+  unconfigured executor fallbacks, and testable `seiseiInvocation()` helpers.
+
 ## 0.1.0-dev.3
 
 - Add generated Apple `AppEnum` support for string enum JSON schema

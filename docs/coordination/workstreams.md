@@ -117,12 +117,14 @@ Deliver:
 Merged into `main` as generic pure-Dart app-action contracts. Native Swift App
 Intents registration later shipped as optional Swift helpers, and the native
 package now includes a build-time Swift source generator for scalar and string
-enum wrapper
-source. `seisei_intents` later added pure Dart generation of the same scalar
-and string-enum Swift wrapper source from `AppActionDefinition` JSON schema
-data, then added a manifest-driven executable that writes generated Swift files
-for host targets. Flutter runtime invocation from those generated wrappers and
-richer App Entity/platform-specific wrappers remain future plugin/native work.
+enum wrapper source. `seisei_intents` later added pure Dart generation of the
+same scalar and string-enum Swift wrapper source from `AppActionDefinition`
+JSON schema data, then added a manifest-driven executable that writes generated
+Swift files for host targets. Generated wrappers now include executor-injection
+initializers and dependency-free `seiseiInvocation()` helpers so host apps can
+test payload construction outside Apple's App Intents runtime. A full Flutter
+runtime bridge from Apple's App Intents runtime and richer App
+Entity/platform-specific wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
 

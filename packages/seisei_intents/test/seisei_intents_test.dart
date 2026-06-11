@@ -147,6 +147,17 @@ void main() {
       source,
       contains(r'"priority": priority.map { .integer($0) } ?? .null'),
     );
+    expect(
+      source,
+      contains(
+        'self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: "create_note"))',
+      ),
+    );
+    expect(source, contains('executor: SeiseiAppIntentExecutor'));
+    expect(
+      source,
+      contains('self._executor = AppDependency(default: executor)'),
+    );
     expect(source, contains('"score": .number(score)'));
     expect(source, contains('"archived": .boolean(archived)'));
     expect(

@@ -55,13 +55,16 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `SeiseiAppIntentInvocation`: native action id, arguments, and metadata;
 - `SeiseiAppIntentResult`: native result value plus metadata;
 - `SeiseiAppIntentExecutor`: a host-owned async executor closure wrapper;
+- `SeiseiAppIntentExecutorError`: stable error for generated wrappers that are
+  executed before a host configures an executor;
 - `SeiseiAppIntentDependencies.configure(...)`: helper that registers the
   executor with `AppDependencyManager`;
 - `SeiseiAppIntentBridge.perform(...)`: helper used by handwritten Swift
   intents to forward execution into the registered executor;
 - `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
   `AppIntent`, `AppShortcutsProvider`, and string-backed `AppEnum` source for a
-  conservative parameter subset.
+  conservative parameter subset with executor-injection initializers and
+  dependency-free invocation payload helpers.
 - `AppleAppIntentSourceGenerator` in `seisei_intents`: pure Dart source
   generation from generic `AppActionDefinition` JSON schema data into the same
   conservative Swift wrapper shape, including string enum JSON schema
@@ -91,7 +94,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - No direct Dart `ObjectSchema`-to-Swift generator in this change; the shipped
   Dart generator consumes generic `AppActionDefinition.parameters` JSON schema
   data.
-- No Flutter method-channel invocation from `perform()` in this change.
+- No full Flutter method-channel invocation from Apple's App Intents runtime in
+  this change. Generated wrappers now build testable invocation payloads and
+  accept host-owned executors, but the app still owns the final runtime bridge.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
   generators cover scalar string, integer, number, boolean, and string enum
@@ -110,7 +115,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - a handwritten `AppIntentsPackage` compiles and exposes included packages.
   - generated source contains stable `AppIntent`, `AppShortcutsProvider`, and
     string-backed `AppEnum` wrappers for supported parameters;
-  - a generated-style wrapper shape compiles with optional parameter forwarding.
+  - a generated-style wrapper shape compiles with optional parameter forwarding;
+  - generated-style wrappers can build `SeiseiAppIntentInvocation` payloads
+    without directly entering Apple's App Intents runtime.
 - `seisei_intents` tests prove Dart-side generation from
   `AppActionDefinition` data and stable rejection of unsupported parameter
   schemas.

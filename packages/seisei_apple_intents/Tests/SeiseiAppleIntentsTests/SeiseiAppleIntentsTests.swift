@@ -100,6 +100,10 @@ struct SeiseiAppleIntentsTests {
         #expect(source.contains("public var priority: Int?"))
         #expect(source.contains("\"title\": .string(title)"))
         #expect(source.contains("\"priority\": priority.map { .integer($0) } ?? .null"))
+        #expect(source.contains("self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: \"create_note\"))"))
+        #expect(source.contains("executor: SeiseiAppIntentExecutor"))
+        #expect(source.contains("self._executor = AppDependency(default: executor)"))
+        #expect(source.contains("public func seiseiInvocation() -> SeiseiAppIntentInvocation"))
         #expect(source.contains("public struct CreateNoteIntentShortcuts: AppShortcutsProvider"))
         #expect(source.contains("phrases: [\"Create a note in \\\\(.applicationName)\"]"))
     }
@@ -162,6 +166,21 @@ struct SeiseiAppleIntentsTests {
         #expect(intent.priority == nil)
     }
 
+    @Test("generated-style AppIntent builds a testable invocation")
+    func generatedStyleIntentBuildsInvocation() {
+        let intent = GeneratedStyleCreateNoteIntent(
+            title: "Roadmap",
+            priority: 2,
+            executor: SeiseiAppIntentExecutor { _ in SeiseiAppIntentResult() }
+        )
+
+        let invocation = intent.seiseiInvocation()
+
+        #expect(invocation.id == "create_note")
+        #expect(invocation.arguments["title"] == .string("Roadmap"))
+        #expect(invocation.arguments["priority"] == .integer(2))
+    }
+
     @Test("generated-style AppIntent enum wrappers compile")
     func generatedStyleEnumIntentCompiles() {
         let intent = GeneratedStyleUpdateNoteIntent(
@@ -211,9 +230,7 @@ private struct CreateNoteIntent: AppIntent {
     private var executor: SeiseiAppIntentExecutor
 
     init() {
-        self._executor = AppDependency(default: SeiseiAppIntentExecutor { _ in
-            throw TestIntentError.unconfiguredExecutor
-        })
+        self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: "create_note"))
     }
 
     init(title: String, executor: SeiseiAppIntentExecutor) {
@@ -274,15 +291,18 @@ private struct GeneratedStyleCreateNoteIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        _ = try await SeiseiAppIntentBridge.perform(
+        _ = try await executor.run(seiseiInvocation())
+        return .result()
+    }
+
+    func seiseiInvocation() -> SeiseiAppIntentInvocation {
+        SeiseiAppIntentBridge.invocation(
             actionID: "create_note",
             arguments: [
                 "title": .string(title),
                 "priority": priority.map { .integer($0) } ?? .null,
-            ],
-            executor: executor
+            ]
         )
-        return .result()
     }
 }
 
@@ -322,9 +342,7 @@ private struct GeneratedStyleUpdateNoteIntent: AppIntent {
     private var executor: SeiseiAppIntentExecutor
 
     init() {
-        self._executor = AppDependency(default: SeiseiAppIntentExecutor { _ in
-            throw TestIntentError.unconfiguredExecutor
-        })
+        self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: "update_note"))
     }
 
     init(status: GeneratedStyleNoteStatus, executor: SeiseiAppIntentExecutor) {
@@ -333,12 +351,15 @@ private struct GeneratedStyleUpdateNoteIntent: AppIntent {
     }
 
     func perform() async throws -> some IntentResult {
-        _ = try await SeiseiAppIntentBridge.perform(
-            actionID: "update_note",
-            arguments: ["status": .string(status.rawValue)],
-            executor: executor
-        )
+        _ = try await executor.run(seiseiInvocation())
         return .result()
+    }
+
+    func seiseiInvocation() -> SeiseiAppIntentInvocation {
+        SeiseiAppIntentBridge.invocation(
+            actionID: "update_note",
+            arguments: ["status": .string(status.rawValue)]
+        )
     }
 }
 
