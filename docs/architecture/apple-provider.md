@@ -106,10 +106,10 @@ The router should be able to reject Apple modes before request execution:
   string patterns, arrays, and optional fields. Explicit-null unions,
   discriminated unions, and non-verified schema forms should stay out of the
   Apple encoder until they are proven against the local SDK.
-- Streaming depth: plain text streaming emits deltas. Schema-backed streaming
-  can surface native partial values in `GenerationChunk.rawValue`; providers
-  that can safely decode partial snapshots may expose typed snapshots in
-  `GenerationChunk.partialValue`.
+- Streaming depth: plain text streaming emits deltas. Schema-backed Apple
+  streams preserve native partial snapshots in `GenerationChunk.rawValue` and
+  decode safe intermediate structured snapshots into
+  `GenerationChunk.partialValue`. Path-level patch events remain future work.
 - Podspec release metadata: the repository intentionally does not choose license policy in this workstream, so local plugin metadata is not a release-readiness decision.
 
 ## Validation Commands

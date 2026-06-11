@@ -142,6 +142,8 @@ stream snapshots and fake-provider partial scripting.
 mapping.
 `seisei_tagflow` later shipped at `0.1.0-dev.0` as an experimental optional
 Tagflow document adapter outside the core package line.
+`seisei_apple` later advanced to `0.1.0-dev.7` for typed partial decoding of
+safe schema-backed streaming snapshots.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -180,7 +182,7 @@ partial chunk work:
 
 - explicit-null or discriminated unions beyond the current field-level `anyOf`
   support
-- provider-specific typed partial decoding and path-level structured patches
+- path-level structured patches
 - PCC support if a verified API path exists
 - generated Swift App Intent wrappers or tighter Flutter integration above the
   handwritten registration helpers

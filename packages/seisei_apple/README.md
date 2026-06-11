@@ -30,7 +30,10 @@ That command uses `FmCliBackend`, `AppleFoundationModelsProvider`, and
 prints `providerId: apple_system` and `response: seisei-ok`. The `--schema`
 variant also writes a temporary `ObjectSchema` FoundationModels schema file and
 expects `response: seisei-schema-ok`. The `--stream` variant verifies that
-real streaming chunks arrive and that Seisei emits a terminal value.
+real streaming chunks arrive and that Seisei emits a terminal value. For
+schema-backed streams, safe intermediate structured snapshots are also decoded
+into `GenerationChunk.partialValue` while raw snapshots remain available in
+`GenerationChunk.rawValue`.
 
 To verify direct PCC CLI access on the machine, run this from an interactive
 terminal:
@@ -154,6 +157,8 @@ and sends plain system-model prompts through
 `FoundationModels.LanguageModelSession`. It can also send schema-backed system
 model requests when `schemaPath` points to a JSON-encoded FoundationModels
 schema file, and it streams system-model text through a Flutter event channel.
+Schema-backed streams preserve raw intermediate structured snapshots and decode
+safe partial snapshots into `GenerationChunk.partialValue`.
 `FoundationModelsSchemaEncoder` covers verified generic `ObjectSchema` features:
 nested objects, string enums, field-level `anyOf` unions, numeric ranges,
 string patterns, arrays, and optional fields. PCC is not implemented in the

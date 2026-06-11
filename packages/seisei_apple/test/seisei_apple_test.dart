@@ -419,11 +419,13 @@ void main() {
 
       expect(chunks[0].rawValue, {'title': 'He'});
       expect(chunks[0].delta, isNull);
+      expect(chunks[0].partialValue, 'He');
       expect(chunks[0].value, isNull);
       expect(chunks[0].isDone, isFalse);
 
       expect(chunks[1].rawValue, {'title': 'Hello'});
       expect(chunks[1].delta, isNull);
+      expect(chunks[1].partialValue, 'Hello');
       expect(chunks[1].value, isNull);
       expect(chunks[1].isDone, isFalse);
 
@@ -431,6 +433,48 @@ void main() {
       expect(chunks[2].isDone, isTrue);
     },
   );
+
+  test('partial snapshot decode failures do not abort streams', () async {
+    final provider = AppleFoundationModelsProvider(
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: false,
+        ),
+        streamValues: const [
+          {'body': 'missing title'},
+          {'title': 'Hello'},
+          {
+            'done': true,
+            'value': {'title': 'Hello'},
+          },
+        ],
+      ),
+    );
+
+    final chunks = await provider
+        .stream(
+          GenerationRequest<String>(
+            prompt: 'Reply as JSON.',
+            metadata: {
+              AppleFoundationModelsProvider.schemaPathMetadataKey:
+                  '/tmp/schema.json',
+            },
+            decode: (rawValue) => (rawValue! as Map)['title']! as String,
+          ),
+        )
+        .toList();
+
+    expect(chunks[0].rawValue, {'body': 'missing title'});
+    expect(chunks[0].partialValue, isNull);
+    expect(chunks[0].value, isNull);
+
+    expect(chunks[1].partialValue, 'Hello');
+    expect(chunks[1].value, isNull);
+
+    expect(chunks[2].value, 'Hello');
+    expect(chunks[2].isDone, isTrue);
+  });
 
   test('streams deltas and a terminal decoded value', () async {
     final provider = AppleFoundationModelsProvider(

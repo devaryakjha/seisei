@@ -1,3 +1,9 @@
+## 0.1.0-dev.7
+
+- Decode safe schema-backed streaming snapshots into
+  `GenerationChunk.partialValue` while preserving raw snapshots and terminal
+  values.
+
 ## 0.1.0-dev.6
 
 - Encode verified field-level union schemas from `seisei_schema` into

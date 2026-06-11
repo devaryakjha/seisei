@@ -72,11 +72,12 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   @override
   Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
     await _check(request, additionalCapabilities: {ModelCapability.streaming});
+    final schemaPath = _schemaPath(request);
     await for (final rawValue in backend.stream(
       AppleFoundationModelsRequest(
         prompt: request.prompt,
         mode: mode,
-        schemaPath: _schemaPath(request),
+        schemaPath: schemaPath,
         stream: true,
       ),
     )) {
@@ -84,6 +85,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       yield GenerationChunk<T>(
         providerId: id,
         delta: rawValue is String && !done ? rawValue : null,
+        partialValue: _partialValue(request, rawValue, done: done),
         value: done ? request.decode(_doneValue(rawValue)) : null,
         rawValue: rawValue,
         isDone: done,
@@ -136,6 +138,21 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
   Object? _doneValue(Object? rawValue) {
     return rawValue is Map ? rawValue['value'] : rawValue;
+  }
+
+  T? _partialValue<T>(
+    GenerationRequest<T> request,
+    Object? rawValue, {
+    required bool done,
+  }) {
+    if (done || rawValue is String || _schemaPath(request) == null) {
+      return null;
+    }
+    try {
+      return request.decode(rawValue);
+    } on Object {
+      return null;
+    }
   }
 
   String _unavailableReason(AppleFoundationModelsAvailability availability) {

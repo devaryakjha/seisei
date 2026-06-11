@@ -44,10 +44,10 @@ Future<void> main(List<String> args) async {
     promptParts.add(arg);
   }
   final prompt = promptParts.isEmpty
-      ? streamSmoke && explicitExpect == null
-          ? 'Say hello in a short sentence.'
-          : schemaSmoke
-              ? 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
+      ? schemaSmoke
+          ? 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
+          : streamSmoke && explicitExpect == null
+              ? 'Say hello in a short sentence.'
               : 'Reply with exactly: $expect'
       : promptParts.join(' ');
   final backend = FmCliBackend();
@@ -95,6 +95,7 @@ Future<void> main(List<String> args) async {
       : await encoder.writeObjectFile(schema, directory: schemaDirectory);
   final String responseValue;
   var streamDeltas = 0;
+  var streamPartialSnapshots = 0;
   try {
     final request = GenerationRequest<String>(
       prompt: prompt,
@@ -112,6 +113,9 @@ Future<void> main(List<String> args) async {
       await for (final chunk in client.stream(request)) {
         if (chunk.delta != null) {
           streamDeltas += 1;
+        }
+        if (chunk.partialValue != null) {
+          streamPartialSnapshots += 1;
         }
         if (chunk.isDone) {
           finalValue = chunk.value;
@@ -133,13 +137,14 @@ Future<void> main(List<String> args) async {
   stdout.writeln('providerId: ${provider.id}');
   if (streamSmoke) {
     stdout.writeln('streamDeltas: $streamDeltas');
+    stdout.writeln('streamPartialSnapshots: $streamPartialSnapshots');
   }
   if (schemaFile != null) {
     stdout.writeln('schema: ObjectSchema(title,count,published,author)');
   }
   stdout.writeln('response: $responseValue');
 
-  if (streamSmoke && explicitExpect == null) {
+  if (streamSmoke && !schemaSmoke && explicitExpect == null) {
     if (streamDeltas == 0 || responseValue.trim().isEmpty) {
       stderr.writeln('Expected local AFM stream to emit deltas and a value.');
       exitCode = 1;
