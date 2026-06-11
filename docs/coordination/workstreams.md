@@ -144,6 +144,9 @@ mapping.
 Tagflow document adapter outside the core package line.
 `seisei_apple` later advanced to `0.1.0-dev.7` for typed partial decoding of
 safe schema-backed streaming snapshots.
+`seisei` later advanced to `0.1.0-dev.2` for provider-neutral structured
+patches, and `seisei_apple` advanced to `0.1.0-dev.8` for schema-backed
+snapshot patch emission.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -182,7 +185,6 @@ partial chunk work:
 
 - explicit-null or discriminated unions beyond the current field-level `anyOf`
   support
-- path-level structured patches
 - PCC support if a verified API path exists
 - generated Swift App Intent wrappers or tighter Flutter integration above the
   handwritten registration helpers

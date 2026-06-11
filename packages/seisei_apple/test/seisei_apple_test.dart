@@ -395,7 +395,7 @@ void main() {
           ),
           streamValues: const [
             {'title': 'He'},
-            {'title': 'Hello'},
+            {'title': 'Hello', 'count': 7},
             {
               'done': true,
               'value': {'title': 'Hello'},
@@ -420,16 +420,24 @@ void main() {
       expect(chunks[0].rawValue, {'title': 'He'});
       expect(chunks[0].delta, isNull);
       expect(chunks[0].partialValue, 'He');
+      expect(chunks[0].structuredPatches, [
+        const StructuredPatch.add(path: ['title'], value: 'He'),
+      ]);
       expect(chunks[0].value, isNull);
       expect(chunks[0].isDone, isFalse);
 
-      expect(chunks[1].rawValue, {'title': 'Hello'});
+      expect(chunks[1].rawValue, {'title': 'Hello', 'count': 7});
       expect(chunks[1].delta, isNull);
       expect(chunks[1].partialValue, 'Hello');
+      expect(chunks[1].structuredPatches, [
+        const StructuredPatch.replace(path: ['title'], value: 'Hello'),
+        const StructuredPatch.add(path: ['count'], value: 7),
+      ]);
       expect(chunks[1].value, isNull);
       expect(chunks[1].isDone, isFalse);
 
       expect(chunks[2].value, 'Hello');
+      expect(chunks[2].structuredPatches, isEmpty);
       expect(chunks[2].isDone, isTrue);
     },
   );
@@ -467,9 +475,16 @@ void main() {
 
     expect(chunks[0].rawValue, {'body': 'missing title'});
     expect(chunks[0].partialValue, isNull);
+    expect(chunks[0].structuredPatches, [
+      const StructuredPatch.add(path: ['body'], value: 'missing title'),
+    ]);
     expect(chunks[0].value, isNull);
 
     expect(chunks[1].partialValue, 'Hello');
+    expect(chunks[1].structuredPatches, [
+      const StructuredPatch.remove(path: ['body']),
+      const StructuredPatch.add(path: ['title'], value: 'Hello'),
+    ]);
     expect(chunks[1].value, isNull);
 
     expect(chunks[2].value, 'Hello');

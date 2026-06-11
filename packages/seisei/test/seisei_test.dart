@@ -78,6 +78,46 @@ void main() {
     expect(chunk.value, isNull);
     expect(chunk.isDone, isFalse);
   });
+
+  test('GenerationChunk carries structured patches', () {
+    const patch = StructuredPatch.replace(
+      path: ['title'],
+      value: 'Updated title',
+    );
+    const chunk = GenerationChunk<_Draft>(
+      providerId: 'echo',
+      structuredPatches: [patch],
+    );
+
+    expect(chunk.structuredPatches, [patch]);
+    expect(
+      chunk.structuredPatches.single.operation,
+      StructuredPatchOperation.replace,
+    );
+  });
+
+  test('diffStructuredValues emits path-level patches', () {
+    final patches = diffStructuredValues(
+      {
+        'title': 'Draft',
+        'tags': ['a', 'b'],
+        'author': {'name': 'Arya', 'role': 'owner'},
+      },
+      {
+        'title': 'Final',
+        'tags': ['a', 'b', 'c'],
+        'author': {'name': 'Arya'},
+        'published': true,
+      },
+    );
+
+    expect(patches, [
+      const StructuredPatch.replace(path: ['title'], value: 'Final'),
+      const StructuredPatch.replace(path: ['tags'], value: ['a', 'b', 'c']),
+      const StructuredPatch.remove(path: ['author', 'role']),
+      const StructuredPatch.add(path: ['published'], value: true),
+    ]);
+  });
 }
 
 final class _Draft {

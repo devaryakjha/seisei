@@ -7,4 +7,5 @@ export 'src/error.dart';
 export 'src/provider.dart';
 export 'src/request.dart';
 export 'src/response.dart';
+export 'src/structured_patch.dart';
 export 'src/tool.dart';

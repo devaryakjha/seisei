@@ -88,11 +88,14 @@ Current transport semantics stay intentionally small:
   `GenerationChunk.rawValue`
 - providers that can safely decode partial snapshots may expose them as
   `GenerationChunk.partialValue`
+- providers that receive structured snapshots may expose path-level
+  `GenerationChunk.structuredPatches` derived from snapshot diffs
 - schema-backed streaming sets `GenerationChunk.value` only on the terminal
   `done` chunk after the request decoder succeeds
 
 This matches the current FoundationModels behavior, which streams snapshots of
-partially generated structured content rather than stable path-level patches.
+partially generated structured content rather than provider-native patch
+events.
 
 ## Future Work
 
@@ -102,5 +105,5 @@ Not part of this workstream:
 - discriminated unions
 - non-string literal enums
 - cross-provider typed partial snapshot APIs
-- path-level structured diff or patch events
+- provider-native structured patch events
 - provider-neutral schema metadata for adapter-specific prompt shaping

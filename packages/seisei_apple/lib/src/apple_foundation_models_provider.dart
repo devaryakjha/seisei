@@ -73,6 +73,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
     await _check(request, additionalCapabilities: {ModelCapability.streaming});
     final schemaPath = _schemaPath(request);
+    Object? previousStructuredSnapshot;
     await for (final rawValue in backend.stream(
       AppleFoundationModelsRequest(
         prompt: request.prompt,
@@ -82,14 +83,24 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       ),
     )) {
       final done = _isDone(rawValue);
+      final structuredPatches = _structuredPatches(
+        rawValue,
+        schemaPath: schemaPath,
+        previous: previousStructuredSnapshot,
+        done: done,
+      );
       yield GenerationChunk<T>(
         providerId: id,
         delta: rawValue is String && !done ? rawValue : null,
         partialValue: _partialValue(request, rawValue, done: done),
+        structuredPatches: structuredPatches,
         value: done ? request.decode(_doneValue(rawValue)) : null,
         rawValue: rawValue,
         isDone: done,
       );
+      if (!done && schemaPath != null && rawValue is! String) {
+        previousStructuredSnapshot = rawValue;
+      }
     }
   }
 
@@ -138,6 +149,27 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
   Object? _doneValue(Object? rawValue) {
     return rawValue is Map ? rawValue['value'] : rawValue;
+  }
+
+  List<StructuredPatch> _structuredPatches(
+    Object? rawValue, {
+    required String? schemaPath,
+    required Object? previous,
+    required bool done,
+  }) {
+    if (done || schemaPath == null || rawValue is String) {
+      return const [];
+    }
+    final baseline = previous ?? _emptySnapshotFor(rawValue);
+    return diffStructuredValues(baseline, rawValue);
+  }
+
+  Object? _emptySnapshotFor(Object? rawValue) {
+    return switch (rawValue) {
+      Map _ => const <Object?, Object?>{},
+      List _ => const <Object?>[],
+      _ => null,
+    };
   }
 
   T? _partialValue<T>(

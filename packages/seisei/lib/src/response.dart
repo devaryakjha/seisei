@@ -1,3 +1,5 @@
+import 'structured_patch.dart';
+
 /// A typed generation response.
 final class GenerationResponse<T> {
   /// Creates a generation response.
@@ -28,6 +30,7 @@ final class GenerationChunk<T> {
     required this.providerId,
     this.value,
     this.partialValue,
+    this.structuredPatches = const [],
     this.delta,
     this.rawValue,
     this.isDone = false,
@@ -45,6 +48,9 @@ final class GenerationChunk<T> {
   /// decode through the request decoder but are not terminal model output.
   /// Terminal values continue to use [value] with [isDone] set to true.
   final T? partialValue;
+
+  /// Structured path-level updates for this chunk.
+  final List<StructuredPatch> structuredPatches;
 
   /// Incremental textual delta.
   final String? delta;

@@ -1,3 +1,8 @@
+## 0.1.0-dev.8
+
+- Emit `GenerationChunk.structuredPatches` for schema-backed structured
+  streaming snapshots.
+
 ## 0.1.0-dev.7
 
 - Decode safe schema-backed streaming snapshots into

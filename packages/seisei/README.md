@@ -8,6 +8,10 @@ Streamed chunks distinguish complete output from structured snapshots:
 
 - `GenerationChunk.value` is the terminal decoded value.
 - `GenerationChunk.partialValue` is an optional decoded partial snapshot.
+- `GenerationChunk.structuredPatches` carries path-level structured updates.
 - `GenerationChunk.delta` is for incremental text.
+
+Use `diffStructuredValues(previous, next)` when a provider receives structured
+snapshots and needs stable add, replace, and remove patches for changed paths.
 
 It does not include Apple Foundation Models bindings, cloud providers, routing policy, schema helpers, test fakes, or UI rendering. Those live in separate Seisei packages.
