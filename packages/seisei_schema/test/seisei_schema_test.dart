@@ -126,6 +126,35 @@ void main() {
     expect(contact.value, {'city': 'Tokyo'});
   });
 
+  test('validates explicit-null unions before decoding', () {
+    const schema = ObjectSchema(
+      name: 'OptionalContact',
+      fields: {
+        'value': ObjectField.union(
+          variants: [ObjectField.string(), ObjectField.nullValue()],
+        ),
+        'values': ObjectField.union(
+          isArray: true,
+          variants: [ObjectField.integer(), ObjectField.nullValue()],
+        ),
+      },
+    );
+
+    final contact = schema.decode(
+      {
+        'value': null,
+        'values': [1, null, 3],
+      },
+      (object) => _NullableUnionContact(
+        value: object['value'],
+        values: (object['values']! as List).cast<Object?>(),
+      ),
+    );
+
+    expect(contact.value, isNull);
+    expect(contact.values, [1, null, 3]);
+  });
+
   test('validates discriminated unions before decoding', () {
     const schema = ObjectSchema(
       name: 'MessageEnvelope',
@@ -259,6 +288,28 @@ void main() {
     );
   });
 
+  test('reports stable errors for explicit-null unions', () {
+    const schema = ObjectSchema(
+      name: 'OptionalContact',
+      fields: {
+        'value': ObjectField.union(
+          variants: [ObjectField.string(), ObjectField.nullValue()],
+        ),
+        'values': ObjectField.union(
+          isArray: true,
+          variants: [ObjectField.integer(), ObjectField.nullValue()],
+        ),
+      },
+    );
+
+    expect(
+      schema.validate({
+        'values': [1, 'bad', null],
+      }).map((error) => '${error.path}: ${error.code}'),
+      [r'$.value: union.required', r'$.values[1]: union.any_of'],
+    );
+  });
+
   test('reports stable errors for discriminated unions', () {
     const schema = ObjectSchema(
       name: 'MessageEnvelope',
@@ -369,4 +420,14 @@ final class _UnionContact {
   const _UnionContact(this.value);
 
   final Object value;
+}
+
+final class _NullableUnionContact {
+  const _NullableUnionContact({
+    required this.value,
+    required this.values,
+  });
+
+  final Object? value;
+  final List<Object?> values;
 }

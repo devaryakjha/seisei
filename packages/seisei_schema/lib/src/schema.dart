@@ -42,6 +42,9 @@ enum ObjectFieldType {
   /// Boolean field.
   boolean,
 
+  /// Null field.
+  nullValue,
+
   /// Object field.
   object,
 
@@ -126,6 +129,22 @@ final class ObjectField {
     this.minItems,
     this.maxItems,
   })  : type = ObjectFieldType.boolean,
+        objectSchema = null,
+        variants = const [],
+        discriminatorKey = null,
+        discriminatorVariants = const {},
+        enumValues = const [],
+        minimum = null,
+        maximum = null,
+        pattern = null;
+
+  /// Creates a null field.
+  const ObjectField.nullValue({
+    this.isRequired = true,
+    this.isArray = false,
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.nullValue,
         objectSchema = null,
         variants = const [],
         discriminatorKey = null,
@@ -272,7 +291,8 @@ final class ObjectSchema implements SeiseiSchema {
     for (final field in definitions.keys) {
       final definition = definitions[field]!;
       final fieldValue = value[field];
-      final missing = !value.containsKey(field) || fieldValue == null;
+      final missing = !value.containsKey(field) ||
+          (fieldValue == null && !_acceptsExplicitNull(definition));
       if (missing) {
         if (definition.isRequired) {
           errors.add(
@@ -519,6 +539,7 @@ bool _matchesType(Object? value, ObjectFieldType type) {
     ObjectFieldType.integer => value is int,
     ObjectFieldType.number => value is num,
     ObjectFieldType.boolean => value is bool,
+    ObjectFieldType.nullValue => value == null,
     ObjectFieldType.object => value is Map,
     ObjectFieldType.union => false,
     ObjectFieldType.discriminatedUnion => false,
@@ -538,10 +559,23 @@ String _scalarTypeName(ObjectFieldType type) {
     ObjectFieldType.integer => 'integer',
     ObjectFieldType.number => 'number',
     ObjectFieldType.boolean => 'boolean',
+    ObjectFieldType.nullValue => 'null',
     ObjectFieldType.object => 'object',
     ObjectFieldType.union => 'union',
     ObjectFieldType.discriminatedUnion => 'union',
   };
+}
+
+bool _acceptsExplicitNull(ObjectField definition) {
+  if (definition.isArray) {
+    return false;
+  }
+  if (definition.type == ObjectFieldType.nullValue) {
+    return true;
+  }
+  return definition.type == ObjectFieldType.union &&
+      definition.variants
+          .any((variant) => variant.type == ObjectFieldType.nullValue);
 }
 
 void _checkSchemaDefinition(ObjectSchema schema) {

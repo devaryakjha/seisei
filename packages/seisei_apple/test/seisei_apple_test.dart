@@ -351,6 +351,54 @@ void main() {
     });
   });
 
+  test('encodes explicit-null unions as FoundationModels anyOf JSON', () {
+    const schema = ObjectSchema(
+      name: 'OptionalContact',
+      fields: {
+        'value': ObjectField.union(
+          variants: [ObjectField.string(), ObjectField.nullValue()],
+        ),
+        'values': ObjectField.union(
+          isArray: true,
+          variants: [ObjectField.integer(), ObjectField.nullValue()],
+        ),
+      },
+    );
+
+    final encoded = const FoundationModelsSchemaEncoder().encodeObject(schema);
+
+    expect(encoded, {
+      r'$defs': {
+        'OptionalContact_value_union': {
+          'title': 'OptionalContact_value_union',
+          'anyOf': [
+            {'type': 'string'},
+            {'type': 'null'},
+          ],
+        },
+        'OptionalContact_values_union_item': {
+          'title': 'OptionalContact_values_union_item',
+          'anyOf': [
+            {'type': 'integer'},
+            {'type': 'null'},
+          ],
+        },
+      },
+      'additionalProperties': false,
+      'required': ['value', 'values'],
+      'type': 'object',
+      'properties': {
+        'value': {r'$ref': r'#/$defs/OptionalContact_value_union'},
+        'values': {
+          'type': 'array',
+          'items': {r'$ref': r'#/$defs/OptionalContact_values_union_item'},
+        },
+      },
+      'x-order': ['value', 'values'],
+      'title': 'OptionalContact',
+    });
+  });
+
   test('encodes discriminated unions as tagged anyOf object variants', () {
     const schema = ObjectSchema(
       name: 'MessageEnvelope',

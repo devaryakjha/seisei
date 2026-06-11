@@ -63,6 +63,12 @@ Future<void> main(List<String> args) async {
         'dart',
         'run',
         'bin/local_afm_smoke.dart',
+        '--explicit-null-union',
+      ]),
+      _Check('$root/packages/seisei_apple', [
+        'dart',
+        'run',
+        'bin/local_afm_smoke.dart',
         '--stream',
       ]),
       _Check('$root/packages/seisei_apple', [

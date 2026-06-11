@@ -1,3 +1,8 @@
+## 0.1.0-dev.10
+
+- Encode explicit `ObjectField.nullValue` union variants as FoundationModels
+  `anyOf` branches and verify them in the local AFM smoke.
+
 ## 0.1.0-dev.9
 
 - Encode `ObjectField.discriminatedUnion` schemas as tagged FoundationModels

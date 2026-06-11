@@ -16,19 +16,31 @@ Future<void> main(List<String> args) async {
 
   final mode = _modeFromArgs(args);
   final discriminatedUnionSmoke = args.contains('--discriminated-union');
-  final schemaSmoke = args.contains('--schema') || discriminatedUnionSmoke;
+  final explicitNullUnionSmoke = args.contains('--explicit-null-union');
+  final schemaSmoke = args.contains('--schema') ||
+      discriminatedUnionSmoke ||
+      explicitNullUnionSmoke;
   final streamSmoke = args.contains('--stream');
   final explicitExpect = _optionValue(args, '--expect');
   final expect = explicitExpect ??
-      switch ((mode, discriminatedUnionSmoke, schemaSmoke)) {
-        (AppleFoundationModelsMode.system, true, _) =>
+      switch ((
+        mode,
+        discriminatedUnionSmoke,
+        explicitNullUnionSmoke,
+        schemaSmoke
+      )) {
+        (AppleFoundationModelsMode.system, true, _, _) =>
           'seisei-discriminated-ok',
-        (AppleFoundationModelsMode.pcc, true, _) =>
+        (AppleFoundationModelsMode.pcc, true, _, _) =>
           'seisei-pcc-discriminated-ok',
-        (AppleFoundationModelsMode.system, false, true) => 'seisei-schema-ok',
-        (AppleFoundationModelsMode.system, false, false) => 'seisei-ok',
-        (AppleFoundationModelsMode.pcc, false, true) => 'seisei-pcc-schema-ok',
-        (AppleFoundationModelsMode.pcc, false, false) => 'seisei-pcc-ok',
+        (AppleFoundationModelsMode.system, false, true, _) => 'seisei-null-ok',
+        (AppleFoundationModelsMode.pcc, false, true, _) => 'seisei-pcc-null-ok',
+        (AppleFoundationModelsMode.system, false, false, true) =>
+          'seisei-schema-ok',
+        (AppleFoundationModelsMode.system, false, false, false) => 'seisei-ok',
+        (AppleFoundationModelsMode.pcc, false, false, true) =>
+          'seisei-pcc-schema-ok',
+        (AppleFoundationModelsMode.pcc, false, false, false) => 'seisei-pcc-ok',
       };
   final promptParts = <String>[];
   for (var index = 0; index < args.length; index += 1) {
@@ -43,6 +55,9 @@ Future<void> main(List<String> args) async {
     if (arg == '--discriminated-union') {
       continue;
     }
+    if (arg == '--explicit-null-union') {
+      continue;
+    }
     if (arg == '--stream') {
       continue;
     }
@@ -55,7 +70,9 @@ Future<void> main(List<String> args) async {
       ? schemaSmoke
           ? discriminatedUnionSmoke
               ? 'Return JSON with message kind exactly note and text exactly $expect'
-              : 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
+              : explicitNullUnionSmoke
+                  ? 'Return JSON with label exactly $expect and value exactly null'
+                  : 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
           : streamSmoke && explicitExpect == null
               ? 'Say hello in a short sentence.'
               : 'Reply with exactly: $expect'
@@ -80,7 +97,11 @@ Future<void> main(List<String> args) async {
     mode: mode,
   );
   final client = SeiseiClient(provider: provider);
-  final schema = discriminatedUnionSmoke ? _discriminatedSchema : _draftSchema;
+  final schema = discriminatedUnionSmoke
+      ? _discriminatedSchema
+      : explicitNullUnionSmoke
+          ? _explicitNullSchema
+          : _draftSchema;
   const encoder = FoundationModelsSchemaEncoder();
   final schemaDirectory = schemaSmoke
       ? await Directory.systemTemp.createTemp('seisei_afm_schema_smoke_')
@@ -104,6 +125,7 @@ Future<void> main(List<String> args) async {
         rawValue,
         schemaSmoke: schemaSmoke,
         discriminatedUnionSmoke: discriminatedUnionSmoke,
+        explicitNullUnionSmoke: explicitNullUnionSmoke,
       ),
     );
 
@@ -142,7 +164,9 @@ Future<void> main(List<String> args) async {
     stdout.writeln(
       discriminatedUnionSmoke
           ? 'schema: ObjectSchema(discriminated message union)'
-          : 'schema: ObjectSchema(title,count,published,author)',
+          : explicitNullUnionSmoke
+              ? 'schema: ObjectSchema(explicit null union)'
+              : 'schema: ObjectSchema(title,count,published,author)',
     );
   }
   stdout.writeln('response: $responseValue');
@@ -202,10 +226,21 @@ const _discriminatedSchema = ObjectSchema(
   },
 );
 
+const _explicitNullSchema = ObjectSchema(
+  name: 'NullableEnvelope',
+  fields: {
+    'label': ObjectField.string(),
+    'value': ObjectField.union(
+      variants: [ObjectField.string(), ObjectField.nullValue()],
+    ),
+  },
+);
+
 String _decode(
   Object? rawValue, {
   required bool schemaSmoke,
   required bool discriminatedUnionSmoke,
+  required bool explicitNullUnionSmoke,
 }) {
   if (!schemaSmoke) {
     return rawValue! as String;
@@ -225,6 +260,17 @@ String _decode(
         );
       }
       return message['text']! as String;
+    });
+  }
+  if (explicitNullUnionSmoke) {
+    return _explicitNullSchema.decode(decoded, (object) {
+      if (object['value'] != null) {
+        throw DecodeException(
+          'Expected explicit null union value.',
+          source: object,
+        );
+      }
+      return object['label']! as String;
     });
   }
 
@@ -278,6 +324,9 @@ void _printUsage() {
   stdout.writeln(
     '  --discriminated-union Use a schema-backed discriminated union prompt.',
   );
+  stdout.writeln(
+    '  --explicit-null-union Use a schema-backed explicit null union prompt.',
+  );
   stdout.writeln('  --stream           Verify streaming transport.');
   stdout.writeln('  --expect VALUE      Exact expected response text.');
   stdout.writeln('');
@@ -285,6 +334,7 @@ void _printUsage() {
   stdout.writeln('  dart run bin/local_afm_smoke.dart');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --schema');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --discriminated-union');
+  stdout.writeln('  dart run bin/local_afm_smoke.dart --explicit-null-union');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --stream');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --mode pcc');
 }

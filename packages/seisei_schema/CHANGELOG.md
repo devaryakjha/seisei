@@ -1,3 +1,7 @@
+## 0.1.0-dev.5
+
+- Add `ObjectField.nullValue` for explicit `null` union variants.
+
 ## 0.1.0-dev.4
 
 - Add `ObjectField.discriminatedUnion` for tagged object unions with stable

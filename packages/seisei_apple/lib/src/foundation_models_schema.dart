@@ -9,8 +9,8 @@ import 'apple_foundation_models_provider.dart';
 ///
 /// The current mapper covers generic `seisei_schema` object fields that are
 /// verified against FoundationModels JSON encoding: nested objects, string
-/// enums, field-level unions, numeric ranges, string patterns, arrays, and
-/// optional fields.
+/// enums, field-level unions, explicit null union variants, numeric ranges,
+/// string patterns, arrays, and optional fields.
 final class FoundationModelsSchemaEncoder {
   /// Creates a FoundationModels schema encoder.
   const FoundationModelsSchemaEncoder();
@@ -199,6 +199,7 @@ final class FoundationModelsSchemaEncoder {
       ObjectFieldType.integer => 'integer',
       ObjectFieldType.number => 'number',
       ObjectFieldType.boolean => 'boolean',
+      ObjectFieldType.nullValue => 'null',
       ObjectFieldType.object => 'object',
       ObjectFieldType.union => 'union',
       ObjectFieldType.discriminatedUnion => 'union',

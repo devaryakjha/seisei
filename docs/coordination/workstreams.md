@@ -150,6 +150,9 @@ snapshot patch emission.
 `seisei_schema` later advanced to `0.1.0-dev.4` for discriminated object unions,
 with `seisei_apple` at `0.1.0-dev.9` for the matching FoundationModels tagged
 `anyOf` mapping.
+`seisei_schema` later advanced to `0.1.0-dev.5` for explicit null union
+variants, with `seisei_apple` at `0.1.0-dev.10` for the matching
+FoundationModels `{"type":"null"}` `anyOf` mapping.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -183,11 +186,9 @@ instead of republishing the same artifacts.
 ### 11. Native Expansion
 
 Deliver after the generic APIs and native capabilities are ready. Current focus
-after the nested-object, verified-constraint, field-level union, and typed
-partial chunk work:
+after the nested-object, verified-constraint, field-level union, explicit-null
+union, and typed partial chunk work:
 
-- explicit-null unions beyond the current field-level and discriminated `anyOf`
-  support
 - PCC support if a verified API path exists
 - generated Swift App Intent wrappers or tighter Flutter integration above the
   handwritten registration helpers

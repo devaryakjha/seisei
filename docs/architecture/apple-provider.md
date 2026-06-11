@@ -103,9 +103,9 @@ The router should be able to reject Apple modes before request execution:
   is verified.
 - Generic schema mapping depth: `FoundationModelsSchemaEncoder` now supports
   nested objects, string enums, field-level `anyOf` unions, discriminated object
-  unions, numeric ranges, string patterns, arrays, and optional fields.
-  Explicit-null unions and non-verified schema forms should stay out of the
-  Apple encoder until they are proven against the local SDK.
+  unions, explicit null union variants, numeric ranges, string patterns, arrays,
+  and optional fields. Non-verified schema forms should stay out of the Apple
+  encoder until they are proven against the local SDK.
 - Streaming depth: plain text streaming emits deltas. Schema-backed Apple
   streams preserve native partial snapshots in `GenerationChunk.rawValue` and
   decode safe intermediate structured snapshots into
