@@ -70,7 +70,7 @@ They include a real Seisei provider call through
 `packages/seisei_apple/bin/local_afm_smoke.dart`, including a schema-backed
 `ObjectSchema` smoke, not only fake clients.
 Use `dart tool/validate.dart --local-pcc` when PCC should be a required local
-smoke test in the same terminal/process context.
+smoke test in the same non-interactive Dart subprocess context.
 On this machine, `/usr/bin/fm` reports PCC availability differently depending
 on how it is launched: interactive PTY checks can report PCC available while
 non-interactive Dart subprocesses report `PCC inference is not available in

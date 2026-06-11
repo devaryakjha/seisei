@@ -17,9 +17,20 @@ Future<void> main(List<String> args) async {
     _Check('$root/packages/seisei_ui', ['dart', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
     _Check('$root/packages/seisei_intents', ['dart', 'test']),
-    _Check('$root/packages/seisei_apple_intents', ['swift', 'test']),
-    _Check('$root/examples/basic_cli', ['dart', 'run']),
   ];
+
+  if (Platform.isMacOS) {
+    checks.add(
+      _Check('$root/packages/seisei_apple_intents', ['swift', 'test']),
+    );
+  } else {
+    stdout.writeln(
+      'Skipping SeiseiAppleIntents Swift tests on '
+      '${Platform.operatingSystem}; AppIntents is Apple-platform only.',
+    );
+  }
+
+  checks.add(_Check('$root/examples/basic_cli', ['dart', 'run']));
 
   if (includeLocalAfm) {
     checks.addAll([
@@ -51,6 +62,11 @@ Future<void> main(List<String> args) async {
   }
 
   if (includeLocalPcc) {
+    stdout.writeln(
+      '\nPCC validation runs through non-interactive Dart subprocesses. '
+      'A passing interactive PTY `fm` check does not prove this context can '
+      'use PCC.',
+    );
     checks.addAll([
       _Check(root, ['fm', 'available', '--model', 'pcc']),
       _Check(root, [

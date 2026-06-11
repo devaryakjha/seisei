@@ -18,7 +18,7 @@ It runs:
 - Dart package tests
 - Flutter plugin tests for `seisei_apple`
 - `seisei_intents` app-action bridge contract tests
-- `swift test` for `packages/seisei_apple_intents`
+- `swift test` for `packages/seisei_apple_intents` on macOS
 - the offline CLI example
 
 Local Apple Foundation Models probes are available but are not CI gates:
@@ -42,9 +42,9 @@ report `PCC inference is not available in this context`:
 dart tool/validate.dart --local-pcc
 ```
 
-That mode requires PCC to be available to the current Dart subprocess context.
-It runs `fm available --model pcc`, a direct PCC generation smoke, and the same
-Seisei smoke path with `--mode pcc`.
+That mode requires PCC to be available to the current non-interactive Dart
+subprocess context. It runs `fm available --model pcc`, a direct PCC generation
+smoke, and the same Seisei smoke path with `--mode pcc`.
 Passing `fm` commands in an interactive terminal do not override a failing
 `--local-pcc` run: the validation target is the non-interactive Seisei/Dart
 execution context that the script actually uses.
