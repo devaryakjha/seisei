@@ -132,8 +132,9 @@ publish wave completed at `0.1.0-dev.0`, and `seisei_apple` has advanced to
 system-model streaming.
 `seisei_schema` later advanced to `0.1.0-dev.1` for typed object fields, and
 `seisei_apple` advanced to `0.1.0-dev.4` for typed FoundationModels schema
-mapping. Nested objects and verified constraints now land as follow-on
-main-branch depth work without changing those published versions.
+mapping. `seisei_schema` then advanced to `0.1.0-dev.2` for nested objects and
+verified constraints, and `seisei_apple` advanced to `0.1.0-dev.5` for the
+matching FoundationModels schema mapper updates and PCC diagnostics.
 
 ### 9. Optional Tagflow Adapter Path
 
