@@ -11,7 +11,19 @@ This file is the coordinator-owned source of truth for parallel Codex work.
 - Keep Apple provider work behind generic provider contracts.
 - Treat README claims as release promises; update them only when the repo has matching working APIs or clearly marked future scope.
 
-## Active Workstreams
+## Current Baseline
+
+`main` has the MVP foundation:
+
+- Dart pub workspace.
+- `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`, `seisei_ui`, and `seisei_apple`.
+- Standard validation and CI.
+- Optional local AFM smoke validation through `/usr/bin/fm`.
+- Tagflow kept optional and adapter-oriented.
+
+The first wave is complete. New work should start from the current `main` branch and avoid recreating the scaffold.
+
+## Completed Workstreams
 
 ### 1. Product and API Spec
 
@@ -24,7 +36,7 @@ Deliver:
 - non-goals
 - acceptance criteria
 
-Merge first because other streams should align to the spec.
+Merged into `main`.
 
 ### 2. Core Monorepo Scaffold
 
@@ -37,7 +49,7 @@ Deliver:
 - test utilities package
 - focused tests
 
-Merge after the spec. This becomes the base for implementation streams.
+Merged into `main`.
 
 ### 3. Apple Provider Bridge
 
@@ -48,7 +60,7 @@ Deliver:
 - provider interface mapping
 - minimal buildable stubs only if justified
 
-Merge after core provider contracts exist.
+MVP boundary merged into `main`; native Swift/Flutter implementation remains next-wave work.
 
 ### 4. UI Block Adapters
 
@@ -60,7 +72,7 @@ Deliver:
 - Tagflow optional-adapter path
 - tests if code is added
 
-Merge after or alongside core scaffold, depending on package dependencies.
+Merged into `main`; future Tagflow adapter remains optional.
 
 ### 5. Quality, Examples, and CI
 
@@ -72,17 +84,61 @@ Deliver:
 - truthful examples
 - release-readiness checklist
 
-Merge after package layout stabilizes.
+Merged into `main`.
+
+## Active Workstreams
+
+### 6. Native Apple Bridge
+
+Deliver:
+
+- verified local Xcode/Flutter/FoundationModels evidence
+- smallest compileable native bridge or a precise blocker-backed SPEC
+- fake-backed CI tests
+- optional local AFM validation only when available
+
+Keep `seisei_apple` behind generic provider contracts.
+
+### 7. App Intents and Tool Bridge
+
+Deliver:
+
+- `seisei_intents` package or SPEC
+- mapping between `ToolDefinition` / `ToolCall` and app/platform actions
+- fake-backed tests for tool/intents contracts
+- native implementation blockers separated from Dart API decisions
+
+Do not put Apple-specific assumptions into `seisei` core unless they are generic and tested.
+
+### 8. Release Readiness
+
+Deliver:
+
+- release dry-run blocker evidence
+- package metadata improvements that do not choose legal policy
+- explicit license/publisher/API-review blockers
+- CI annotation review and safe workflow updates if verified
+
+Do not invent a license.
+
+### 9. Optional Tagflow Adapter Path
+
+Deliver:
+
+- read-only inspection of `~/projects/tagflow`
+- Seisei-side contract gaps, if any
+- docs-only adapter SPEC unless Tagflow API is stable enough for compileable optional code
+
+Tagflow must remain optional and outside core packages.
 
 ## Merge Order
 
-1. Product/API spec.
-2. Core scaffold.
-3. UI block contracts.
-4. Apple provider bridge.
-5. Quality/examples/CI.
-6. README cleanup against implemented reality.
-7. Final validation pass.
+1. Native Apple bridge or blocker-backed SPEC.
+2. App Intents/tool bridge.
+3. Release readiness metadata/docs.
+4. Optional Tagflow adapter SPEC.
+5. README cleanup against implemented reality.
+6. Final validation pass.
 
 ## Coordinator Review Checklist
 
