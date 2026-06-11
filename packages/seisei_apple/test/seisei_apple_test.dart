@@ -158,20 +158,32 @@ void main() {
   test('encodes Seisei object schemas as FoundationModels JSON', () {
     const schema = ObjectSchema(
       name: 'Draft',
-      requiredStringFields: {'summary', 'title'},
+      fields: {
+        'count': ObjectField.integer(),
+        'published': ObjectField.boolean(),
+        'score': ObjectField.number(isRequired: false),
+        'tags': ObjectField.string(isArray: true, isRequired: false),
+        'title': ObjectField.string(),
+      },
     );
 
     final encoded = const FoundationModelsSchemaEncoder().encodeObject(schema);
 
     expect(encoded, {
       'additionalProperties': false,
-      'required': ['summary', 'title'],
+      'required': ['count', 'published', 'title'],
       'type': 'object',
       'properties': {
-        'summary': {'type': 'string'},
+        'count': {'type': 'integer'},
+        'published': {'type': 'boolean'},
+        'score': {'type': 'number'},
+        'tags': {
+          'type': 'array',
+          'items': {'type': 'string'},
+        },
         'title': {'type': 'string'},
       },
-      'x-order': ['summary', 'title'],
+      'x-order': ['count', 'published', 'score', 'tags', 'title'],
       'title': 'Draft',
     });
   });

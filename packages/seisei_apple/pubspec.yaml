@@ -1,6 +1,6 @@
 name: seisei_apple
 description: Apple Foundation Models provider and Flutter bridge for Seisei.
-version: 0.1.0-dev.3
+version: 0.1.0-dev.4
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:
@@ -19,7 +19,7 @@ dependencies:
   flutter:
     sdk: flutter
   seisei: ^0.1.0-dev.0
-  seisei_schema: ^0.1.0-dev.0
+  seisei_schema: ^0.1.0-dev.1
 
 dev_dependencies:
   flutter_test:

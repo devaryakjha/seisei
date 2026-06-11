@@ -47,7 +47,7 @@ Future<void> main(List<String> args) async {
       ? streamSmoke && explicitExpect == null
           ? 'Say hello in a short sentence.'
           : schemaSmoke
-              ? 'Return JSON with title exactly $expect'
+              ? 'Return JSON with title exactly $expect, count 7, and published true'
               : 'Reply with exactly: $expect'
       : promptParts.join(' ');
   final backend = FmCliBackend();
@@ -72,7 +72,11 @@ Future<void> main(List<String> args) async {
   final client = SeiseiClient(provider: provider);
   const schema = ObjectSchema(
     name: 'Draft',
-    requiredStringFields: {'title'},
+    fields: {
+      'count': ObjectField.integer(),
+      'published': ObjectField.boolean(),
+      'title': ObjectField.string(),
+    },
   );
   const encoder = FoundationModelsSchemaEncoder();
   final schemaDirectory = schemaSmoke
@@ -123,7 +127,7 @@ Future<void> main(List<String> args) async {
     stdout.writeln('streamDeltas: $streamDeltas');
   }
   if (schemaFile != null) {
-    stdout.writeln('schema: ObjectSchema(title)');
+    stdout.writeln('schema: ObjectSchema(title,count,published)');
   }
   stdout.writeln('response: $responseValue');
 
@@ -154,9 +158,22 @@ String _decode(Object? rawValue, {required bool schemaSmoke}) {
   };
   const schema = ObjectSchema(
     name: 'Draft',
-    requiredStringFields: {'title'},
+    fields: {
+      'count': ObjectField.integer(),
+      'published': ObjectField.boolean(),
+      'title': ObjectField.string(),
+    },
   );
-  return schema.decode(decoded, (object) => object['title']! as String);
+  return schema.decode(decoded, (object) {
+    if (object['count'] != 7 || object['published'] != true) {
+      throw DecodeException(
+        'Expected count 7 and published true.',
+        source: object,
+      );
+    }
+
+    return object['title']! as String;
+  });
 }
 
 AppleFoundationModelsMode _modeFromArgs(List<String> args) {

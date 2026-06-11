@@ -162,7 +162,7 @@ instead of republishing the same artifacts.
 
 Deliver after the generic APIs and native capabilities are ready:
 
-- richer Dart schema-to-FoundationModels mapping
+- deeper Dart schema-to-FoundationModels mapping for nested objects, unions, and constraints
 - richer typed partial semantics for schema streaming
 - PCC support if a verified API path exists
 - Swift App Intents registration package

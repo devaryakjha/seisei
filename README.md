@@ -66,6 +66,11 @@ They include a real Seisei provider call through
 `ObjectSchema` smoke, not only fake clients.
 Use `dart tool/validate.dart --local-pcc` when PCC should be a required local
 smoke test in the same terminal/process context.
+On this machine, `/usr/bin/fm` reports PCC availability differently depending
+on how it is launched: interactive PTY checks can report PCC available while
+non-interactive Dart subprocesses report `PCC inference is not available in
+this context`. Treat PCC checks as context-sensitive until a production native
+PCC API path is verified.
 For a supported Flutter host path that exercises the native `seisei_apple`
 bridge, see `packages/seisei_apple/README.md`. The offline CLI example in
 `examples/basic_cli` intentionally stays provider-free and does not call AFM.
@@ -85,7 +90,7 @@ Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts,
 deterministic tests, an offline example, validation tooling, Apple provider
 architecture notes, generic app-action/tool bridge contracts, and a native Apple
 bridge for system-model availability, plain prompts, provider-specific
-FoundationModels schema requests, and flat `ObjectSchema` mapping into
-FoundationModels schema files, plus system-model streaming. PCC generation,
+FoundationModels schema requests, flat typed `ObjectSchema` mapping into
+FoundationModels schema files, and system-model streaming. PCC generation,
 system App Intents registration, cloud providers, production RAG, and Tagflow
 integration are not implemented yet.

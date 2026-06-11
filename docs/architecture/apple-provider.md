@@ -12,10 +12,14 @@ The current worker machine provides a usable Apple Foundation Models path:
 - `find /Applications/Xcode.app/Contents/Developer/Platforms -path '*FoundationModels.framework*'` finds public FoundationModels SDK frameworks for macOS, iOS, and iOS Simulator.
 - A Swift compile/run probe against `SystemLanguageModel.default.availability` compiled with the macOS SDK and returned `available`.
 - `fm available --model system` reports `System model available`.
-- `fm available --model pcc` reports that PCC inference is not available in this shell context.
+- `fm available --model pcc` reports `PCC model available` when launched in an
+  interactive PTY, but reports `PCC inference is not available in this context`
+  when launched through non-interactive Dart subprocesses.
 - `fm respond --no-stream 'Reply with exactly: seisei-ok'` returned `seisei-ok`.
 
-This means Seisei can use local AFM as a real implementation target during development, but PCC must remain capability-gated and optional.
+This means Seisei can use local AFM as a real implementation target during
+development, but PCC must remain capability-gated, optional, and explicit about
+the launch context used for validation.
 
 ## Provider Direction
 
@@ -53,7 +57,8 @@ The provider should map Apple availability into Seisei capabilities:
   FoundationModels schema file.
 - `FoundationModelsSchemaEncoder`: maps the current flat `seisei_schema`
   `ObjectSchema` contract into FoundationModels schema JSON and provider
-  metadata.
+  metadata, including strings, integers, numbers, booleans, arrays, and
+  optional fields.
 - streaming: `AppleFoundationModelsProvider.stream` uses backend streams that
   emit text deltas and a terminal decoded value for the system model.
 - `fm respond --image`: multimodal input support after the core request model includes media segments.
@@ -77,16 +82,19 @@ The router should be able to reject Apple modes before request execution:
    plain system-model generation, and provider-specific schema-backed
    generation.
 6. Add true streaming support only after a backend can surface incremental chunks through `GenerationChunk<T>`.
-7. Add a stable Dart schema-to-FoundationModels mapping after `seisei_schema`
-   grows beyond the MVP object-schema contract.
+7. Add a stable flat Dart schema-to-FoundationModels mapping after
+   `seisei_schema` grows beyond the MVP object-schema contract.
 
 ## Remaining Native Blockers
 
-- PCC generation: `/usr/bin/fm available --model pcc` says PCC inference is unavailable in this shell context, and no native PCC `FoundationModels` API path is verified.
+- PCC generation: `/usr/bin/fm available --model pcc` is launch-context
+  sensitive here, and direct PCC generation currently returns
+  `FoundationModels.PrivateCloudComputeLanguageModel.Error error 0`; no native
+  PCC `FoundationModels` API path is verified.
 - Generic schema mapping depth: `FoundationModelsSchemaEncoder` supports flat
-  `ObjectSchema` values with required string fields. Nested objects, optional
-  fields, arrays, unions, and non-string primitives should wait until
-  `seisei_schema` grows matching generic contracts.
+  `ObjectSchema` values with strings, integers, numbers, booleans, arrays, and
+  optional fields. Nested objects, unions, enums, and richer constraints should
+  wait until `seisei_schema` grows matching generic contracts.
 - Streaming depth: plain text streaming emits deltas. Schema-backed streaming
   can surface native partial values, but richer typed partial semantics should
   wait until `seisei_schema` models partial structured output.

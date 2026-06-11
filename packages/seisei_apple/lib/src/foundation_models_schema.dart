@@ -7,30 +7,33 @@ import 'apple_foundation_models_provider.dart';
 
 /// Encodes Seisei schemas into FoundationModels `GenerationSchema` JSON.
 ///
-/// The current mapper intentionally covers the stable `seisei_schema`
-/// MVP surface: flat object schemas with required string fields.
+/// The current mapper intentionally covers flat `seisei_schema` object fields:
+/// strings, integers, numbers, booleans, arrays, and optional fields.
 final class FoundationModelsSchemaEncoder {
   /// Creates a FoundationModels schema encoder.
   const FoundationModelsSchemaEncoder();
 
   /// Encodes [schema] as a JSON-compatible FoundationModels schema map.
   Map<String, Object?> encodeObject(ObjectSchema schema) {
-    final fields = schema.requiredStringFields.toList()..sort();
-    for (final field in fields) {
+    final fields = schema.fieldDefinitions;
+    for (final field in fields.keys) {
       _checkFlatFieldName(field);
     }
+    final required = [
+      for (final entry in fields.entries)
+        if (entry.value.isRequired) entry.key,
+    ];
+    final orderedFields = fields.keys.toList();
 
     return {
       'additionalProperties': false,
-      'required': fields,
+      'required': required,
       'type': 'object',
       'properties': {
-        for (final field in fields)
-          field: const {
-            'type': 'string',
-          },
+        for (final entry in fields.entries)
+          entry.key: _encodeField(entry.value),
       },
-      'x-order': fields,
+      'x-order': orderedFields,
       'title': schema.name,
     };
   }
@@ -66,16 +69,39 @@ final class FoundationModelsSchemaEncoder {
     if (field.isEmpty) {
       throw ArgumentError.value(
         field,
-        'schema.requiredStringFields',
+        'schema.fields',
         'FoundationModels schema field names must not be empty.',
       );
     }
     if (field.contains('.')) {
       throw ArgumentError.value(
         field,
-        'schema.requiredStringFields',
+        'schema.fields',
         'Nested object fields are not supported by the current Seisei schema mapper.',
       );
     }
+  }
+
+  Map<String, Object?> _encodeField(ObjectField field) {
+    final encoded = {
+      'type': _foundationModelsType(field.type),
+    };
+    if (!field.isArray) {
+      return encoded;
+    }
+
+    return {
+      'type': 'array',
+      'items': encoded,
+    };
+  }
+
+  String _foundationModelsType(ObjectFieldType type) {
+    return switch (type) {
+      ObjectFieldType.string => 'string',
+      ObjectFieldType.integer => 'integer',
+      ObjectFieldType.number => 'number',
+      ObjectFieldType.boolean => 'boolean',
+    };
   }
 }

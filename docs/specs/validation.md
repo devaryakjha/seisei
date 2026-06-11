@@ -33,14 +33,15 @@ plain, schema-backed, and streaming
 through `FmCliBackend`, `AppleFoundationModelsProvider`, and `SeiseiClient`.
 
 PCC is checked separately because the `fm` CLI can expose a working system model
-while reporting `PCC inference is not available in this context` for the same
-process:
+while PCC availability depends on launch context. On this machine, interactive
+PTY checks can report PCC available while non-interactive Dart subprocesses
+report `PCC inference is not available in this context`:
 
 ```sh
 dart tool/validate.dart --local-pcc
 ```
 
-That mode requires PCC to be available to the current terminal/process context.
+That mode requires PCC to be available to the current Dart subprocess context.
 It runs `fm available --model pcc`, a direct PCC generation smoke, and the same
 Seisei smoke path with `--mode pcc`.
 

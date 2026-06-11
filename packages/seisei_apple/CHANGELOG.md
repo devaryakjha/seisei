@@ -1,3 +1,8 @@
+## 0.1.0-dev.4
+
+- Map typed `seisei_schema` object fields into FoundationModels schema JSON
+  and verify typed schema generation in the local AFM smoke.
+
 ## 0.1.0-dev.3
 
 - Add streaming generation support for the system Apple model through
