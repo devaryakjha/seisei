@@ -15,6 +15,7 @@ Future<void> main(List<String> args) async {
     _Check('$root/packages/seisei_router', ['dart', 'test']),
     _Check('$root/packages/seisei_test', ['dart', 'test']),
     _Check('$root/packages/seisei_ui', ['dart', 'test']),
+    _Check('$root/packages/seisei_tagflow', ['flutter', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
     _Check('$root/packages/seisei_intents', ['dart', 'test']),
   ];
@@ -108,6 +109,12 @@ Future<void> main(List<String> args) async {
       '--dry-run',
     ]),
     _Check('$root/packages/seisei_ui', [
+      'flutter',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+    _Check('$root/packages/seisei_tagflow', [
       'flutter',
       'pub',
       'publish',

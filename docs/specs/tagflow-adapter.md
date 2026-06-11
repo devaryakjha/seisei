@@ -2,153 +2,128 @@
 
 ## Status
 
-Draft, docs-only. Do not create a `seisei_tagflow` package from this SPEC until
-Tagflow's alpha runtime contract has settled enough for a compileable optional
-adapter.
+Active, implemented as an experimental optional package.
+
+The current local Tagflow alpha line is stable enough for a narrow compileable
+adapter package that returns `TagflowDocument` values. Core Seisei packages must
+still remain Tagflow-free, and broader UI/layout mapping is intentionally out of
+scope until Seisei has stronger renderer-neutral presentation semantics.
 
 ## Objective
 
-Allow a future `seisei_tagflow` package to translate validated `seisei_ui`
-blocks into Tagflow without making Tagflow a dependency of `seisei`,
-`seisei_ui`, or any other core package.
+Provide `seisei_tagflow` as an optional adapter package that translates a
+limited `seisei_ui` block vocabulary into Tagflow runtime documents without
+adding Tagflow imports to `seisei`, `seisei_ui`, or other core packages.
 
-## Current Tagflow Findings
+## Current Tagflow Evidence
 
-Read-only inspection of `/Users/arya/projects/tagflow` found two relevant API
-generations:
+Read-only inspection of `/Users/arya/projects/tagflow` on 2026-06-11 found:
 
-- `package:tagflow/tagflow.dart` now exports alpha-facing runtime APIs:
-  `TagflowDocument`, `TagflowDocumentNode`, `TagflowNodeKind`,
-  `TagflowHtmlAdapter`, `TagflowComponentRegistry`, `TagflowContentPolicy`,
-  `TagflowTheme`, and `TagflowViewOptions`.
-- `package:tagflow/legacy.dart` keeps parser, converter, selector, and legacy
-  node APIs available for compatibility.
-- `Tagflow.document(...)` renders a native runtime document through a component
-  registry.
-- `Tagflow.html(...)` and `TagflowHtmlAdapter.parse(...)` adapt HTML into a
-  native runtime document.
-- `TagflowRenderBoundary` remains HTML-adapter behavior. It should not become a
-  `seisei_ui` concept.
-- Tagflow is currently a Flutter package with SDK constraint `>=3.9.0 <4.0.0`;
-  the Seisei workspace is currently pure Dart with SDK constraint
-  `>=3.6.0 <4.0.0`.
-- Tagflow's native-rich-content runtime SPEC is draft status for
-  `1.0.0-alpha.1`, and its changelog explicitly marks the release line as alpha
-  with unstable internals.
+- `packages/tagflow/pubspec.yaml` publishes `tagflow` at `1.0.0-alpha.1` with
+  `sdk: ">=3.9.0 <4.0.0"` and a direct Flutter dependency.
+- `packages/tagflow/lib/tagflow.dart` publicly exports the runtime/document
+  model, render registry, theme, and view options from the main barrel.
+- `packages/tagflow/lib/src/runtime/document.dart` and
+  `document_node.dart` expose concrete public constructors for
+  `TagflowDocument` and `TagflowDocumentNode`.
+- `packages/tagflow/lib/src/tagflow_widget.dart` exposes
+  `Tagflow.document(...)` and `Tagflow.html(...)`, with `Tagflow.document(...)`
+  rendering a supplied runtime document through `TagflowComponentRegistry`.
+- `packages/tagflow/lib/src/render/component_registry.dart` ships built-in
+  semantic renderers for `root`, `container`, `paragraph`, `heading`, `text`,
+  `link`, `list`, `listItem`, `blockquote`, `codeBlock`, `inlineCode`, `image`,
+  `table`, `tableRow`, `tableCell`, and `horizontalRule`.
+- `packages/tagflow/README.md` and `CHANGELOG.md` still explicitly mark the
+  line as alpha and subject to change before stable `1.0.0`.
 
 ## Seisei Contract Assessment
 
-No generic `seisei_ui` contract change is required for a future Tagflow adapter
-at the current level of evidence.
+No `seisei_ui` API change is required for the current adapter:
 
-The existing primitives already cover the adapter boundary:
+- `SeiseiBlock` already provides a stable semantic tree with JSON-compatible
+  props.
+- `SeiseiBlockSchema` already models supported block types, required props,
+  action types, and child constraints.
+- `SeiseiBlockAdapter<TOutput>` already allows renderer-specific output types
+  without leaking those renderer names into core packages.
+- `SeiseiBlockRenderContext.metadata` is sufficient for optional document-level
+  metadata such as the rendered Tagflow document ID.
 
-- `SeiseiBlock` provides a stable semantic tree with JSON-compatible props.
-- `SeiseiBlockSchema` validates allowed types, required props, child rules, and
-  action types before rendering.
-- `SeiseiBlockAdapter<TOutput>` can return a renderer-specific output type
-  without importing that renderer into core.
-- `SeiseiBlockAdapterCapabilities` can reject unsupported blocks and actions
-  before conversion.
-- `SeiseiBlockRenderContext.metadata` can carry app-local render settings
-  without adding renderer-specific fields to `seisei_ui`.
+The adapter package should add only package-local validation and mapping logic.
+If Seisei later needs renderer-neutral layout variants, authored IDs, styling,
+or dynamic patch metadata, those should be designed generically first and not as
+Tagflow-only fields on `seisei_ui`.
 
-If a future adapter needs multi-root documents, adapter metadata, or richer
-validation than required props and child rules, add those capabilities only when
-a second non-Tagflow renderer has the same need or when the gap can be expressed
-without Tagflow names.
+## Implemented Package Shape
 
-## Future Package Shape
+`packages/seisei_tagflow` is a Flutter package with:
 
-If implemented, `seisei_tagflow` should be an optional package with a Flutter
-SDK dependency and a direct dependency on `tagflow`.
+- `sdk: ">=3.9.0 <4.0.0"` to match the current Tagflow alpha line
+- a direct `tagflow: ^1.0.0-alpha.1` dependency
+- a direct `seisei_ui` dependency
+- a `SeiseiTagflowAdapter` that implements
+  `SeiseiBlockAdapter<TagflowDocument>`
 
-Recommended initial API shape:
+The adapter returns `TagflowDocument`, not a `Widget`. App code remains free to
+choose `Tagflow.document(...)`, custom registries, or custom view options.
 
-```dart
-final class SeiseiTagflowAdapter
-    implements SeiseiBlockAdapter<TagflowDocument> {
-  const SeiseiTagflowAdapter();
+## Supported Block Vocabulary
 
-  @override
-  String get id => 'tagflow';
-
-  @override
-  SeiseiBlockAdapterCapabilities get capabilities => ...;
-
-  @override
-  bool supports(SeiseiBlockSchema schema) => capabilities.supports(schema);
-
-  @override
-  TagflowDocument render(
-    SeiseiBlock block,
-    SeiseiBlockRenderContext context,
-  ) {
-    ...
-  }
-}
-```
-
-The adapter should return `TagflowDocument` first, not a `Widget`. Apps can then
-choose `Tagflow.document(...)`, their own `TagflowComponentRegistry`, and their
-own `TagflowViewOptions`.
-
-## Suggested Block Mapping
-
-The first adapter should target Tagflow's native document model rather than
-HTML strings.
+The first implemented adapter is intentionally narrow and content-oriented:
 
 | Seisei block type | Tagflow target |
 | --- | --- |
-| `root` or app document root | `TagflowDocument` children or `TagflowDocumentNode.root` at render time |
-| `container`, `column`, `row` | `TagflowDocumentNode.container` plus presentation hints only when generic |
+| `root`, `document` | `TagflowDocument` children |
+| `container` | `TagflowDocumentNode.container` |
 | `paragraph` | `TagflowDocumentNode.paragraph` |
-| `heading` with `level` prop | `TagflowDocumentNode.heading` |
-| `text` with `value` prop | `TagflowDocumentNode.text` |
-| `link` with validated `url` prop | `TagflowDocumentNode.link` |
-| `list` and `listItem` | `TagflowDocumentNode.list` and `TagflowDocumentNode.listItem` |
+| `heading` | `TagflowDocumentNode.heading` |
+| `text` | `TagflowDocumentNode.text` |
+| `link` | `TagflowDocumentNode.link` |
+| `list` | `TagflowDocumentNode.list` |
+| `listItem` | `TagflowDocumentNode.listItem` |
 | `blockquote` | `TagflowDocumentNode.blockquote` |
-| `codeBlock` and `inlineCode` | `TagflowDocumentNode.codeBlock` and `TagflowDocumentNode.inlineCode` |
-| `image` with validated `url` and optional `alt` | `TagflowDocumentNode.image` |
-| `table`, `tableRow`, `tableCell` | matching Tagflow table nodes |
-| unsupported extension block | capability mismatch before render |
+| `codeBlock` | `TagflowDocumentNode.codeBlock` |
+| `inlineCode` | `TagflowDocumentNode.inlineCode` |
+| `image` | `TagflowDocumentNode.image` |
+| `horizontalRule` | `TagflowDocumentNode.horizontalRule` |
 
-Action payloads must remain app-owned. A Tagflow adapter may surface links
-through Tagflow's link callback path, but it must not execute Seisei tool calls,
-submit actions, or app-defined commands.
+The adapter validates block trees before render and fails fast on unsupported
+block types, unsupported action types, duplicate block IDs, invalid prop types,
+invalid URI payloads, or invalid child placement.
 
-## Non-Goals
+## Current Non-Goals
 
-- Do not add `tagflow` to the root workspace or to `seisei_ui`.
-- Do not encode `TagflowNodeKind`, render boundaries, HTML tags, component
-  registries, or Tagflow view options into `seisei_ui`.
+- Do not add `tagflow` imports to `seisei`, `seisei_ui`, or other core Seisei
+  packages.
 - Do not translate Seisei blocks to HTML as the primary adapter strategy.
-- Do not silently degrade unsupported Seisei blocks into Tagflow unsupported
-  nodes. Report capability mismatches before rendering.
+- Do not treat Tagflow HTML render boundaries, view options, themes, or
+  component registries as `seisei_ui` concepts.
+- Do not silently coerce unsupported blocks or actions into Tagflow unsupported
+  nodes.
+- Do not model Seisei layout-specific primitives such as `row`, `column`,
+  grid, forms, or tool execution through this first adapter package.
+- Do not claim the current Tagflow alpha surface is stable. The package must
+  remain explicitly experimental.
 
-## Implementation Blockers
+## Remaining Constraints
 
-- Tagflow runtime APIs are in a `1.0.0-alpha.1` line and documented as draft
-  work. A Seisei adapter should wait until the Tagflow document model and widget
-  constructors are stable enough to depend on.
-- Tagflow currently requires Flutter and Dart `>=3.9.0`; Seisei core packages
-  currently stay pure Dart and support Dart `>=3.6.0`. Any adapter package must
-  isolate that higher SDK and Flutter dependency.
-- Seisei has not yet defined first-party UI block type names beyond generic
-  tests. The adapter needs a published block vocabulary or an app-supplied
-  mapping table before it can be useful.
-- Tagflow presentation and theming semantics are richer than Seisei's current
-  generic props. Keep styling minimal until Seisei has renderer-neutral
-  presentation requirements.
+- Tagflow is still an alpha dependency. The package should be treated as
+  experimental until the Tagflow runtime surface settles beyond
+  `1.0.0-alpha.1`.
+- The adapter package raises the minimum SDK for that package only. Seisei core
+  packages remain on `sdk: ">=3.6.0 <4.0.0"`.
+- The first package does not attempt tables, authored patch updates, renderer
+  overrides, or rich presentation hints even though Tagflow has local support
+  for some of those concepts.
+- Broader Seisei UI vocabulary should only land when another renderer or a
+  concrete Seisei app requires the same generic semantics.
 
-## Acceptance Criteria For A Later Code Package
+## Acceptance Criteria
 
-- `seisei_tagflow` is absent from core package dependency graphs unless an app
-  explicitly depends on it.
-- The adapter compiles independently against a pinned Tagflow alpha or stable
-  release.
-- Tests prove unsupported block/action types fail before rendering.
-- Tests prove at least text, heading, link, image, list, code, and table blocks
-  map into Tagflow runtime documents without HTML string generation.
-- README and pubspec metadata mark the package experimental until Tagflow's
-  runtime API is stable.
+- `seisei_tagflow` stays outside core Seisei dependency graphs unless an app
+  opts into it.
+- The adapter compiles against the current `tagflow` alpha surface.
+- Tests prove unsupported block/action usage fails before rendering.
+- Tests prove a narrow supported block set maps to `TagflowDocument` values
+  without HTML generation.
+- README and pubspec metadata keep the package marked experimental.

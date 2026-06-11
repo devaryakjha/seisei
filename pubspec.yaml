@@ -10,6 +10,7 @@ workspace:
   - packages/seisei_router
   - packages/seisei_test
   - packages/seisei_ui
+  - packages/seisei_tagflow
   - packages/seisei_apple
   - packages/seisei_intents
   - examples/basic_cli

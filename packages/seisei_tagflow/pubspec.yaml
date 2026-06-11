@@ -1,0 +1,27 @@
+name: seisei_tagflow
+description: Experimental optional adapter from seisei_ui blocks to Tagflow documents.
+version: 0.1.0-dev.0
+repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+topics:
+  - ai
+  - flutter
+  - renderer
+  - tagflow
+  - ui
+
+environment:
+  sdk: ">=3.9.0 <4.0.0"
+  flutter: ">=3.3.0"
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  seisei_ui: ^0.1.0-dev.0
+  tagflow: ^1.0.0-alpha.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+

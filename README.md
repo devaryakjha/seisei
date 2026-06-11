@@ -26,6 +26,7 @@ The current workspace contains:
 - `seisei_router`: provider routing, fallback policies, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
 - `seisei_ui`: renderer-neutral UI blocks and adapter contracts
+- `seisei_tagflow`: experimental optional adapter from `seisei_ui` blocks into Tagflow runtime documents
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
 - `seisei_intents`: generic app-action contracts, tool-call mapping, and fake bridges for future platform intent adapters
 
@@ -36,7 +37,6 @@ Optional native support packages include:
 Future packages may include:
 
 - `seisei_flutter_intents`: Flutter/native bridge for generated wrappers or tighter Flutter app integration above the handwritten Swift registration path
-- `seisei_tagflow`: optional adapter from `seisei_ui` blocks into Tagflow once Tagflow's renderer API is stable
 
 ## Development
 
@@ -99,7 +99,9 @@ architecture notes, generic app-action/tool bridge contracts, and a native Apple
 bridge for system-model availability, plain prompts, provider-specific
 FoundationModels schema requests, nested and constrained `ObjectSchema` mapping
 into FoundationModels schema files, system-model streaming, and a minimal
-native App Intents registration helper package for handwritten Swift intents.
+native App Intents registration helper package for handwritten Swift intents,
+plus an experimental optional Tagflow document adapter for `seisei_ui` blocks.
 PCC generation, generated App Intent wrappers, cloud providers, production RAG,
 provider-specific typed partial decoding, path-level structured patches, and
-Tagflow integration are not implemented yet.
+broader renderer integration beyond the narrow Tagflow content adapter are not
+implemented yet.
