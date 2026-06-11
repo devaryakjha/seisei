@@ -31,50 +31,78 @@ Future<void> main(List<String> args) async {
     ]);
   }
 
+  final releaseChecks = <_Check>[
+    _Check('$root/packages/seisei', ['dart', 'pub', 'publish', '--dry-run']),
+    _Check('$root/packages/seisei_schema', [
+      'dart',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+    _Check('$root/packages/seisei_router', [
+      'dart',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+    _Check('$root/packages/seisei_test', [
+      'dart',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+    _Check('$root/packages/seisei_ui', [
+      'dart',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+    _Check('$root/packages/seisei_apple', [
+      'dart',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+    _Check('$root/packages/seisei_intents', [
+      'dart',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+  ];
+
   if (includeRelease) {
-    checks.addAll([
-      _Check('$root/packages/seisei', ['dart', 'pub', 'publish', '--dry-run']),
-      _Check('$root/packages/seisei_schema', [
-        'dart',
-        'pub',
-        'publish',
-        '--dry-run',
-      ]),
-      _Check('$root/packages/seisei_router', [
-        'dart',
-        'pub',
-        'publish',
-        '--dry-run',
-      ]),
-      _Check('$root/packages/seisei_test', [
-        'dart',
-        'pub',
-        'publish',
-        '--dry-run',
-      ]),
-      _Check('$root/packages/seisei_ui', [
-        'dart',
-        'pub',
-        'publish',
-        '--dry-run',
-      ]),
-      _Check('$root/packages/seisei_apple', [
-        'dart',
-        'pub',
-        'publish',
-        '--dry-run',
-      ]),
-      _Check('$root/packages/seisei_intents', [
-        'dart',
-        'pub',
-        'publish',
-        '--dry-run',
-      ]),
-    ]);
+    stdout.writeln(
+      '\nRelease validation will run every package dry-run before failing.',
+    );
   }
 
   for (final check in checks) {
     await check.run();
+  }
+
+  if (includeRelease) {
+    final failures = <_CheckFailure>[];
+    for (final check in releaseChecks) {
+      final exitCode = await check.run(failFast: false);
+      if (exitCode != 0) {
+        failures.add(_CheckFailure(check, exitCode));
+      }
+    }
+
+    if (failures.isNotEmpty) {
+      stderr.writeln(
+        '\nRelease validation failed for ${failures.length} package(s):',
+      );
+      for (final failure in failures) {
+        stderr.writeln(
+          '- ${failure.check.workingDirectory}: '
+          '${failure.check.command.join(' ')} '
+          '(exit ${failure.exitCode})',
+        );
+      }
+      exit(failures.first.exitCode);
+    }
   }
 }
 
@@ -89,7 +117,7 @@ final class _Check {
   final List<String> command;
   final bool allowFailure;
 
-  Future<void> run() async {
+  Future<int> run({bool failFast = true}) async {
     stdout.writeln('\n> ${command.join(' ')}');
     stdout.writeln('  cwd: $workingDirectory');
 
@@ -102,10 +130,21 @@ final class _Check {
 
     final exitCode = await process.exitCode;
     if (exitCode == 0 || allowFailure) {
-      return;
+      return exitCode;
     }
 
     stderr.writeln('Validation failed with exit code $exitCode.');
-    exit(exitCode);
+    if (failFast) {
+      exit(exitCode);
+    }
+
+    return exitCode;
   }
+}
+
+final class _CheckFailure {
+  const _CheckFailure(this.check, this.exitCode);
+
+  final _Check check;
+  final int exitCode;
 }

@@ -38,20 +38,16 @@ This command is expected to fail until package ownership, publisher settings, li
 
 Publishing is intentionally disabled with `publish_to: none` until ownership, publisher, and license decisions are made. Release workers may improve neutral metadata such as descriptions, repository links, issue tracker links, and topics, but must not choose or add a license text on the owner's behalf.
 
-When `--release` reaches `dart pub publish --dry-run`, the script stops at the first failing package. To collect full release evidence, run dry-runs package by package:
+When `--release` reaches `dart pub publish --dry-run`, the script runs every package dry-run before exiting nonzero. This keeps the command useful as a single release audit even when multiple packages share the same blocker. The current release package set is:
 
 ```sh
-for package in \
-  packages/seisei \
-  packages/seisei_schema \
-  packages/seisei_router \
-  packages/seisei_test \
-  packages/seisei_ui \
-  packages/seisei_apple \
-  packages/seisei_intents
-do
-  (cd "$package" && dart pub publish --dry-run)
-done
+packages/seisei
+packages/seisei_schema
+packages/seisei_router
+packages/seisei_test
+packages/seisei_ui
+packages/seisei_apple
+packages/seisei_intents
 ```
 
 The current known blocker is missing package-root `LICENSE` files across the publishable packages. A root repository license decision may also be required, but the package dry-run gate is per package root because those files are what pub.dev validates in each package archive.

@@ -51,20 +51,12 @@ and to each package root that will be published.
 
 ## Dry-Run Evidence
 
-Run the package dry-runs individually when `dart tool/validate.dart --release`
-stops at the first package. The current packages to check are:
+Run the package dry-runs through the release validator. It executes every
+package dry-run before failing so the output shows all package-level blockers in
+one pass:
 
 ```sh
-for package in \
-  packages/seisei \
-  packages/seisei_schema \
-  packages/seisei_router \
-  packages/seisei_test \
-  packages/seisei_ui \
-  packages/seisei_apple
-do
-  (cd "$package" && dart pub publish --dry-run)
-done
+dart tool/validate.dart --release
 ```
 
 Expected blocker until the owner resolves licensing: each command exits with
