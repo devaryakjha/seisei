@@ -10,10 +10,10 @@ existing architecture:
 - Host apps own the final Swift `AppIntent` types that Apple indexes at build
   time.
 
-This work does not attempt dynamic intent registration from Dart, generated
-parameter wrappers, or a Flutter-owned global registry. Those would overclaim
-what App Intents can do and would push Apple build-time constraints into the
-generic Seisei architecture.
+This work does not attempt dynamic intent registration from Dart or a
+Flutter-owned global registry. Those would overclaim what App Intents can do
+and would push Apple build-time constraints into the generic Seisei
+architecture.
 
 ## Local SDK Evidence
 
@@ -58,7 +58,10 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `SeiseiAppIntentDependencies.configure(...)`: helper that registers the
   executor with `AppDependencyManager`;
 - `SeiseiAppIntentBridge.perform(...)`: helper used by handwritten Swift
-  intents to forward execution into the registered executor.
+  intents to forward execution into the registered executor;
+- `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
+  `AppIntent` and `AppShortcutsProvider` source for a conservative scalar
+  parameter subset.
 
 ## Boundary Decisions
 
@@ -69,15 +72,18 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   workspace and is not a publishable Dart package.
 - Host apps still write the concrete `AppIntent` types because App Intents
   parameters, titles, summaries, and phrases must be static Swift source.
+- Generated source is still host-owned Swift source. Apps must write it into a
+  target that Xcode compiles and App Intents indexes.
 
 ## Non-Goals
 
 - No Tagflow dependency or adapter work.
 - No PCC assumptions or APIs.
-- No generated Swift intent wrappers from JSON schema in this change.
+- No direct Dart-schema-to-Swift generator in this change.
 - No Flutter method-channel invocation from `perform()` in this change.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
-  into App Intent parameters automatically.
+  into App Intent parameters automatically; the current generator covers scalar
+  string, integer, number, and boolean parameters only.
 
 ## Acceptance Criteria
 
@@ -90,6 +96,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - a handwritten `AppIntent` type compiles around the Seisei helper types;
   - a handwritten `AppShortcutsProvider` compiles with a Seisei-backed intent;
   - a handwritten `AppIntentsPackage` compiles and exposes included packages.
+  - generated source contains stable `AppIntent` and `AppShortcutsProvider`
+    wrappers for scalar parameters;
+  - a generated-style wrapper shape compiles with optional parameter forwarding.
 - Repository docs stop describing all native App Intents registration as purely
   future work and instead describe the new minimal native path plus remaining
   gaps.

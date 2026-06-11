@@ -54,6 +54,7 @@ unless the release process is deliberately changed.
 - [x] Router fallback and privacy claims are backed by tests.
 - [x] UI blocks can be validated before rendering.
 - [x] Tagflow remains optional and is isolated in `seisei_tagflow`.
+- [x] Native App Intent helper claims are backed by Swift compile tests.
 
 ## Dry-Run Evidence
 
@@ -88,6 +89,9 @@ Last verified on 2026-06-11 from `main`:
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
+- `swift test` for `packages/seisei_apple_intents` passed locally with
+  generated-source assertions and generated-style `AppIntent` /
+  `AppShortcutsProvider` compile tests.
 - GitHub Actions `Validate` run `27365326818` completed successfully on the
   default branch for `c7d3687`.
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,

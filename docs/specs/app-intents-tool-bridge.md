@@ -50,12 +50,14 @@ The minimal native registration path now lives in the optional Swift package
 `packages/seisei_apple_intents`. It proves the smallest viable boundary:
 handwritten Swift `AppIntent` types, host-owned executor injection through
 `AppDependencyManager`, and host-defined `AppShortcutsProvider` /
-`AppIntentsPackage` roots.
+`AppIntentsPackage` roots. It also includes a build-time Swift source generator
+for a conservative scalar-parameter wrapper subset.
 
 Later native work can still:
 
-- generate or provide Swift `AppIntent` wrappers from `AppActionDefinition`;
-- compile those wrappers in an app target, extension target, Swift package, or static library that the App Intents runtime indexes;
+- generate Swift wrappers directly from Dart `AppActionDefinition` data;
+- compile generated wrappers in an app target, extension target, Swift package,
+  or static library that the App Intents runtime indexes;
 - bridge `perform()` calls into Flutter/Dart or host-native handlers;
 - map App Entities/App Enums to future typed Seisei action/entity contracts when needed;
 - keep `seisei_intents` as the source of generic Dart-side behavior.

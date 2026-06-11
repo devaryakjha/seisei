@@ -64,6 +64,86 @@ struct SeiseiAppleIntentsTests {
         #expect(TestPackageRoot.includedPackages.count == 1)
         #expect(TestPackageRoot.includedPackages[0] == NestedPackage.self)
     }
+
+    @Test("source generator emits build-time AppIntent wrappers")
+    func sourceGeneratorEmitsAppIntentWrapper() {
+        let source = SeiseiAppIntentSourceGenerator.source(
+            for: SeiseiGeneratedAppIntentDefinition(
+                typeName: "CreateNoteIntent",
+                actionID: "create_note",
+                title: "Create Note",
+                description: "Create a note from a title.",
+                parameters: [
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "title",
+                        title: "Title",
+                        type: .string
+                    ),
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "priority",
+                        title: "Priority",
+                        type: .integer,
+                        isRequired: false
+                    ),
+                ],
+                shortcut: SeiseiGeneratedAppShortcutDefinition(
+                    phrases: ["Create a note in \\(.applicationName)"],
+                    shortTitle: "Create Note",
+                    systemImageName: "note.text"
+                )
+            )
+        )
+
+        #expect(source.contains("public struct CreateNoteIntent: AppIntent"))
+        #expect(source.contains("@Parameter(title: \"Title\")"))
+        #expect(source.contains("public var title: String"))
+        #expect(source.contains("public var priority: Int?"))
+        #expect(source.contains("\"title\": .string(title)"))
+        #expect(source.contains("\"priority\": priority.map { .integer($0) } ?? .null"))
+        #expect(source.contains("public struct CreateNoteIntentShortcuts: AppShortcutsProvider"))
+        #expect(source.contains("phrases: [\"Create a note in \\\\(.applicationName)\"]"))
+    }
+
+    @Test("generated-style AppIntent wrappers compile")
+    func generatedStyleIntentCompiles() {
+        let intent = GeneratedStyleCreateNoteIntent(
+            title: "Roadmap",
+            priority: nil,
+            executor: SeiseiAppIntentExecutor { invocation in
+                #expect(invocation.id == "create_note")
+                #expect(invocation.arguments["title"] == .string("Roadmap"))
+                #expect(invocation.arguments["priority"] == .null)
+                return SeiseiAppIntentResult()
+            }
+        )
+
+        #expect(intent.title == "Roadmap")
+        #expect(intent.priority == nil)
+    }
+
+    @Test("generated-style shortcut providers compile")
+    func generatedStyleShortcutProviderCompiles() {
+        #expect(GeneratedStyleCreateNoteIntentShortcuts.appShortcuts.count == 1)
+    }
+
+    @Test("source generator escapes Swift string literals")
+    func sourceGeneratorEscapesStringLiterals() {
+        let source = SeiseiAppIntentSourceGenerator.source(
+            for: SeiseiGeneratedAppIntentDefinition(
+                typeName: "QuoteIntent",
+                actionID: "quote_action",
+                title: "Quote \"Line\"",
+                description: "Line 1\nLine 2",
+                parameters: []
+            ),
+            accessLevel: "internal"
+        )
+
+        #expect(source.contains("internal struct QuoteIntent: AppIntent"))
+        #expect(source.contains("LocalizedStringResource = \"Quote \\\"Line\\\"\""))
+        #expect(source.contains("IntentDescription(\"Line 1\\nLine 2\")"))
+        #expect(source.contains("arguments: [:]"))
+    }
 }
 
 private struct CreateNoteIntent: AppIntent {
@@ -102,6 +182,59 @@ private struct CreateNoteShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
             intent: CreateNoteIntent(),
+            phrases: ["Create a note in \\(.applicationName)"],
+            shortTitle: "Create Note",
+            systemImageName: "note.text"
+        )
+    }
+}
+
+private struct GeneratedStyleCreateNoteIntent: AppIntent {
+    static let title: LocalizedStringResource = "Create Note"
+    static let description = IntentDescription("Create a note from a title.")
+
+    @Parameter(title: "Title")
+    var title: String
+
+    @Parameter(title: "Priority")
+    var priority: Int?
+
+    @AppDependency
+    private var executor: SeiseiAppIntentExecutor
+
+    init() {
+        self._executor = AppDependency(default: SeiseiAppIntentExecutor { _ in
+            throw TestIntentError.unconfiguredExecutor
+        })
+    }
+
+    init(
+        title: String,
+        priority: Int?,
+        executor: SeiseiAppIntentExecutor
+    ) {
+        self.title = title
+        self.priority = priority
+        self._executor = AppDependency(default: executor)
+    }
+
+    func perform() async throws -> some IntentResult {
+        _ = try await SeiseiAppIntentBridge.perform(
+            actionID: "create_note",
+            arguments: [
+                "title": .string(title),
+                "priority": priority.map { .integer($0) } ?? .null,
+            ],
+            executor: executor
+        )
+        return .result()
+    }
+}
+
+private struct GeneratedStyleCreateNoteIntentShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        AppShortcut(
+            intent: GeneratedStyleCreateNoteIntent(),
             phrases: ["Create a note in \\(.applicationName)"],
             shortTitle: "Create Note",
             systemImageName: "note.text"

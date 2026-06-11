@@ -32,7 +32,7 @@ The current workspace contains:
 
 Optional native support packages include:
 
-- `SeiseiAppleIntents`: Swift package helpers for handwritten App Intents, app-owned executor injection, and App Shortcut / package registration on Apple platforms
+- `SeiseiAppleIntents`: Swift package helpers for handwritten or generated-source App Intents, app-owned executor injection, and App Shortcut / package registration on Apple platforms
 
 Future packages may include:
 
@@ -105,8 +105,8 @@ into FoundationModels schema files including field-level explicit null and
 discriminated object unions, system-model streaming with typed partial
 snapshots and path-level structured patches for safe schema-backed chunks, and a
 minimal native App Intents registration helper package for handwritten Swift
-intents, plus an experimental optional Tagflow document adapter for
-`seisei_ui` blocks.
-PCC generation, generated App Intent wrappers, cloud providers, production RAG,
-provider-native patch streams, and broader renderer integration beyond the
-narrow Tagflow content adapter are not implemented yet.
+intents and generated-source scalar wrappers, plus an experimental optional
+Tagflow document adapter for `seisei_ui` blocks.
+PCC generation, Dart/Flutter-driven App Intent generation, cloud providers,
+production RAG, provider-native patch streams, and broader renderer integration
+beyond the narrow Tagflow content adapter are not implemented yet.

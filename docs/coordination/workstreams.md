@@ -114,7 +114,10 @@ Deliver:
 - fake-backed tests for tool/intents contracts
 - native implementation blockers separated from Dart API decisions
 
-Merged into `main` as generic pure-Dart app-action contracts. Native Swift App Intents registration remains future plugin work.
+Merged into `main` as generic pure-Dart app-action contracts. Native Swift App
+Intents registration later shipped as optional Swift helpers, and the native
+package now includes a build-time Swift source generator for scalar wrapper
+source. Dart/Flutter-driven generation remains future plugin work.
 
 ### 8. Release Readiness
 
@@ -153,6 +156,8 @@ with `seisei_apple` at `0.1.0-dev.9` for the matching FoundationModels tagged
 `seisei_schema` later advanced to `0.1.0-dev.5` for explicit null union
 variants, with `seisei_apple` at `0.1.0-dev.10` for the matching
 FoundationModels `{"type":"null"}` `anyOf` mapping.
+`SeiseiAppleIntents` later added a Swift source generator for build-time scalar
+`AppIntent` wrappers and matching generated-style compile tests.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -190,8 +195,8 @@ after the nested-object, verified-constraint, field-level union, explicit-null
 union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
-- generated Swift App Intent wrappers or tighter Flutter integration above the
-  handwritten registration helpers
+- Dart/Flutter-driven App Intent generation and richer App Entity/App Enum
+  wrappers above the Swift scalar source generator
 
 ## Merge Order
 
