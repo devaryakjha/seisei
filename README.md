@@ -78,4 +78,4 @@ bridge, see `packages/seisei_apple/README.md`. The offline CLI example in
 
 ## Status
 
-Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, Apple provider architecture notes, generic app-action/tool bridge contracts, and a narrow native Apple bridge for system-model availability plus plain prompts. PCC generation, schema-backed native generation, native streaming, system App Intents registration, cloud providers, production RAG, and Tagflow integration are not implemented yet.
+Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, Apple provider architecture notes, generic app-action/tool bridge contracts, and a native Apple bridge for system-model availability, plain prompts, and provider-specific FoundationModels schema requests. PCC generation, native streaming, system App Intents registration, cloud providers, production RAG, a Dart-to-FoundationModels schema mapper, and Tagflow integration are not implemented yet.

@@ -66,13 +66,18 @@ final response = await backend.respond(
 
 The native bridge is intentionally narrow. It checks system-model availability
 and sends plain system-model prompts through
-`FoundationModels.LanguageModelSession`. PCC, schema-backed generation, and
-streaming are not implemented in the native bridge yet.
+`FoundationModels.LanguageModelSession`. It can also send schema-backed system
+model requests when `schemaPath` points to a JSON-encoded
+`FoundationModels.GenerationSchema` file. PCC and streaming are not implemented
+in the native bridge yet.
 
 If you want the typed Seisei client layer, add a direct `seisei` dependency in
 the host app and build `AppleFoundationModelsProvider` on top of the native
-backend. Keep the request in system mode and avoid schema metadata, streaming,
-or PCC settings.
+backend. Keep the request in system mode and avoid streaming or PCC settings.
+For schema-backed requests, use
+`AppleFoundationModelsProvider.schemaPathMetadataKey` only with a
+provider-specific FoundationModels schema file; Seisei does not yet map
+`seisei_schema` descriptors into native FoundationModels schemas.
 
 CI tests use fake and mocked method-channel backends; `/usr/bin/fm` and local
 Apple Foundation Models are optional validation only.

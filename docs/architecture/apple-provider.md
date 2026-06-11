@@ -33,7 +33,10 @@ The current native bridge is a compileable Flutter plugin scaffold for iOS and m
 - Dart backend: `MethodChannelAppleFoundationModelsBackend`.
 - Channel: `dev.jha.seisei/seisei_apple`.
 - Native methods: `availability` and `respond`.
-- Swift API used: `SystemLanguageModel.default.availability` and `LanguageModelSession(model: .default).respond(to:)`.
+- Swift API used: `SystemLanguageModel.default.availability`,
+  `LanguageModelSession(model: .default).respond(to:)`, and
+  `LanguageModelSession(model: .default).respond(to:schema:)` for
+  provider-specific FoundationModels schemas.
 - Availability guard: FoundationModels requires iOS/macOS `26.0` or newer.
 - PCC availability is reported as false because no native PCC API path has been verified.
 
@@ -43,8 +46,10 @@ The provider should map Apple availability into Seisei capabilities:
 
 - `system` available: structured generation, text generation, local inference, privacy-compatible on-device execution.
 - `pcc` available: structured generation and larger-context cloud execution, subject to user privacy policy.
-- `fm respond --schema`: structured output support once schema package APIs are stable.
-- native method-channel bridge: plain system-model text generation only.
+- `fm respond --schema`: structured output support for local CLI probes.
+- native method-channel bridge: plain system-model text generation and
+  schema-backed generation when the request supplies a JSON-encoded
+  FoundationModels `GenerationSchema` file.
 - streaming: deferred until the provider has a backend that emits incremental chunks. The current `FmCliBackend` uses `fm respond --no-stream`, so `seisei_apple` must not advertise `ModelCapability.streaming` yet.
 - `fm respond --image`: multimodal input support after the core request model includes media segments.
 
@@ -63,14 +68,19 @@ The router should be able to reject Apple modes before request execution:
 2. Define an `AppleFoundationModelsBackend` abstraction so tests do not shell out.
 3. Add an `FmCliBackend` for local development and smoke tests.
 4. Add tests for system availability, PCC unavailability, privacy rejection, and schema-backed generation.
-5. Add a compileable native Flutter plugin bridge for iOS/macOS availability and plain system-model generation.
+5. Add a compileable native Flutter plugin bridge for iOS/macOS availability,
+   plain system-model generation, and provider-specific schema-backed
+   generation.
 6. Add true streaming support only after a backend can surface incremental chunks through `GenerationChunk<T>`.
-7. Add schema-backed native generation only after Seisei has a stable schema-to-FoundationModels mapping.
+7. Add a stable Dart schema-to-FoundationModels mapping after `seisei_schema`
+   grows beyond the MVP object-schema contract.
 
 ## Remaining Native Blockers
 
 - PCC generation: `/usr/bin/fm available` says PCC inference is unavailable in this shell context, and no native PCC `FoundationModels` API path is verified.
-- Schema-backed generation: `FoundationModels` exposes `GenerationSchema`, but Seisei does not yet have a stable Dart schema mapping into that Swift type.
+- Generic schema mapping: native schema-backed generation accepts
+  FoundationModels `GenerationSchema` JSON, but Seisei does not yet have a
+  stable Dart schema mapping into that Swift type.
 - Streaming: the native API exposes response streams, but the Dart backend does not yet expose event-channel streaming into `GenerationChunk<T>`.
 - Podspec release metadata: the repository intentionally does not choose license policy in this workstream, so local plugin metadata is not a release-readiness decision.
 

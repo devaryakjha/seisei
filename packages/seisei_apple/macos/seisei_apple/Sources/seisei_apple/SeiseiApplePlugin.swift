@@ -80,6 +80,15 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin {
     Task {
       do {
         let session = LanguageModelSession(model: .default)
+        if let schemaPath = arguments["schemaPath"] as? String {
+          let schema = try schema(at: schemaPath)
+          let response = try await session.respond(to: prompt, schema: schema)
+          await MainActor.run {
+            result(flutterValue(from: response.content))
+          }
+          return
+        }
+
         let response = try await session.respond(to: prompt)
         await MainActor.run {
           result(response.content)
@@ -94,5 +103,20 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin {
         }
       }
     }
+  }
+
+  @available(macOS 26.0, *)
+  private func schema(at path: String) throws -> GenerationSchema {
+    let data = try Data(contentsOf: URL(fileURLWithPath: path))
+    return try JSONDecoder().decode(GenerationSchema.self, from: data)
+  }
+
+  @available(macOS 26.0, *)
+  private func flutterValue(from content: GeneratedContent) -> Any {
+    guard let data = content.jsonString.data(using: .utf8),
+          let value = try? JSONSerialization.jsonObject(with: data) else {
+      return content.jsonString
+    }
+    return value
   }
 }

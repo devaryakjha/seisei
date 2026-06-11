@@ -277,6 +277,37 @@ void main() {
     expect(response, 'native-ok');
   });
 
+  test('method channel backend forwards schema-backed generation requests',
+      () async {
+    const channel = MethodChannel('test.seisei/respond-schema');
+    final binding = flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      call,
+    ) async {
+      expect(call.method, 'respond');
+      expect(call.arguments, {
+        'prompt': 'Reply as JSON.',
+        'mode': 'system',
+        'schemaPath': '/tmp/schema.json',
+      });
+      return {'answer': 'native-ok'};
+    });
+    addTearDown(() {
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    });
+
+    final backend = MethodChannelAppleFoundationModelsBackend(channel: channel);
+    final response = await backend.respond(
+      const AppleFoundationModelsRequest(
+        prompt: 'Reply as JSON.',
+        mode: AppleFoundationModelsMode.system,
+        schemaPath: '/tmp/schema.json',
+      ),
+    );
+
+    expect(response, {'answer': 'native-ok'});
+  });
+
   test('method channel backend rejects unsupported native bridge paths', () {
     final backend = MethodChannelAppleFoundationModelsBackend(
       channel: const MethodChannel('test.seisei/rejects'),
@@ -287,16 +318,6 @@ void main() {
         const AppleFoundationModelsRequest(
           prompt: 'Hello',
           mode: AppleFoundationModelsMode.pcc,
-        ),
-      ),
-      throwsUnsupportedError,
-    );
-    expect(
-      () => backend.respond(
-        const AppleFoundationModelsRequest(
-          prompt: 'Hello',
-          mode: AppleFoundationModelsMode.system,
-          schemaPath: '/tmp/schema.json',
         ),
       ),
       throwsUnsupportedError,

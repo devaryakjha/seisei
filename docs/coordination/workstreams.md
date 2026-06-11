@@ -19,7 +19,8 @@ This file is the coordinator-owned source of truth for parallel Codex work.
 - `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`, `seisei_ui`, `seisei_apple`, and `seisei_intents`.
 - Standard validation and CI.
 - Optional local AFM smoke validation through `/usr/bin/fm`.
-- A narrow native iOS/macOS Apple Foundation Models bridge for availability and plain system-model prompts.
+- A native iOS/macOS Apple Foundation Models bridge for availability, plain
+  system-model prompts, and provider-specific FoundationModels schema requests.
 - Tagflow kept optional and adapter-oriented.
 
 The first wave is complete. New work should start from the current `main` branch and avoid recreating the scaffold.
@@ -96,7 +97,9 @@ Deliver:
 - fake-backed CI tests
 - optional local AFM validation only when available
 
-Merged into `main` as a narrow Flutter plugin bridge for system-model availability and plain prompts. PCC, schema-backed native generation, and native streaming remain future work.
+Merged into `main` as a Flutter plugin bridge for system-model availability,
+plain prompts, and provider-specific FoundationModels schema-backed generation.
+PCC, a generic Dart schema mapper, and native streaming remain future work.
 
 ### 7. App Intents and Tool Bridge
 
@@ -153,7 +156,7 @@ deliberately instead of republishing the same artifacts.
 
 Deliver after the generic APIs and native capabilities are ready:
 
-- schema-backed Apple generation
+- generic Dart schema-to-FoundationModels mapping
 - native streaming
 - PCC support if a verified API path exists
 - Swift App Intents registration package

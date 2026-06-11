@@ -44,11 +44,6 @@ final class MethodChannelAppleFoundationModelsBackend
         'The native Apple bridge does not support PCC generation yet.',
       );
     }
-    if (request.schemaPath != null) {
-      throw UnsupportedError(
-        'The native Apple bridge does not support schema-backed generation yet.',
-      );
-    }
     if (request.stream) {
       throw UnsupportedError(
         'The native Apple bridge does not support streaming generation yet.',
@@ -58,6 +53,7 @@ final class MethodChannelAppleFoundationModelsBackend
     return _channel.invokeMethod<Object?>('respond', {
       'prompt': request.prompt,
       'mode': request.mode.name,
+      if (request.schemaPath case final schemaPath?) 'schemaPath': schemaPath,
     });
   }
 }
