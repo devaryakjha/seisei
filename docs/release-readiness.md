@@ -92,8 +92,8 @@ Last verified on 2026-06-11 from `main`:
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent` /
   `AppShortcutsProvider` compile tests.
-- GitHub Actions `Validate` run `27365326818` completed successfully on the
-  default branch for `c7d3687`.
+- GitHub Actions `Validate` run `27365942023` completed successfully on the
+  default branch for `e16f006`.
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
