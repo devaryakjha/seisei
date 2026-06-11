@@ -1,0 +1,23 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Dart
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Validate
+        run: dart tool/validate.dart

@@ -1,8 +1,8 @@
 # Seisei
 
-Typed generative AI for Flutter apps.
+Typed generative AI contracts for Flutter apps.
 
-Seisei is a planned monorepo for bringing native, typed, testable generative AI workflows to Flutter. The initial focus is Apple Intelligence and Apple's Foundation Models APIs, with a Dart-first surface that can also route to cloud or mock providers when native capabilities are unavailable.
+Seisei is a Dart-first monorepo for native, typed, testable generative AI workflows. The initial focus is Apple Foundation Models on Apple platforms, but the core API is provider-neutral and can route to fake, local, Apple, PCC, or future cloud providers when policy and capabilities allow.
 
 ## Why
 
@@ -17,16 +17,45 @@ Seisei aims to own the developer layer above raw model APIs:
 - deterministic test doubles
 - privacy-aware local context flows
 
-## Package Direction
+## Current Packages
 
-The monorepo is expected to grow around focused packages:
+The current workspace contains:
 
 - `seisei`: shared Dart API and core abstractions
-- `seisei_schema`: typed schemas, validation, generated adapters, and structured output helpers
-- `seisei_apple`: Apple Foundation Models provider for iOS, iPadOS, and macOS
-- `seisei_intents`: Flutter-to-App Intents bridge for tool calling, Siri, Shortcuts, and semantic app actions
+- `seisei_schema`: structured output schemas and validation helpers
 - `seisei_router`: provider routing, fallback policies, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
+- `seisei_ui`: renderer-neutral UI blocks and adapter contracts
+- `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes
+
+Future packages may include:
+
+- `seisei_intents`: Flutter-to-App Intents bridge for tool calling, Siri, Shortcuts, and semantic app actions
+- `seisei_tagflow`: optional adapter from `seisei_ui` blocks into Tagflow once Tagflow's renderer API is stable
+
+## Development
+
+The local FVM toolchain can be used when `dart` is not on the default `PATH`:
+
+```sh
+PATH=/Users/arya/fvm/cache.git/bin:$PATH dart tool/validate.dart
+```
+
+On a normal Dart setup:
+
+```sh
+dart tool/validate.dart
+```
+
+The validation command runs dependency resolution, formatting, static analysis, tests, and the offline CLI example.
+
+Local Apple Foundation Models smoke checks are available on macOS 27 machines that provide `/usr/bin/fm`:
+
+```sh
+dart tool/validate.dart --local-afm
+```
+
+These checks are not CI gates because CI runners are not expected to provide AFM.
 
 ## Design Principles
 
@@ -39,5 +68,4 @@ The monorepo is expected to grow around focused packages:
 
 ## Status
 
-Seisei is at the project-definition stage. The first milestone should define the public API contract and package boundaries before implementation begins.
-
+Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, and Apple provider architecture notes. Native Swift plugin work, App Intents bridging, cloud providers, production RAG, and Tagflow integration are not implemented yet.

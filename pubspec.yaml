@@ -1,0 +1,17 @@
+name: seisei_workspace
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+workspace:
+  - packages/seisei
+  - packages/seisei_schema
+  - packages/seisei_router
+  - packages/seisei_test
+  - packages/seisei_ui
+  - packages/seisei_apple
+  - examples/basic_cli
+
+dev_dependencies:
+  lints: ^6.0.0

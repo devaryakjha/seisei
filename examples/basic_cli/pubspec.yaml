@@ -1,0 +1,11 @@
+name: seisei_basic_cli
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+resolution: workspace
+
+dependencies:
+  seisei: ^0.1.0-dev.0
+  seisei_schema: ^0.1.0-dev.0
+  seisei_test: ^0.1.0-dev.0
