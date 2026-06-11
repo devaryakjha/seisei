@@ -17,6 +17,16 @@ fm available
 fm respond --no-stream 'Reply with exactly: seisei-ok'
 ```
 
+To verify Seisei itself can use local AFM, run the package smoke command:
+
+```sh
+dart run bin/local_afm_smoke.dart
+```
+
+That command uses `FmCliBackend`, `AppleFoundationModelsProvider`, and
+`SeiseiClient` to send the prompt through the local system model. A passing run
+prints `providerId: apple_system` and `response: seisei-ok`.
+
 For a minimal Flutter host, create an app and point `seisei_apple` at this
 workspace with a path dependency:
 

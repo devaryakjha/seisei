@@ -26,7 +26,10 @@ Local Apple Foundation Models probes are available but are not CI gates:
 dart tool/validate.dart --local-afm
 ```
 
-That mode expects the local `fm` CLI and should only be used on machines that provide Apple Foundation Models.
+That mode expects the local `fm` CLI and should only be used on machines that
+provide Apple Foundation Models. It runs both a direct `fm respond` smoke check
+and `packages/seisei_apple/bin/local_afm_smoke.dart`, which calls local AFM
+through `FmCliBackend`, `AppleFoundationModelsProvider`, and `SeiseiClient`.
 
 Release dry-runs are intentionally a readiness gate, not part of normal validation:
 
