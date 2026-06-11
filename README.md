@@ -21,7 +21,7 @@ Seisei aims to own the developer layer above raw model APIs:
 
 The current workspace contains:
 
-- `seisei`: shared Dart API and core abstractions
+- `seisei`: shared Dart API, `SeiseiClient`, and core abstractions
 - `seisei_schema`: structured output schemas and validation helpers
 - `seisei_router`: provider routing, fallback policies, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities

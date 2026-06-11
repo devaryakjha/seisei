@@ -16,9 +16,10 @@ This file is the coordinator-owned source of truth for parallel Codex work.
 `main` has the MVP foundation:
 
 - Dart pub workspace.
-- `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`, `seisei_ui`, and `seisei_apple`.
+- `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`, `seisei_ui`, `seisei_apple`, and `seisei_intents`.
 - Standard validation and CI.
 - Optional local AFM smoke validation through `/usr/bin/fm`.
+- A narrow native iOS/macOS Apple Foundation Models bridge for availability and plain system-model prompts.
 - Tagflow kept optional and adapter-oriented.
 
 The first wave is complete. New work should start from the current `main` branch and avoid recreating the scaffold.
@@ -86,8 +87,6 @@ Deliver:
 
 Merged into `main`.
 
-## Active Workstreams
-
 ### 6. Native Apple Bridge
 
 Deliver:
@@ -97,7 +96,7 @@ Deliver:
 - fake-backed CI tests
 - optional local AFM validation only when available
 
-Keep `seisei_apple` behind generic provider contracts.
+Merged into `main` as a narrow Flutter plugin bridge for system-model availability and plain prompts. PCC, schema-backed native generation, and native streaming remain future work.
 
 ### 7. App Intents and Tool Bridge
 
@@ -108,7 +107,7 @@ Deliver:
 - fake-backed tests for tool/intents contracts
 - native implementation blockers separated from Dart API decisions
 
-Do not put Apple-specific assumptions into `seisei` core unless they are generic and tested.
+Merged into `main` as generic pure-Dart app-action contracts. Native Swift App Intents registration remains future plugin work.
 
 ### 8. Release Readiness
 
@@ -119,7 +118,7 @@ Deliver:
 - explicit license/publisher/API-review blockers
 - CI annotation review and safe workflow updates if verified
 
-Do not invent a license.
+Merged into `main` as neutral metadata and release-readiness documentation. Publishing remains blocked on owner-approved license and publisher decisions.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -129,16 +128,36 @@ Deliver:
 - Seisei-side contract gaps, if any
 - docs-only adapter SPEC unless Tagflow API is stable enough for compileable optional code
 
-Tagflow must remain optional and outside core packages.
+Merged into `main` as a docs-only optional adapter SPEC. Tagflow remains optional and outside core packages.
+
+## Remaining Workstreams
+
+### 10. Owner-Gated Release
+
+Deliver after owner decision:
+
+- selected repository and package license material
+- publisher/ownership settings
+- package API review for the first publish wave
+- `dart tool/validate.dart --release` passing
+
+Do not invent a license.
+
+### 11. Native Expansion
+
+Deliver after the generic APIs and native capabilities are ready:
+
+- schema-backed Apple generation
+- native streaming
+- PCC support if a verified API path exists
+- Swift App Intents registration package
 
 ## Merge Order
 
-1. Native Apple bridge or blocker-backed SPEC.
-2. App Intents/tool bridge.
-3. Release readiness metadata/docs.
-4. Optional Tagflow adapter SPEC.
-5. README cleanup against implemented reality.
-6. Final validation pass.
+1. Owner-gated release decisions.
+2. Native expansion work that has verified API support.
+3. Optional Tagflow adapter only after Tagflow's renderer API is stable enough for compileable adapter code.
+4. Final validation pass after each merged workstream.
 
 ## Coordinator Review Checklist
 

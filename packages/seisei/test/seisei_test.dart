@@ -2,6 +2,22 @@ import 'package:seisei/seisei.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('SeiseiClient delegates typed generation to a provider', () async {
+    final client = SeiseiClient(
+      provider: _EchoProvider({'title': 'Client result'}),
+    );
+
+    final result = await client.generate(
+      GenerationRequest<_Draft>(
+        prompt: 'Draft a title',
+        decode: _Draft.fromJson,
+      ),
+    );
+
+    expect(result.value.title, 'Client result');
+    expect(result.providerId, 'echo');
+  });
+
   test('GenerationRequest decodes typed values through providers', () async {
     final provider = _EchoProvider({'title': 'Typed result'});
     final result = await provider.generate(
@@ -31,6 +47,24 @@ void main() {
       ),
       throwsA(isA<UnsupportedCapabilityException>()),
     );
+  });
+
+  test('SeiseiClient delegates streaming to a provider', () async {
+    final client = SeiseiClient(
+      provider: _EchoProvider({'title': 'Stream result'}),
+    );
+
+    final chunks = await client
+        .stream(
+          GenerationRequest<_Draft>(
+            prompt: 'Stream a title',
+            decode: _Draft.fromJson,
+          ),
+        )
+        .toList();
+
+    expect(chunks.single.value!.title, 'Stream result');
+    expect(chunks.single.isDone, isTrue);
   });
 }
 

@@ -17,8 +17,9 @@ Future<void> main() async {
       'text': 'Seisei defines typed, testable generation contracts for Dart.',
     },
   );
+  final client = SeiseiClient(provider: provider);
 
-  final response = await provider.generate(
+  final response = await client.generate(
     GenerationRequest<_Summary>(
       prompt: 'Summarize Seisei in one line.',
       privacyPolicy: PrivacyPolicy.onDeviceOnly,

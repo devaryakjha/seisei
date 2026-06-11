@@ -143,10 +143,11 @@ The coordinator can call the MVP finished only when all of the following are tru
 
 - Whether generated schema adapters live in `seisei_schema` or a separate builder package after the MVP.
 - Whether `seisei_ui` ships in the first publish wave or remains pre-release until a real adapter exists.
-- Whether `seisei_apple` starts as documentation plus platform channel stubs or waits for a confirmed buildable native API.
+- Whether `seisei_apple` expands beyond the current narrow system-model bridge into schema-backed generation and streaming.
 
 ## Resolved Decisions
 
 - The MVP scaffold uses Dart pub workspaces, not Melos.
 - The current package SDK constraint is `>=3.6.0 <4.0.0`.
-- Current packages are pure Dart. Flutter-specific SDK constraints are deferred until a package actually imports Flutter.
+- Core, schema, router, test, UI, and app-action packages stay pure Dart.
+- `seisei_apple` is a Flutter plugin package because the native iOS/macOS bridge imports Flutter platform-channel APIs.

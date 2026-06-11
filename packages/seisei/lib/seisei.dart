@@ -2,6 +2,7 @@
 library;
 
 export 'src/capability.dart';
+export 'src/client.dart';
 export 'src/error.dart';
 export 'src/provider.dart';
 export 'src/request.dart';
