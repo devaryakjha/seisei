@@ -2,6 +2,13 @@ name: seisei_ui
 description: Renderer-neutral UI block contracts and adapter interfaces for Seisei.
 version: 0.1.0-dev.0
 repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+topics:
+  - ai
+  - dart
+  - ui
+  - renderer
+  - blocks
 publish_to: none
 
 environment:

@@ -2,6 +2,13 @@ name: seisei_test
 description: Deterministic fake providers and assertions for Seisei tests.
 version: 0.1.0-dev.0
 repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+topics:
+  - ai
+  - dart
+  - testing
+  - fake-provider
+  - test-utils
 publish_to: none
 
 environment:

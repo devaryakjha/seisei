@@ -2,6 +2,13 @@ name: seisei_schema
 description: Structured output schemas and validation helpers for Seisei.
 version: 0.1.0-dev.0
 repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+topics:
+  - ai
+  - dart
+  - json-schema
+  - structured-output
+  - validation
 publish_to: none
 
 environment:

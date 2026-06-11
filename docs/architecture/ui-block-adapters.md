@@ -85,6 +85,10 @@ Rules:
 - If Tagflow cannot render a block, the adapter reports a capability mismatch rather than degrading silently.
 - Apps can provide their own adapters without depending on Tagflow.
 
+See [Optional Tagflow Adapter SPEC](../specs/tagflow-adapter.md) for the
+current read-only Tagflow findings, Seisei contract assessment, and blockers
+before any optional `seisei_tagflow` package is added.
+
 ## Security and Safety
 
 - Model-produced UI blocks are data, not code.

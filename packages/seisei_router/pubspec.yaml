@@ -2,6 +2,13 @@ name: seisei_router
 description: Provider routing, fallback, capability, and privacy policy decisions for Seisei.
 version: 0.1.0-dev.0
 repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+topics:
+  - ai
+  - dart
+  - provider-routing
+  - privacy
+  - fallback
 publish_to: none
 
 environment:
