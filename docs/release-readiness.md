@@ -11,7 +11,8 @@ The current published package line is `0.1.0-dev.0` for the first wave, with
 `seisei_schema` advanced to `0.1.0-dev.2` for nested objects and verified
 constraints and `seisei_apple` advanced to `0.1.0-dev.5` for nested
 FoundationModels schema mapping, system-model streaming, and clearer PCC
-availability diagnostics.
+availability diagnostics. `seisei` and `seisei_test` advanced to
+`0.1.0-dev.1` for typed partial stream snapshots.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -77,8 +78,9 @@ Last verified on 2026-06-11 from `main`:
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_apple`, and `seisei_intents`.
-- GitHub Actions `Validate` run `27359646933` completed successfully on the
-  default branch for `cfb3a08`.
-- The pub.dev package API reports `seisei_schema` latest as `0.1.0-dev.2` and
-  `seisei_apple` latest as `0.1.0-dev.5`; the other released packages remain
-  at `0.1.0-dev.0`.
+- GitHub Actions `Validate` run `27360682814` completed successfully on the
+  default branch for `378fb78`.
+- The pub.dev package API reports `seisei` latest as `0.1.0-dev.1`,
+  `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
+  `0.1.0-dev.2`, and `seisei_apple` latest as `0.1.0-dev.5`; the other
+  released packages remain at `0.1.0-dev.0`.

@@ -135,6 +135,8 @@ system-model streaming.
 mapping. `seisei_schema` then advanced to `0.1.0-dev.2` for nested objects and
 verified constraints, and `seisei_apple` advanced to `0.1.0-dev.5` for the
 matching FoundationModels schema mapper updates and PCC diagnostics.
+`seisei` and `seisei_test` later advanced to `0.1.0-dev.1` for typed partial
+stream snapshots and fake-provider partial scripting.
 
 ### 9. Optional Tagflow Adapter Path
 
