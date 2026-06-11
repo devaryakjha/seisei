@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart' as flutter_test;
 import 'package:seisei/seisei.dart';
 import 'package:seisei_apple/seisei_apple.dart';
+import 'package:seisei_schema/seisei_schema.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -152,6 +153,66 @@ void main() {
     );
 
     expect(backend.requests.single.schemaPath, '/tmp/seisei_schema.json');
+  });
+
+  test('encodes Seisei object schemas as FoundationModels JSON', () {
+    const schema = ObjectSchema(
+      name: 'Draft',
+      requiredStringFields: {'summary', 'title'},
+    );
+
+    final encoded = const FoundationModelsSchemaEncoder().encodeObject(schema);
+
+    expect(encoded, {
+      'additionalProperties': false,
+      'required': ['summary', 'title'],
+      'type': 'object',
+      'properties': {
+        'summary': {'type': 'string'},
+        'title': {'type': 'string'},
+      },
+      'x-order': ['summary', 'title'],
+      'title': 'Draft',
+    });
+  });
+
+  test('writes FoundationModels schema files and provider metadata', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'seisei_afm_schema_test_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    const encoder = FoundationModelsSchemaEncoder();
+    const schema = ObjectSchema(
+      name: 'Draft',
+      requiredStringFields: {'title'},
+    );
+
+    final file = await encoder.writeObjectFile(
+      schema,
+      directory: directory,
+      fileName: 'draft.json',
+    );
+
+    expect(file.path, endsWith('/draft.json'));
+    expect(
+      await file.readAsString(),
+      contains('"title": "Draft"'),
+    );
+    expect(encoder.metadataForFile(file), {
+      AppleFoundationModelsProvider.schemaPathMetadataKey: file.path,
+    });
+  });
+
+  test('rejects nested fields until the generic schema supports them', () {
+    const schema = ObjectSchema(
+      name: 'Draft',
+      requiredStringFields: {'author.name'},
+    );
+
+    expect(
+      () => const FoundationModelsSchemaEncoder().encodeObject(schema),
+      throwsArgumentError,
+    );
   });
 
   test('stream rejects until Apple backend exposes streaming', () async {

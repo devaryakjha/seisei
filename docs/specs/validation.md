@@ -27,9 +27,10 @@ dart tool/validate.dart --local-afm
 ```
 
 That mode expects the local `fm` CLI and should only be used on machines that
-provide Apple Foundation Models. It runs both a direct `fm respond` smoke check
-and `packages/seisei_apple/bin/local_afm_smoke.dart`, which calls local AFM
-through `FmCliBackend`, `AppleFoundationModelsProvider`, and `SeiseiClient`.
+provide Apple Foundation Models. It runs a direct `fm respond` smoke check plus
+plain and schema-backed `packages/seisei_apple/bin/local_afm_smoke.dart` runs,
+which call local AFM through `FmCliBackend`, `AppleFoundationModelsProvider`,
+and `SeiseiClient`.
 
 PCC is checked separately because the `fm` CLI can expose a working system model
 while reporting `PCC inference is not available in this context` for the same

@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:seisei/seisei.dart';
 import 'package:seisei_apple/src/apple_foundation_models_provider.dart';
 import 'package:seisei_apple/src/backend.dart';
 import 'package:seisei_apple/src/fm_cli_backend.dart';
+import 'package:seisei_apple/src/foundation_models_schema.dart';
+import 'package:seisei_schema/seisei_schema.dart';
 
 Future<void> main(List<String> args) async {
   if (args.contains('--help') || args.contains('-h')) {
@@ -12,10 +15,13 @@ Future<void> main(List<String> args) async {
   }
 
   final mode = _modeFromArgs(args);
+  final schemaSmoke = args.contains('--schema');
   final expect = _optionValue(args, '--expect') ??
-      switch (mode) {
-        AppleFoundationModelsMode.system => 'seisei-ok',
-        AppleFoundationModelsMode.pcc => 'seisei-pcc-ok',
+      switch ((mode, schemaSmoke)) {
+        (AppleFoundationModelsMode.system, true) => 'seisei-schema-ok',
+        (AppleFoundationModelsMode.system, false) => 'seisei-ok',
+        (AppleFoundationModelsMode.pcc, true) => 'seisei-pcc-schema-ok',
+        (AppleFoundationModelsMode.pcc, false) => 'seisei-pcc-ok',
       };
   final promptParts = <String>[];
   for (var index = 0; index < args.length; index += 1) {
@@ -24,13 +30,18 @@ Future<void> main(List<String> args) async {
       index += 1;
       continue;
     }
+    if (arg == '--schema') {
+      continue;
+    }
     if (arg.startsWith('--mode=') || arg.startsWith('--expect=')) {
       continue;
     }
     promptParts.add(arg);
   }
   final prompt = promptParts.isEmpty
-      ? 'Reply with exactly: $expect'
+      ? schemaSmoke
+          ? 'Return JSON with title exactly $expect'
+          : 'Reply with exactly: $expect'
       : promptParts.join(' ');
   final backend = FmCliBackend();
   final availability = await backend.availability();
@@ -52,6 +63,17 @@ Future<void> main(List<String> args) async {
     mode: mode,
   );
   final client = SeiseiClient(provider: provider);
+  const schema = ObjectSchema(
+    name: 'Draft',
+    requiredStringFields: {'title'},
+  );
+  const encoder = FoundationModelsSchemaEncoder();
+  final schemaDirectory = schemaSmoke
+      ? await Directory.systemTemp.createTemp('seisei_afm_schema_smoke_')
+      : null;
+  final schemaFile = schemaDirectory == null
+      ? null
+      : await encoder.writeObjectFile(schema, directory: schemaDirectory);
   final GenerationResponse<String> response;
   try {
     response = await client.generate(
@@ -61,16 +83,23 @@ Future<void> main(List<String> args) async {
           AppleFoundationModelsMode.system => PrivacyPolicy.onDeviceOnly,
           AppleFoundationModelsMode.pcc => PrivacyPolicy.cloudAllowed,
         },
-        decode: (rawValue) => rawValue! as String,
+        metadata:
+            schemaFile == null ? const {} : encoder.metadataForFile(schemaFile),
+        decode: (rawValue) => _decode(rawValue, schemaSmoke: schemaSmoke),
       ),
     );
   } on Object catch (error) {
     stderr.writeln('local AFM smoke failed: $error');
     exitCode = 1;
     return;
+  } finally {
+    await schemaDirectory?.delete(recursive: true);
   }
 
   stdout.writeln('providerId: ${response.providerId}');
+  if (schemaFile != null) {
+    stdout.writeln('schema: ObjectSchema(title)');
+  }
   stdout.writeln('response: ${response.value}');
 
   if (response.value.trim() != expect) {
@@ -79,6 +108,22 @@ Future<void> main(List<String> args) async {
     );
     exitCode = 1;
   }
+}
+
+String _decode(Object? rawValue, {required bool schemaSmoke}) {
+  if (!schemaSmoke) {
+    return rawValue! as String;
+  }
+
+  final decoded = switch (rawValue) {
+    final String text => jsonDecode(text),
+    _ => rawValue,
+  };
+  const schema = ObjectSchema(
+    name: 'Draft',
+    requiredStringFields: {'title'},
+  );
+  return schema.decode(decoded, (object) => object['title']! as String);
 }
 
 AppleFoundationModelsMode _modeFromArgs(List<String> args) {
@@ -111,9 +156,12 @@ void _printUsage() {
   stdout.writeln(
     '  --mode system|pcc   Apple model mode to use. Defaults to system.',
   );
+  stdout
+      .writeln('  --schema           Use a Seisei ObjectSchema-backed prompt.');
   stdout.writeln('  --expect VALUE      Exact expected response text.');
   stdout.writeln('');
   stdout.writeln('Examples:');
   stdout.writeln('  dart run bin/local_afm_smoke.dart');
+  stdout.writeln('  dart run bin/local_afm_smoke.dart --schema');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --mode pcc');
 }

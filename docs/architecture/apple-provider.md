@@ -36,7 +36,7 @@ The current native bridge is a compileable Flutter plugin scaffold for iOS and m
 - Swift API used: `SystemLanguageModel.default.availability`,
   `LanguageModelSession(model: .default).respond(to:)`, and
   `LanguageModelSession(model: .default).respond(to:schema:)` for
-  provider-specific FoundationModels schemas.
+  FoundationModels schemas.
 - Availability guard: FoundationModels requires iOS/macOS `26.0` or newer.
 - PCC availability is reported as false because no native PCC API path has been verified.
 
@@ -49,7 +49,10 @@ The provider should map Apple availability into Seisei capabilities:
 - `fm respond --schema`: structured output support for local CLI probes.
 - native method-channel bridge: plain system-model text generation and
   schema-backed generation when the request supplies a JSON-encoded
-  FoundationModels `GenerationSchema` file.
+  FoundationModels schema file.
+- `FoundationModelsSchemaEncoder`: maps the current flat `seisei_schema`
+  `ObjectSchema` contract into FoundationModels schema JSON and provider
+  metadata.
 - streaming: deferred until the provider has a backend that emits incremental chunks. The current `FmCliBackend` uses `fm respond --no-stream`, so `seisei_apple` must not advertise `ModelCapability.streaming` yet.
 - `fm respond --image`: multimodal input support after the core request model includes media segments.
 
@@ -78,9 +81,10 @@ The router should be able to reject Apple modes before request execution:
 ## Remaining Native Blockers
 
 - PCC generation: `/usr/bin/fm available --model pcc` says PCC inference is unavailable in this shell context, and no native PCC `FoundationModels` API path is verified.
-- Generic schema mapping: native schema-backed generation accepts
-  FoundationModels `GenerationSchema` JSON, but Seisei does not yet have a
-  stable Dart schema mapping into that Swift type.
+- Generic schema mapping depth: `FoundationModelsSchemaEncoder` supports flat
+  `ObjectSchema` values with required string fields. Nested objects, optional
+  fields, arrays, unions, and non-string primitives should wait until
+  `seisei_schema` grows matching generic contracts.
 - Streaming: the native API exposes response streams, but the Dart backend does not yet expose event-channel streaming into `GenerationChunk<T>`.
 - Podspec release metadata: the repository intentionally does not choose license policy in this workstream, so local plugin metadata is not a release-readiness decision.
 

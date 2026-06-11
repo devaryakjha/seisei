@@ -62,7 +62,8 @@ dart tool/validate.dart --local-afm
 
 These checks are not CI gates because CI runners are not expected to provide AFM.
 They include a real Seisei provider call through
-`packages/seisei_apple/bin/local_afm_smoke.dart`, not only fake clients.
+`packages/seisei_apple/bin/local_afm_smoke.dart`, including a schema-backed
+`ObjectSchema` smoke, not only fake clients.
 Use `dart tool/validate.dart --local-pcc` when PCC should be a required local
 smoke test in the same terminal/process context.
 For a supported Flutter host path that exercises the native `seisei_apple`
@@ -80,4 +81,11 @@ bridge, see `packages/seisei_apple/README.md`. The offline CLI example in
 
 ## Status
 
-Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, Apple provider architecture notes, generic app-action/tool bridge contracts, and a native Apple bridge for system-model availability, plain prompts, and provider-specific FoundationModels schema requests. PCC generation, native streaming, system App Intents registration, cloud providers, production RAG, a Dart-to-FoundationModels schema mapper, and Tagflow integration are not implemented yet.
+Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts,
+deterministic tests, an offline example, validation tooling, Apple provider
+architecture notes, generic app-action/tool bridge contracts, and a native Apple
+bridge for system-model availability, plain prompts, provider-specific
+FoundationModels schema requests, and flat `ObjectSchema` mapping into
+FoundationModels schema files. PCC generation, native streaming, system App
+Intents registration, cloud providers, production RAG, and Tagflow integration
+are not implemented yet.

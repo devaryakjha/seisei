@@ -34,6 +34,12 @@ Future<void> main(List<String> args) async {
         'run',
         'bin/local_afm_smoke.dart',
       ]),
+      _Check('$root/packages/seisei_apple', [
+        'dart',
+        'run',
+        'bin/local_afm_smoke.dart',
+        '--schema',
+      ]),
     ]);
   }
 

@@ -21,11 +21,14 @@ To verify Seisei itself can use local AFM, run the package smoke command:
 
 ```sh
 dart run bin/local_afm_smoke.dart
+dart run bin/local_afm_smoke.dart --schema
 ```
 
 That command uses `FmCliBackend`, `AppleFoundationModelsProvider`, and
 `SeiseiClient` to send the prompt through the local system model. A passing run
-prints `providerId: apple_system` and `response: seisei-ok`.
+prints `providerId: apple_system` and `response: seisei-ok`. The `--schema`
+variant also writes a temporary `ObjectSchema` FoundationModels schema file and
+expects `response: seisei-schema-ok`.
 
 To verify PCC from the same Seisei path, run:
 
@@ -68,20 +71,46 @@ final response = await backend.respond(
 );
 ```
 
+For schema-backed generation, encode the generic Seisei object schema into a
+FoundationModels schema file and pass that file through provider metadata:
+
+```dart
+const encoder = FoundationModelsSchemaEncoder();
+const schema = ObjectSchema(
+  name: 'Draft',
+  requiredStringFields: {'title'},
+);
+final schemaFile = await encoder.writeObjectFile(schema);
+
+final provider = AppleFoundationModelsProvider(
+  backend: MethodChannelAppleFoundationModelsBackend(),
+);
+final response = await SeiseiClient(provider: provider).generate(
+  GenerationRequest<String>(
+    prompt: 'Reply as JSON with a title field.',
+    metadata: encoder.metadataForFile(schemaFile),
+    decode: (rawValue) {
+      final object = schema.decode(rawValue, (value) => value);
+      return object['title']! as String;
+    },
+  ),
+);
+```
+
 The native bridge is intentionally narrow. It checks system-model availability
 and sends plain system-model prompts through
 `FoundationModels.LanguageModelSession`. It can also send schema-backed system
-model requests when `schemaPath` points to a JSON-encoded
-`FoundationModels.GenerationSchema` file. PCC and streaming are not implemented
-in the native bridge yet.
+model requests when `schemaPath` points to a JSON-encoded FoundationModels
+schema file. The current `FoundationModelsSchemaEncoder` covers flat
+`ObjectSchema` values with required string fields. PCC and streaming are not
+implemented in the native bridge yet.
 
 If you want the typed Seisei client layer, add a direct `seisei` dependency in
 the host app and build `AppleFoundationModelsProvider` on top of the native
 backend. Keep the request in system mode and avoid streaming or PCC settings.
-For schema-backed requests, use
-`AppleFoundationModelsProvider.schemaPathMetadataKey` only with a
-provider-specific FoundationModels schema file; Seisei does not yet map
-`seisei_schema` descriptors into native FoundationModels schemas.
+For schema-backed requests outside `FoundationModelsSchemaEncoder`, use
+`AppleFoundationModelsProvider.schemaPathMetadataKey` with a provider-specific
+FoundationModels schema file.
 
 CI tests use fake and mocked method-channel backends; `/usr/bin/fm` and local
 Apple Foundation Models are optional validation only.

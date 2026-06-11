@@ -20,7 +20,8 @@ This file is the coordinator-owned source of truth for parallel Codex work.
 - Standard validation and CI.
 - Optional local AFM smoke validation through `/usr/bin/fm`.
 - A native iOS/macOS Apple Foundation Models bridge for availability, plain
-  system-model prompts, and provider-specific FoundationModels schema requests.
+  system-model prompts, schema-backed FoundationModels requests, and flat
+  `ObjectSchema` mapping into FoundationModels schema files.
 - Tagflow kept optional and adapter-oriented.
 
 The first wave is complete. New work should start from the current `main` branch and avoid recreating the scaffold.
@@ -98,8 +99,9 @@ Deliver:
 - optional local AFM validation only when available
 
 Merged into `main` as a Flutter plugin bridge for system-model availability,
-plain prompts, and provider-specific FoundationModels schema-backed generation.
-PCC, a generic Dart schema mapper, and native streaming remain future work.
+plain prompts, schema-backed FoundationModels generation, and flat
+`ObjectSchema` mapping. PCC, richer schema mapping, and native streaming remain
+future work.
 
 ### 7. App Intents and Tool Bridge
 
@@ -157,7 +159,7 @@ instead of republishing the same artifacts.
 
 Deliver after the generic APIs and native capabilities are ready:
 
-- generic Dart schema-to-FoundationModels mapping
+- richer Dart schema-to-FoundationModels mapping
 - native streaming
 - PCC support if a verified API path exists
 - Swift App Intents registration package

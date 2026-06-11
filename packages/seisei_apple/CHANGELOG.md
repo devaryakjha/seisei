@@ -1,3 +1,9 @@
+## 0.1.0-dev.2
+
+- Add `FoundationModelsSchemaEncoder` for mapping the current
+  `seisei_schema` `ObjectSchema` contract into FoundationModels
+  `GenerationSchema` JSON files and provider metadata.
+
 ## 0.1.0-dev.1
 
 - Add native iOS/macOS schema-backed generation for provider-specific
