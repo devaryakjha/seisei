@@ -22,10 +22,10 @@ dart tool/validate.dart --local-afm
 
 That mode expects the local `fm` CLI and should only be used on machines that provide Apple Foundation Models.
 
-Release dry-runs are available with:
+Release dry-runs are intentionally a readiness gate, not part of normal validation:
 
 ```sh
 dart tool/validate.dart --release
 ```
 
-Publishing is intentionally disabled with `publish_to: none` until package ownership, licensing, and API review are complete.
+This command is expected to fail until package ownership, licensing, package-level READMEs, changelogs, and API review are complete. Publishing is intentionally disabled with `publish_to: none` until those decisions are made.
