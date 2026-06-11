@@ -4,6 +4,12 @@ import 'backend.dart';
 
 /// Seisei provider backed by Apple Foundation Models.
 final class AppleFoundationModelsProvider implements SeiseiProvider {
+  /// Metadata key for a provider-specific JSON schema file path.
+  ///
+  /// This keeps schema-backed AFM requests behind the Apple provider boundary
+  /// instead of adding Apple concepts to `GenerationRequest`.
+  static const schemaPathMetadataKey = 'seisei.apple.schemaPath';
+
   /// Creates an Apple provider.
   const AppleFoundationModelsProvider({
     required this.backend,
@@ -48,7 +54,11 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   ) async {
     await _check(request);
     final rawValue = await backend.respond(
-      AppleFoundationModelsRequest(prompt: request.prompt, mode: mode),
+      AppleFoundationModelsRequest(
+        prompt: request.prompt,
+        mode: mode,
+        schemaPath: _schemaPath(request),
+      ),
     );
 
     return GenerationResponse<T>(
@@ -60,11 +70,12 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
   @override
   Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
-    await _check(request);
+    await _check(request, additionalCapabilities: {ModelCapability.streaming});
     final rawValue = await backend.respond(
       AppleFoundationModelsRequest(
         prompt: request.prompt,
         mode: mode,
+        schemaPath: _schemaPath(request),
         stream: true,
       ),
     );
@@ -77,7 +88,10 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     );
   }
 
-  Future<void> _check<T>(GenerationRequest<T> request) async {
+  Future<void> _check<T>(
+    GenerationRequest<T> request, {
+    Set<ModelCapability> additionalCapabilities = const {},
+  }) async {
     final available = await availability();
     if (!available.isAvailable) {
       throw SeiseiException(
@@ -86,9 +100,11 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       );
     }
 
-    final unsupported = request.capabilities.difference(
-      available.capabilities,
-    );
+    final requiredCapabilities = {
+      ...request.capabilities,
+      ...additionalCapabilities,
+    };
+    final unsupported = requiredCapabilities.difference(available.capabilities);
     if (unsupported.isNotEmpty) {
       throw UnsupportedCapabilityException(
         providerId: id,
@@ -100,5 +116,14 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
         !available.capabilities.contains(ModelCapability.onDeviceInference)) {
       throw PrivacyPolicyRejectedException(request.privacyPolicy, id);
     }
+
+    if (mode == AppleFoundationModelsMode.pcc &&
+        request.privacyPolicy != PrivacyPolicy.cloudAllowed) {
+      throw PrivacyPolicyRejectedException(request.privacyPolicy, id);
+    }
+  }
+
+  String? _schemaPath<T>(GenerationRequest<T> request) {
+    return request.metadata[schemaPathMetadataKey] as String?;
   }
 }

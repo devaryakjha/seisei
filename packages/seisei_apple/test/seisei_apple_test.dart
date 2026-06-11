@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:seisei/seisei.dart';
 import 'package:seisei_apple/seisei_apple.dart';
 import 'package:test/test.dart';
@@ -63,12 +65,152 @@ void main() {
       throwsA(isA<PrivacyPolicyRejectedException>()),
     );
   });
+
+  test('privacy rejects pcc for on-device-preferred requests', () async {
+    final provider = AppleFoundationModelsProvider(
+      mode: AppleFoundationModelsMode.pcc,
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: true,
+        ),
+      ),
+    );
+
+    expect(
+      () => provider.generate(
+        GenerationRequest<String>(
+          prompt: 'Hello',
+          decode: (rawValue) => rawValue! as String,
+        ),
+      ),
+      throwsA(isA<PrivacyPolicyRejectedException>()),
+    );
+  });
+
+  test('pcc generation is allowed when cloud policy is explicit', () async {
+    final provider = AppleFoundationModelsProvider(
+      mode: AppleFoundationModelsMode.pcc,
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: true,
+        ),
+      ),
+    );
+
+    final response = await provider.generate(
+      GenerationRequest<String>(
+        prompt: 'Hello',
+        privacyPolicy: PrivacyPolicy.cloudAllowed,
+        decode: (rawValue) => rawValue! as String,
+      ),
+    );
+
+    expect(response.value, 'ok');
+  });
+
+  test('forwards schema path metadata for schema-backed generation', () async {
+    final backend = _FakeAppleBackend(
+      availabilityResult: const AppleFoundationModelsAvailability(
+        systemAvailable: true,
+        pccAvailable: false,
+      ),
+    );
+    final provider = AppleFoundationModelsProvider(backend: backend);
+
+    await provider.generate(
+      GenerationRequest<String>(
+        prompt: 'Reply as JSON.',
+        metadata: {
+          AppleFoundationModelsProvider.schemaPathMetadataKey:
+              '/tmp/seisei_schema.json',
+        },
+        decode: (rawValue) => rawValue! as String,
+      ),
+    );
+
+    expect(backend.requests.single.schemaPath, '/tmp/seisei_schema.json');
+  });
+
+  test('stream rejects until Apple backend exposes streaming', () async {
+    final provider = AppleFoundationModelsProvider(
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: false,
+        ),
+      ),
+    );
+
+    expect(
+      () => provider
+          .stream(
+            GenerationRequest<String>(
+              prompt: 'Hello',
+              decode: (rawValue) => rawValue! as String,
+            ),
+          )
+          .toList(),
+      throwsA(isA<UnsupportedCapabilityException>()),
+    );
+  });
+
+  test('fm backend maps system availability when PCC exits nonzero', () async {
+    final backend = FmCliBackend(
+      executable: 'fm',
+      processRunner: (executable, arguments) async => ProcessResult(
+        1,
+        1,
+        'System model available',
+        'Error: PCC inference is not available in this context.',
+      ),
+    );
+
+    final availability = await backend.availability();
+
+    expect(availability.systemAvailable, isTrue);
+    expect(availability.pccAvailable, isFalse);
+    expect(availability.reason, contains('PCC inference is not available'));
+  });
+
+  test('fm backend builds stream and schema response arguments', () async {
+    final calls = <List<String>>[];
+    final backend = FmCliBackend(
+      executable: 'fm',
+      processRunner: (_, arguments) async {
+        calls.add(arguments);
+        return ProcessResult(2, 0, 'seisei-ok\n', '');
+      },
+    );
+
+    final response = await backend.respond(
+      const AppleFoundationModelsRequest(
+        prompt: 'Reply with exactly: seisei-ok',
+        mode: AppleFoundationModelsMode.pcc,
+        schemaPath: '/tmp/schema.json',
+        stream: true,
+      ),
+    );
+
+    expect(response, 'seisei-ok');
+    expect(calls.single, [
+      'respond',
+      '--stream',
+      '--model',
+      'pcc',
+      '--schema',
+      '/tmp/schema.json',
+      'Reply with exactly: seisei-ok',
+    ]);
+  });
 }
 
 final class _FakeAppleBackend implements AppleFoundationModelsBackend {
-  const _FakeAppleBackend({required this.availabilityResult});
+  _FakeAppleBackend({required this.availabilityResult});
 
   final AppleFoundationModelsAvailability availabilityResult;
+  final List<AppleFoundationModelsRequest> requests = [];
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
@@ -77,6 +219,7 @@ final class _FakeAppleBackend implements AppleFoundationModelsBackend {
 
   @override
   Future<Object?> respond(AppleFoundationModelsRequest request) async {
+    requests.add(request);
     return 'ok';
   }
 }

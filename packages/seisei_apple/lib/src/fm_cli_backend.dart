@@ -2,17 +2,28 @@ import 'dart:io';
 
 import 'backend.dart';
 
+/// Injectable process runner used by tests.
+typedef ProcessRunner = Future<ProcessResult> Function(
+  String executable,
+  List<String> arguments,
+);
+
 /// Backend that talks to the local `/usr/bin/fm` CLI.
 final class FmCliBackend implements AppleFoundationModelsBackend {
   /// Creates an `fm` CLI backend.
-  const FmCliBackend({this.executable = 'fm'});
+  FmCliBackend({
+    this.executable = '/usr/bin/fm',
+    ProcessRunner? processRunner,
+  }) : _processRunner = processRunner ?? Process.run;
 
   /// CLI executable.
   final String executable;
 
+  final ProcessRunner _processRunner;
+
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
-    final result = await Process.run(executable, ['available']);
+    final result = await _processRunner(executable, ['available']);
     final output = '${result.stdout}\n${result.stderr}';
 
     return AppleFoundationModelsAvailability(
@@ -27,7 +38,7 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
   Future<Object?> respond(AppleFoundationModelsRequest request) async {
     final args = [
       'respond',
-      '--no-stream',
+      if (request.stream) '--stream' else '--no-stream',
       if (request.mode == AppleFoundationModelsMode.pcc) ...[
         '--model',
         'pcc',
@@ -39,7 +50,7 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
       request.prompt,
     ];
 
-    final result = await Process.run(executable, args);
+    final result = await _processRunner(executable, args);
     if (result.exitCode != 0) {
       throw ProcessException(
         executable,
