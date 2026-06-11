@@ -47,7 +47,7 @@ Future<void> main(List<String> args) async {
       ? streamSmoke && explicitExpect == null
           ? 'Say hello in a short sentence.'
           : schemaSmoke
-              ? 'Return JSON with title exactly $expect, count 7, and published true'
+              ? 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
               : 'Reply with exactly: $expect'
       : promptParts.join(' ');
   final backend = FmCliBackend();
@@ -73,6 +73,14 @@ Future<void> main(List<String> args) async {
   const schema = ObjectSchema(
     name: 'Draft',
     fields: {
+      'author': ObjectField.object(
+        schema: ObjectSchema(
+          name: 'Author',
+          fields: {
+            'name': ObjectField.string(),
+          },
+        ),
+      ),
       'count': ObjectField.integer(),
       'published': ObjectField.boolean(),
       'title': ObjectField.string(),
@@ -127,7 +135,7 @@ Future<void> main(List<String> args) async {
     stdout.writeln('streamDeltas: $streamDeltas');
   }
   if (schemaFile != null) {
-    stdout.writeln('schema: ObjectSchema(title,count,published)');
+    stdout.writeln('schema: ObjectSchema(title,count,published,author)');
   }
   stdout.writeln('response: $responseValue');
 
@@ -159,15 +167,26 @@ String _decode(Object? rawValue, {required bool schemaSmoke}) {
   const schema = ObjectSchema(
     name: 'Draft',
     fields: {
+      'author': ObjectField.object(
+        schema: ObjectSchema(
+          name: 'Author',
+          fields: {
+            'name': ObjectField.string(),
+          },
+        ),
+      ),
       'count': ObjectField.integer(),
       'published': ObjectField.boolean(),
       'title': ObjectField.string(),
     },
   );
   return schema.decode(decoded, (object) {
-    if (object['count'] != 7 || object['published'] != true) {
+    final author = object['author'] as Map;
+    if (author['name'] != 'Aria' ||
+        object['count'] != 7 ||
+        object['published'] != true) {
       throw DecodeException(
-        'Expected count 7 and published true.',
+        'Expected nested author and typed schema fields.',
         source: object,
       );
     }

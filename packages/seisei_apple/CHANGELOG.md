@@ -1,3 +1,9 @@
+## 0.1.0-dev.5
+
+- Encode nested object schemas, string enum choices, numeric ranges, string
+  patterns, and array size constraints into FoundationModels schema JSON.
+- Improve PCC availability diagnostics for context-sensitive `fm` CLI behavior.
+
 ## 0.1.0-dev.4
 
 - Map typed `seisei_schema` object fields into FoundationModels schema JSON
