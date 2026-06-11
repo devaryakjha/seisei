@@ -9,9 +9,10 @@ MIT `LICENSE` files, `dart tool/validate.dart --release` passes locally, and
 the released packages are published under the verified publisher `jha.sh`.
 The current published package line is `0.1.0-dev.0` for the first wave, with
 `seisei_schema` advanced to `0.1.0-dev.3` for field-level unions and
-`seisei_apple` advanced to `0.1.0-dev.7` for FoundationModels `anyOf` mapping
-and typed partial decoding of safe schema-backed stream snapshots.
-`seisei` and `seisei_test` advanced to `0.1.0-dev.1` for typed partial stream
+`seisei` advanced to `0.1.0-dev.2` for provider-neutral structured patches.
+`seisei_apple` advanced to `0.1.0-dev.8` for FoundationModels `anyOf` mapping,
+typed partial decoding of safe schema-backed stream snapshots, and structured
+patch emission. `seisei_test` is at `0.1.0-dev.1` for typed partial stream
 snapshots. `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental
 optional Tagflow document adapter.
 
@@ -81,10 +82,10 @@ Last verified on 2026-06-11 from `main`:
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
-- GitHub Actions `Validate` run `27363065297` completed successfully on the
-  default branch for `05ee96b`.
-- The pub.dev package API reports `seisei` latest as `0.1.0-dev.1`,
+- GitHub Actions `Validate` run `27363695041` completed successfully on the
+  default branch for `fbd49f2`.
+- The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
-  `0.1.0-dev.3`, `seisei_apple` latest as `0.1.0-dev.7`, and
+  `0.1.0-dev.3`, `seisei_apple` latest as `0.1.0-dev.8`, and
   `seisei_tagflow` latest as `0.1.0-dev.0`; the other released packages remain
   at `0.1.0-dev.0`.
