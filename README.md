@@ -70,14 +70,17 @@ They include a real Seisei provider call through
 `packages/seisei_apple/bin/local_afm_smoke.dart`, including a schema-backed
 `ObjectSchema` smoke, not only fake clients.
 Use `dart tool/validate.dart --local-pcc` when PCC should be a required local
-smoke test in the same non-interactive Dart subprocess context.
+smoke test in the same non-interactive Dart subprocess context used by the
+current `FmCliBackend`.
 On this machine, `/usr/bin/fm` reports PCC availability differently depending
 on how it is launched: interactive PTY checks can report PCC available while
-non-interactive Dart subprocesses report `PCC inference is not available in
-this context`. Treat PCC checks as context-sensitive until a production native
-PCC API path is verified. The current public Swift `FoundationModels` SDK still
-exposes `LanguageModelSession(model: SystemLanguageModel)` only, so Seisei does
-not claim native PCC support for Flutter/macOS hosts.
+non-interactive Dart subprocesses, including `Process.run` calls that capture
+stdout/stderr, report `PCC inference is not available in this context`.
+Treat direct interactive PCC CLI checks as real machine capability probes, but
+not as proof that Seisei's current Dart backend can use PCC. The current public
+Swift `FoundationModels` SDK still exposes
+`LanguageModelSession(model: SystemLanguageModel)` only, so Seisei does not
+claim native PCC support for Flutter/macOS hosts.
 For a supported Flutter host path that exercises the native `seisei_apple`
 bridge, see `packages/seisei_apple/README.md`. The offline CLI example in
 `examples/basic_cli` intentionally stays provider-free and does not call AFM.

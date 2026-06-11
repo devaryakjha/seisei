@@ -140,6 +140,8 @@ stream snapshots and fake-provider partial scripting.
 `seisei_schema` then advanced to `0.1.0-dev.3` for field-level unions, with
 `seisei_apple` at `0.1.0-dev.6` for the matching FoundationModels `anyOf`
 mapping.
+`seisei_tagflow` later shipped at `0.1.0-dev.0` as an experimental optional
+Tagflow document adapter outside the core package line.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -149,7 +151,9 @@ Deliver:
 - Seisei-side contract gaps, if any
 - docs-only adapter SPEC unless Tagflow API is stable enough for compileable optional code
 
-Merged into `main` as a docs-only optional adapter SPEC. Tagflow remains optional and outside core packages.
+Merged into `main` first as a docs-only optional adapter SPEC, then shipped as
+`seisei_tagflow` `0.1.0-dev.0`. Tagflow remains optional and outside core
+packages.
 
 ## Completed Owner-Gated Workstreams
 
@@ -184,7 +188,7 @@ partial chunk work:
 ## Merge Order
 
 1. Native expansion work that has verified API support.
-2. Optional Tagflow adapter only after Tagflow's renderer API is stable enough for compileable adapter code.
+2. Additional renderer adapters only after their renderer APIs are stable enough for compileable adapter code.
 3. Final validation pass after each merged workstream.
 
 ## Coordinator Review Checklist

@@ -36,7 +36,14 @@ through `FmCliBackend`, `AppleFoundationModelsProvider`, and `SeiseiClient`.
 PCC is checked separately because the `fm` CLI can expose a working system model
 while PCC availability depends on launch context. On this machine, interactive
 PTY checks can report PCC available while non-interactive Dart subprocesses
-report `PCC inference is not available in this context`:
+report `PCC inference is not available in this context`. The direct interactive
+CLI probe is:
+
+```sh
+fm respond --model pcc --no-stream 'Reply with exactly: seisei-pcc-ok'
+```
+
+The Seisei backend gate is:
 
 ```sh
 dart tool/validate.dart --local-pcc
@@ -44,7 +51,8 @@ dart tool/validate.dart --local-pcc
 
 That mode requires PCC to be available to the current non-interactive Dart
 subprocess context. It runs `fm available --model pcc`, a direct PCC generation
-smoke, and the same Seisei smoke path with `--mode pcc`.
+smoke, and the same Seisei smoke path with `--mode pcc` through the current
+`FmCliBackend`, which uses captured subprocess output.
 Passing `fm` commands in an interactive terminal do not override a failing
 `--local-pcc` run: the validation target is the non-interactive Seisei/Dart
 execution context that the script actually uses.
@@ -71,6 +79,7 @@ packages/seisei_schema
 packages/seisei_router
 packages/seisei_test
 packages/seisei_ui
+packages/seisei_tagflow
 packages/seisei_apple
 packages/seisei_intents
 ```

@@ -11,7 +11,8 @@ The current published package line is `0.1.0-dev.0` for the first wave, with
 `seisei_schema` advanced to `0.1.0-dev.3` for field-level unions and
 `seisei_apple` advanced to `0.1.0-dev.6` for FoundationModels `anyOf` mapping.
 `seisei` and `seisei_test` advanced to `0.1.0-dev.1` for typed partial stream
-snapshots.
+snapshots. `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental
+optional Tagflow document adapter.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -47,7 +48,7 @@ unless the release process is deliberately changed.
       tests.
 - [x] Router fallback and privacy claims are backed by tests.
 - [x] UI blocks can be validated before rendering.
-- [x] Tagflow is optional and appears only as a future adapter path.
+- [x] Tagflow remains optional and is isolated in `seisei_tagflow`.
 
 ## Dry-Run Evidence
 
@@ -76,10 +77,11 @@ Last verified on 2026-06-11 from `main`:
   Dart subprocesses report `PCC inference is not available in this context`.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
-  `seisei_ui`, `seisei_apple`, and `seisei_intents`.
-- GitHub Actions `Validate` run `27361419497` completed successfully on the
-  default branch for `86e3416`.
+  `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
+- GitHub Actions `Validate` run `27362160557` completed successfully on the
+  default branch for `5448911`.
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.1`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
-  `0.1.0-dev.3`, and `seisei_apple` latest as `0.1.0-dev.6`; the other
-  released packages remain at `0.1.0-dev.0`.
+  `0.1.0-dev.3`, `seisei_apple` latest as `0.1.0-dev.6`, and
+  `seisei_tagflow` latest as `0.1.0-dev.0`; the other released packages remain
+  at `0.1.0-dev.0`.

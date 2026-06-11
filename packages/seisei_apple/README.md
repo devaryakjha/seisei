@@ -32,11 +32,12 @@ variant also writes a temporary `ObjectSchema` FoundationModels schema file and
 expects `response: seisei-schema-ok`. The `--stream` variant verifies that
 real streaming chunks arrive and that Seisei emits a terminal value.
 
-To verify PCC from the same Seisei path, run:
+To verify direct PCC CLI access on the machine, run this from an interactive
+terminal:
 
 ```sh
 fm available --model pcc
-dart run bin/local_afm_smoke.dart --mode pcc
+fm respond --model pcc --no-stream 'Reply with exactly: seisei-pcc-ok'
 ```
 
 Those commands must be run in the same launch context you want to validate. On
@@ -66,10 +67,18 @@ The same split applies to direct generation:
 
 Run non-interactively, it fails with `PCC inference is not available in this
 context`. Run in an interactive PTY, it can return `seisei-pcc-ok`.
-`dart run bin/local_afm_smoke.dart --mode pcc` uses a non-interactive Dart
-subprocess, so it should be treated as a validation of that exact Seisei
-execution context, not as proof that PCC is generally unavailable on the
-machine.
+
+To verify PCC from the current Seisei Dart backend path, run:
+
+```sh
+dart run bin/local_afm_smoke.dart --mode pcc
+```
+
+That path currently uses `FmCliBackend`, which calls `fm` with captured
+subprocess output. On this machine that makes PCC report unavailable even when
+the direct interactive CLI probe succeeds. Treat that result as a validation of
+the current Seisei execution context, not as proof that PCC is generally
+unavailable on the machine.
 
 From the repository root, `dart tool/validate.dart --local-afm` checks only the
 system-model path. Use `dart tool/validate.dart --local-pcc` when you want PCC
