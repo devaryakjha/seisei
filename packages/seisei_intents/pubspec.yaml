@@ -1,0 +1,22 @@
+name: seisei_intents
+description: Generic app action and intent bridge contracts for Seisei tools.
+version: 0.1.0-dev.0
+repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+topics:
+  - ai
+  - dart
+  - intents
+  - tool-calling
+  - app-actions
+publish_to: none
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+resolution: workspace
+
+dependencies:
+  seisei: ^0.1.0-dev.0
+
+dev_dependencies:
+  test: ^1.26.0

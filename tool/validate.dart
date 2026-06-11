@@ -15,6 +15,7 @@ Future<void> main(List<String> args) async {
     _Check('$root/packages/seisei_test', ['dart', 'test']),
     _Check('$root/packages/seisei_ui', ['dart', 'test']),
     _Check('$root/packages/seisei_apple', ['dart', 'test']),
+    _Check('$root/packages/seisei_intents', ['dart', 'test']),
     _Check('$root/examples/basic_cli', ['dart', 'run']),
   ];
 
@@ -58,6 +59,12 @@ Future<void> main(List<String> args) async {
         '--dry-run',
       ]),
       _Check('$root/packages/seisei_apple', [
+        'dart',
+        'pub',
+        'publish',
+        '--dry-run',
+      ]),
+      _Check('$root/packages/seisei_intents', [
         'dart',
         'pub',
         'publish',

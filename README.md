@@ -27,10 +27,11 @@ The current workspace contains:
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
 - `seisei_ui`: renderer-neutral UI blocks and adapter contracts
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes
+- `seisei_intents`: generic app-action contracts, tool-call mapping, and fake bridges for future platform intent adapters
 
 Future packages may include:
 
-- `seisei_intents`: Flutter-to-App Intents bridge for tool calling, Siri, Shortcuts, and semantic app actions
+- `seisei_flutter_intents`: Flutter/native plugin bridge that registers generated or handwritten App Intents, Siri, Shortcuts, and semantic app actions against the generic `seisei_intents` contracts
 - `seisei_tagflow`: optional adapter from `seisei_ui` blocks into Tagflow once Tagflow's renderer API is stable
 
 ## Development
@@ -68,4 +69,4 @@ These checks are not CI gates because CI runners are not expected to provide AFM
 
 ## Status
 
-Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, and Apple provider architecture notes. Native Swift plugin work, App Intents bridging, cloud providers, production RAG, and Tagflow integration are not implemented yet.
+Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, Apple provider architecture notes, and generic app-action/tool bridge contracts. Native Swift plugin work, system App Intents registration, cloud providers, production RAG, and Tagflow integration are not implemented yet.

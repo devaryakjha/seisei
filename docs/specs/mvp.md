@@ -16,6 +16,7 @@ The MVP includes:
 - A test package with deterministic fake providers, fixture helpers, and stream simulators.
 - An Apple provider design and minimal integration boundary for Foundation Models / Apple Intelligence capabilities where the current platform APIs permit it.
 - A generic UI block contract that can be rendered by adapters, including a future optional Tagflow adapter, without making Tagflow a core dependency.
+- A generic app-action and intent bridge contract that maps Seisei tools to host-app actions without making Apple own the core tool architecture.
 - Documentation, examples, and validation commands that show the supported MVP path truthfully.
 
 The MVP does not include:
@@ -102,22 +103,36 @@ Owns renderer-agnostic UI block contracts:
 
 The package must not import Tagflow. A later optional `seisei_tagflow` adapter can map `seisei_ui` blocks into Tagflow once Tagflow's renderer API is stable.
 
+### `seisei_intents`
+
+Owns generic app-action and intent bridge contracts:
+
+- `AppActionDefinition`
+- `AppActionInvocation`
+- `AppActionResult`
+- `AppActionBridge`
+- `FakeAppActionBridge`
+- mapping helpers for `ToolDefinition` and `ToolCall`
+
+This package may depend on `seisei`. It must not import Flutter, Swift, Apple frameworks, or provider packages. A later native Flutter/plugin package can map these contracts into concrete platform App Intents, Shortcuts, Siri, or other system surfaces.
+
 ## MVP User Stories
 
 1. As a Flutter developer, I can ask Seisei for a typed result and receive either a typed value or a structured validation error.
 2. As a Flutter developer, I can register multiple providers and route requests based on capabilities, availability, and privacy policy.
 3. As a Flutter developer, I can test an AI workflow deterministically without contacting Apple or cloud services.
 4. As an Apple-platform Flutter developer, I can detect whether native Apple capabilities are available before making a request.
-5. As a UI developer, I can accept model-produced UI blocks through a stable Seisei contract and render them through an adapter chosen by my app.
-6. As a future Tagflow user, I can use Tagflow as one renderer adapter without changing Seisei core APIs.
+5. As an app developer, I can map a Seisei tool definition to a host-app action contract and test action invocation without native platform code.
+6. As a UI developer, I can accept model-produced UI blocks through a stable Seisei contract and render them through an adapter chosen by my app.
+7. As a future Tagflow user, I can use Tagflow as one renderer adapter without changing Seisei core APIs.
 
 ## Acceptance Criteria
 
 The coordinator can call the MVP finished only when all of the following are true:
 
 - The repository has a multi-package Dart/Flutter workspace with documented package responsibilities.
-- Core, schema, router, test, and UI adapter contracts exist as compileable Dart APIs.
-- Tests cover typed generation success, validation failure, provider fallback, privacy rejection, fake-provider streaming, and UI block adapter capability matching.
+- Core, schema, router, test, UI adapter, and app-action bridge contracts exist as compileable Dart APIs.
+- Tests cover typed generation success, validation failure, provider fallback, privacy rejection, fake-provider streaming, UI block adapter capability matching, and tool-to-action mapping.
 - Apple provider limitations and supported integration path are documented against current official platform/tooling evidence.
 - The README describes the actual working APIs and does not promise unavailable provider behavior.
 - CI or an equivalent local validation script runs formatting, static analysis, and tests for all packages.

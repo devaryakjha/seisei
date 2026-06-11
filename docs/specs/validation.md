@@ -12,6 +12,7 @@ It runs:
 - formatting check
 - static analysis
 - all package tests
+- `seisei_intents` app-action bridge contract tests
 - the offline CLI example
 
 Local Apple Foundation Models probes are available but are not CI gates:
@@ -41,7 +42,8 @@ for package in \
   packages/seisei_router \
   packages/seisei_test \
   packages/seisei_ui \
-  packages/seisei_apple
+  packages/seisei_apple \
+  packages/seisei_intents
 do
   (cd "$package" && dart pub publish --dry-run)
 done
