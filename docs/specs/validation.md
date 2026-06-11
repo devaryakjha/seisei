@@ -54,6 +54,6 @@ packages/seisei_apple
 packages/seisei_intents
 ```
 
-After the first publish, packages need to be transferred to the verified
-publisher `aryak.dev` from their pub.dev admin pages if they are initially
-created under an individual Google account.
+The released packages are published under the verified publisher `jha.sh`.
+Keep new publishable packages aligned with that publisher unless the release
+process changes.
