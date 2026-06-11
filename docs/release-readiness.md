@@ -18,6 +18,8 @@ tagged `anyOf` mapping for discriminated object unions, and explicit
 partial stream snapshots.
 `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental optional
 Tagflow document adapter.
+`seisei_intents` is at `0.1.0-dev.1` for Dart-side scalar Apple App Intent
+Swift source generation from generic app-action JSON schemas.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -54,7 +56,8 @@ unless the release process is deliberately changed.
 - [x] Router fallback and privacy claims are backed by tests.
 - [x] UI blocks can be validated before rendering.
 - [x] Tagflow remains optional and is isolated in `seisei_tagflow`.
-- [x] Native App Intent helper claims are backed by Swift compile tests.
+- [x] Native App Intent helper claims are backed by Swift compile tests and
+      `seisei_intents` source-generation tests.
 
 ## Dry-Run Evidence
 
@@ -72,7 +75,7 @@ already complete for the current package set.
 
 ## Verified Evidence
 
-Last verified on 2026-06-11 from `main`:
+Last verified on 2026-06-12 from `main`:
 
 - `dart tool/validate.dart --local-afm` passed locally. The system model smoke
   returned `seisei-ok`; the schema-backed nested `ObjectSchema` smoke returned
@@ -89,13 +92,17 @@ Last verified on 2026-06-11 from `main`:
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
+- `seisei_intents` `0.1.0-dev.1` was published successfully.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent` /
   `AppShortcutsProvider` compile tests.
-- GitHub Actions `Validate` run `27365942023` completed successfully on the
-  default branch for `e16f006`.
+- `seisei_intents` tests passed locally with Dart-side Swift source generation
+  assertions and stable source-generation failures for unsupported parameter
+  schemas.
+- GitHub Actions `Validate` run `27383351970` completed successfully on the
+  default branch for `4de69e2`.
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
-  `seisei_tagflow` latest as `0.1.0-dev.0`; the other released packages remain
-  at `0.1.0-dev.0`.
+  `seisei_intents` latest as `0.1.0-dev.1`; `seisei_router`, `seisei_ui`, and
+  `seisei_tagflow` remain at `0.1.0-dev.0`.
