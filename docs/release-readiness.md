@@ -8,8 +8,9 @@ The first publish wave is complete. All publishable packages have package-root
 MIT `LICENSE` files, `dart tool/validate.dart --release` passes locally, and
 the released packages are published under the verified publisher `jha.sh`.
 The current published package line is `0.1.0-dev.0` for the first wave, with
-`seisei_apple` advanced to `0.1.0-dev.3` for the native schema bridge, flat
-`ObjectSchema` mapper, and system-model streaming.
+`seisei_schema` advanced to `0.1.0-dev.1` for flat typed object fields and
+`seisei_apple` advanced to `0.1.0-dev.4` for typed FoundationModels schema
+mapping and system-model streaming.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -67,12 +68,16 @@ Last verified on 2026-06-11 from `main`:
 
 - `dart tool/validate.dart --local-afm` passed locally. The system model smoke
   returned `seisei-ok`; the schema-backed `ObjectSchema` smoke returned
-  `seisei-schema-ok`; the streaming smoke emitted real deltas and a terminal
-  value; PCC remained unavailable in this shell context and is documented as
-  capability-gated.
+  `seisei-schema-ok` while validating `title`, `count`, and `published`; the
+  streaming smoke emitted real deltas and a terminal value. PCC availability is
+  launch-context sensitive on this machine: PTY checks can report PCC available
+  while non-interactive Dart subprocesses report unavailable, and direct PCC
+  generation currently returns a FoundationModels PCC error.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_apple`, and `seisei_intents`.
-- GitHub Actions `Validate` completed successfully on the default branch.
-- The pub.dev package API reports `seisei_apple` latest as `0.1.0-dev.3`; the
-  other released packages remain at `0.1.0-dev.0`.
+- GitHub Actions `Validate` run `27345080650` completed successfully on the
+  default branch for `4ec1280`.
+- The pub.dev package API reports `seisei_schema` latest as `0.1.0-dev.1` and
+  `seisei_apple` latest as `0.1.0-dev.4`; the other released packages remain
+  at `0.1.0-dev.0`.

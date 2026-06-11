@@ -130,6 +130,9 @@ Owner decisions later selected MIT and publisher transfer to `jha.sh`; the first
 publish wave completed at `0.1.0-dev.0`, and `seisei_apple` has advanced to
 `0.1.0-dev.3` for the native schema bridge, flat `ObjectSchema` mapper, and
 system-model streaming.
+`seisei_schema` later advanced to `0.1.0-dev.1` for typed flat object fields,
+and `seisei_apple` advanced to `0.1.0-dev.4` for typed FoundationModels schema
+mapping.
 
 ### 9. Optional Tagflow Adapter Path
 
