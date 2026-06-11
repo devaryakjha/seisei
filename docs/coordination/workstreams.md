@@ -168,9 +168,11 @@ instead of republishing the same artifacts.
 ### 11. Native Expansion
 
 Deliver after the generic APIs and native capabilities are ready. Current focus
-after the nested-object and verified-constraint work:
+after the nested-object, verified-constraint, field-level union, and typed
+partial chunk work:
 
-- unions beyond string choice enums
+- explicit-null or discriminated unions beyond the current field-level `anyOf`
+  support
 - provider-specific typed partial decoding and path-level structured patches
 - PCC support if a verified API path exists
 - generated Swift App Intent wrappers or tighter Flutter integration above the

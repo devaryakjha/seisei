@@ -43,49 +43,53 @@ void main() {
     expect((await provider.availability()).isAvailable, isFalse);
   });
 
-  test('pcc mode rewrites unhelpful system-only availability reasons',
-      () async {
-    final provider = AppleFoundationModelsProvider(
-      mode: AppleFoundationModelsMode.pcc,
-      backend: _FakeAppleBackend(
-        availabilityResult: const AppleFoundationModelsAvailability(
-          systemAvailable: true,
-          pccAvailable: false,
-          reason: 'System model available',
+  test(
+    'pcc mode rewrites unhelpful system-only availability reasons',
+    () async {
+      final provider = AppleFoundationModelsProvider(
+        mode: AppleFoundationModelsMode.pcc,
+        backend: _FakeAppleBackend(
+          availabilityResult: const AppleFoundationModelsAvailability(
+            systemAvailable: true,
+            pccAvailable: false,
+            reason: 'System model available',
+          ),
         ),
-      ),
-    );
+      );
 
-    final availability = await provider.availability();
+      final availability = await provider.availability();
 
-    expect(availability.isAvailable, isFalse);
-    expect(availability.reason, contains('PCC mode is unavailable'));
-    expect(
-      availability.reason,
-      contains('No verified public native FoundationModels PCC API path'),
-    );
-  });
+      expect(availability.isAvailable, isFalse);
+      expect(availability.reason, contains('PCC mode is unavailable'));
+      expect(
+        availability.reason,
+        contains('No verified public native FoundationModels PCC API path'),
+      );
+    },
+  );
 
-  test('pcc mode explains the native API gap when no reason is supplied',
-      () async {
-    final provider = AppleFoundationModelsProvider(
-      mode: AppleFoundationModelsMode.pcc,
-      backend: _FakeAppleBackend(
-        availabilityResult: const AppleFoundationModelsAvailability(
-          systemAvailable: true,
-          pccAvailable: false,
+  test(
+    'pcc mode explains the native API gap when no reason is supplied',
+    () async {
+      final provider = AppleFoundationModelsProvider(
+        mode: AppleFoundationModelsMode.pcc,
+        backend: _FakeAppleBackend(
+          availabilityResult: const AppleFoundationModelsAvailability(
+            systemAvailable: true,
+            pccAvailable: false,
+          ),
         ),
-      ),
-    );
+      );
 
-    final availability = await provider.availability();
+      final availability = await provider.availability();
 
-    expect(availability.isAvailable, isFalse);
-    expect(
-      availability.reason,
-      contains('No verified public native FoundationModels PCC API path'),
-    );
-  });
+      expect(availability.isAvailable, isFalse);
+      expect(
+        availability.reason,
+        contains('No verified public native FoundationModels PCC API path'),
+      );
+    },
+  );
 
   test('privacy rejects pcc for on-device-only requests', () async {
     final provider = AppleFoundationModelsProvider(
@@ -273,6 +277,77 @@ void main() {
       },
       'x-order': ['author', 'status', 'tags', 'title'],
       'title': 'Draft',
+    });
+  });
+
+  test('encodes field-level unions as FoundationModels anyOf JSON', () {
+    const schema = ObjectSchema(
+      name: 'Contact',
+      fields: {
+        'value': ObjectField.union(
+          variants: [
+            ObjectField.string(),
+            ObjectField.object(
+              schema: ObjectSchema(
+                name: 'Address',
+                fields: {'city': ObjectField.string()},
+              ),
+            ),
+          ],
+        ),
+        'values': ObjectField.union(
+          isArray: true,
+          isRequired: false,
+          minItems: 1,
+          maxItems: 3,
+          variants: [ObjectField.integer(), ObjectField.boolean()],
+        ),
+      },
+    );
+
+    final encoded = const FoundationModelsSchemaEncoder().encodeObject(schema);
+
+    expect(encoded, {
+      r'$defs': {
+        'Address': {
+          'additionalProperties': false,
+          'required': ['city'],
+          'type': 'object',
+          'properties': {
+            'city': {'type': 'string'},
+          },
+          'x-order': ['city'],
+          'title': 'Address',
+        },
+        'Contact_value_union': {
+          'title': 'Contact_value_union',
+          'anyOf': [
+            {'type': 'string'},
+            {r'$ref': r'#/$defs/Address'},
+          ],
+        },
+        'Contact_values_union_item': {
+          'title': 'Contact_values_union_item',
+          'anyOf': [
+            {'type': 'integer'},
+            {'type': 'boolean'},
+          ],
+        },
+      },
+      'additionalProperties': false,
+      'required': ['value'],
+      'type': 'object',
+      'properties': {
+        'value': {r'$ref': r'#/$defs/Contact_value_union'},
+        'values': {
+          'type': 'array',
+          'items': {r'$ref': r'#/$defs/Contact_values_union_item'},
+          'minItems': 1,
+          'maxItems': 3,
+        },
+      },
+      'x-order': ['value', 'values'],
+      'title': 'Contact',
     });
   });
 

@@ -1,3 +1,8 @@
+## 0.1.0-dev.6
+
+- Encode verified field-level union schemas from `seisei_schema` into
+  FoundationModels `anyOf` JSON.
+
 ## 0.1.0-dev.5
 
 - Encode nested object schemas, string enum choices, numeric ranges, string

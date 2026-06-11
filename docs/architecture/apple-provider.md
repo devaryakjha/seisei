@@ -67,8 +67,8 @@ The provider should map Apple availability into Seisei capabilities:
   FoundationModels schema file.
 - `FoundationModelsSchemaEncoder`: maps the generic `seisei_schema`
   `ObjectSchema` contract into FoundationModels schema JSON and provider
-  metadata, including nested objects, string enums, numeric ranges, string
-  patterns, arrays, and optional fields.
+  metadata, including nested objects, string enums, field-level `anyOf`
+  unions, numeric ranges, string patterns, arrays, and optional fields.
 - streaming: `AppleFoundationModelsProvider.stream` uses backend streams that
   emit text deltas and a terminal decoded value for the system model.
 - `fm respond --image`: multimodal input support after the core request model includes media segments.
@@ -102,10 +102,10 @@ The router should be able to reject Apple modes before request execution:
   non-interactive split, and no public native PCC `FoundationModels` API path
   is verified.
 - Generic schema mapping depth: `FoundationModelsSchemaEncoder` now supports
-  nested objects, string enums, numeric ranges, string patterns, arrays, and
-  optional fields. Unions beyond string choice enums and non-verified schema
-  forms should stay out of the Apple encoder until they are proven against the
-  local SDK.
+  nested objects, string enums, field-level `anyOf` unions, numeric ranges,
+  string patterns, arrays, and optional fields. Explicit-null unions,
+  discriminated unions, and non-verified schema forms should stay out of the
+  Apple encoder until they are proven against the local SDK.
 - Streaming depth: plain text streaming emits deltas. Schema-backed streaming
   can surface native partial values in `GenerationChunk.rawValue`; providers
   that can safely decode partial snapshots may expose typed snapshots in

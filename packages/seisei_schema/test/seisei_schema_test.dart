@@ -98,6 +98,34 @@ void main() {
     expect(draft.title, 'Hello');
   });
 
+  test('validates field-level unions before decoding', () {
+    const schema = ObjectSchema(
+      name: 'Contact',
+      fields: {
+        'value': ObjectField.union(
+          variants: [
+            ObjectField.string(),
+            ObjectField.object(
+              schema: ObjectSchema(
+                name: 'Address',
+                fields: {'city': ObjectField.string()},
+              ),
+            ),
+          ],
+        ),
+      },
+    );
+
+    final contact = schema.decode(
+      {
+        'value': {'city': 'Tokyo'},
+      },
+      (object) => _UnionContact(object['value']!),
+    );
+
+    expect(contact.value, {'city': 'Tokyo'});
+  });
+
   test('reports stable errors for typed fields', () {
     const schema = ObjectSchema(
       name: 'Draft',
@@ -166,6 +194,38 @@ void main() {
     );
   });
 
+  test('reports stable errors for field-level unions', () {
+    const schema = ObjectSchema(
+      name: 'Contact',
+      fields: {
+        'value': ObjectField.union(
+          variants: [
+            ObjectField.string(),
+            ObjectField.object(
+              schema: ObjectSchema(
+                name: 'Address',
+                fields: {'city': ObjectField.string()},
+              ),
+            ),
+          ],
+        ),
+        'values': ObjectField.union(
+          isArray: true,
+          isRequired: false,
+          variants: [ObjectField.integer(), ObjectField.boolean()],
+        ),
+      },
+    );
+
+    expect(
+      schema.validate({
+        'value': 42,
+        'values': [1, 'bad'],
+      }).map((error) => '${error.path}: ${error.code}'),
+      [r'$.value: union.any_of', r'$.values[1]: union.any_of'],
+    );
+  });
+
   test('exposes deterministic field definitions', () {
     const schema = ObjectSchema(
       name: 'Draft',
@@ -228,4 +288,10 @@ final class _NestedDraft {
   final String status;
   final List<String> tags;
   final String title;
+}
+
+final class _UnionContact {
+  const _UnionContact(this.value);
+
+  final Object value;
 }

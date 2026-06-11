@@ -44,6 +44,9 @@ enum ObjectFieldType {
 
   /// Object field.
   object,
+
+  /// Union field.
+  union,
 }
 
 /// An object field definition.
@@ -54,6 +57,7 @@ final class ObjectField {
     this.isRequired = true,
     this.isArray = false,
     this.objectSchema,
+    this.variants = const [],
     this.enumValues = const [],
     this.minimum,
     this.maximum,
@@ -72,6 +76,7 @@ final class ObjectField {
     this.maxItems,
   })  : type = ObjectFieldType.string,
         objectSchema = null,
+        variants = const [],
         minimum = null,
         maximum = null;
 
@@ -85,6 +90,7 @@ final class ObjectField {
     this.maxItems,
   })  : type = ObjectFieldType.integer,
         objectSchema = null,
+        variants = const [],
         enumValues = const [],
         pattern = null;
 
@@ -98,6 +104,7 @@ final class ObjectField {
     this.maxItems,
   })  : type = ObjectFieldType.number,
         objectSchema = null,
+        variants = const [],
         enumValues = const [],
         pattern = null;
 
@@ -109,6 +116,7 @@ final class ObjectField {
     this.maxItems,
   })  : type = ObjectFieldType.boolean,
         objectSchema = null,
+        variants = const [],
         enumValues = const [],
         minimum = null,
         maximum = null,
@@ -123,6 +131,21 @@ final class ObjectField {
     this.maxItems,
   })  : type = ObjectFieldType.object,
         objectSchema = schema,
+        variants = const [],
+        enumValues = const [],
+        minimum = null,
+        maximum = null,
+        pattern = null;
+
+  /// Creates a field-level union.
+  const ObjectField.union({
+    required this.variants,
+    this.isRequired = true,
+    this.isArray = false,
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.union,
+        objectSchema = null,
         enumValues = const [],
         minimum = null,
         maximum = null,
@@ -139,6 +162,9 @@ final class ObjectField {
 
   /// Nested object schema when [type] is [ObjectFieldType.object].
   final ObjectSchema? objectSchema;
+
+  /// Allowed variants when [type] is [ObjectFieldType.union].
+  final List<ObjectField> variants;
 
   /// Allowed string values when [type] is [ObjectFieldType.string].
   final List<String> enumValues;
@@ -201,6 +227,7 @@ final class ObjectSchema implements SeiseiSchema {
     }
 
     final errors = <SchemaValidationError>[];
+    _checkSchemaDefinition(this);
     final definitions = fieldDefinitions;
     for (final field in definitions.keys) {
       final definition = definitions[field]!;
@@ -319,6 +346,11 @@ void _validateSingleValue(
   bool useItemType = false,
   required List<SchemaValidationError> errors,
 }) {
+  if (definition.type == ObjectFieldType.union) {
+    _validateUnionValue(definition, value, path: path, errors: errors);
+    return;
+  }
+
   if (!_matchesType(value, definition.type)) {
     final typeName =
         useItemType ? _scalarTypeName(definition.type) : _typeName(definition);
@@ -399,6 +431,39 @@ void _validateSingleValue(
   }
 }
 
+void _validateUnionValue(
+  ObjectField definition,
+  Object? value, {
+  required String path,
+  required List<SchemaValidationError> errors,
+}) {
+  for (final variant in definition.variants) {
+    final variantErrors = <SchemaValidationError>[];
+    _validateSingleValue(
+      variant,
+      value,
+      path: path,
+      isRequired: false,
+      errors: variantErrors,
+    );
+    if (variantErrors.isEmpty) {
+      return;
+    }
+  }
+
+  errors.add(
+    const SchemaValidationError(
+      code: 'union.any_of',
+      path: '',
+      message: 'Expected a value matching at least one union variant.',
+    ),
+  );
+  final last = errors.removeLast();
+  errors.add(
+    SchemaValidationError(code: last.code, path: path, message: last.message),
+  );
+}
+
 bool _matchesType(Object? value, ObjectFieldType type) {
   return switch (type) {
     ObjectFieldType.string => value is String,
@@ -406,6 +471,7 @@ bool _matchesType(Object? value, ObjectFieldType type) {
     ObjectFieldType.number => value is num,
     ObjectFieldType.boolean => value is bool,
     ObjectFieldType.object => value is Map,
+    ObjectFieldType.union => false,
   };
 }
 
@@ -423,7 +489,46 @@ String _scalarTypeName(ObjectFieldType type) {
     ObjectFieldType.number => 'number',
     ObjectFieldType.boolean => 'boolean',
     ObjectFieldType.object => 'object',
+    ObjectFieldType.union => 'union',
   };
+}
+
+void _checkSchemaDefinition(ObjectSchema schema) {
+  for (final entry in schema.fieldDefinitions.entries) {
+    _checkFieldDefinition(entry.key, entry.value);
+    if (entry.value.type == ObjectFieldType.object) {
+      _checkSchemaDefinition(entry.value.objectSchema!);
+    }
+  }
+}
+
+void _checkFieldDefinition(String fieldName, ObjectField definition) {
+  if (definition.type != ObjectFieldType.union) {
+    return;
+  }
+  if (definition.variants.isEmpty) {
+    throw ArgumentError.value(
+      fieldName,
+      'schema.fields',
+      'Union fields must define at least one variant.',
+    );
+  }
+  for (final variant in definition.variants) {
+    if (variant.isArray) {
+      throw ArgumentError.value(
+        fieldName,
+        'schema.fields',
+        'Union variants must describe single values. Set isArray on the union field instead.',
+      );
+    }
+    if (variant.type == ObjectFieldType.union) {
+      throw ArgumentError.value(
+        fieldName,
+        'schema.fields',
+        'Union variants must not nest other unions.',
+      );
+    }
+  }
 }
 
 String _prefixPath(String parentPath, String childPath) {

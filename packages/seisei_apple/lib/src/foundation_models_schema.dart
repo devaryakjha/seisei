@@ -9,7 +9,8 @@ import 'apple_foundation_models_provider.dart';
 ///
 /// The current mapper covers generic `seisei_schema` object fields that are
 /// verified against FoundationModels JSON encoding: nested objects, string
-/// enums, numeric ranges, string patterns, arrays, and optional fields.
+/// enums, field-level unions, numeric ranges, string patterns, arrays, and
+/// optional fields.
 final class FoundationModelsSchemaEncoder {
   /// Creates a FoundationModels schema encoder.
   const FoundationModelsSchemaEncoder();
@@ -72,7 +73,8 @@ final class FoundationModelsSchemaEncoder {
       'type': 'object',
       'properties': {
         for (final entry in fields.entries)
-          entry.key: _encodeField(entry.value, definitions),
+          entry.key:
+              _encodeField(entry.key, entry.value, schema.name, definitions),
       },
       'x-order': orderedFields,
       'title': schema.name,
@@ -97,10 +99,18 @@ final class FoundationModelsSchemaEncoder {
   }
 
   Map<String, Object?> _encodeField(
+    String fieldName,
     ObjectField field,
+    String parentSchemaName,
     _SchemaDefinitions definitions,
   ) {
-    final encoded = _encodeSingleValue(field, definitions);
+    final encoded = _encodeSingleValue(
+      field,
+      definitions,
+      unionTitle: field.isArray
+          ? _unionTitle(parentSchemaName, fieldName, isArrayItem: true)
+          : _unionTitle(parentSchemaName, fieldName),
+    );
     if (!field.isArray) {
       return encoded;
     }
@@ -115,8 +125,21 @@ final class FoundationModelsSchemaEncoder {
 
   Map<String, Object?> _encodeSingleValue(
     ObjectField field,
-    _SchemaDefinitions definitions,
-  ) {
+    _SchemaDefinitions definitions, {
+    String? unionTitle,
+  }) {
+    if (field.type == ObjectFieldType.union) {
+      final title = unionTitle!;
+      definitions.add(title, {
+        'title': title,
+        'anyOf': [
+          for (final variant in field.variants)
+            _encodeUnionVariant(variant, definitions),
+        ],
+      });
+      return {r'$ref': '#/\$defs/$title'};
+    }
+
     if (field.type == ObjectFieldType.object) {
       final schema = field.objectSchema!;
       if (schema.name.isEmpty) {
@@ -139,6 +162,27 @@ final class FoundationModelsSchemaEncoder {
     };
   }
 
+  Map<String, Object?> _encodeUnionVariant(
+    ObjectField variant,
+    _SchemaDefinitions definitions,
+  ) {
+    if (variant.isArray) {
+      throw ArgumentError.value(
+        variant.type.name,
+        'schema.fields',
+        'Union variants must describe single values. Set isArray on the union field instead.',
+      );
+    }
+    if (variant.type == ObjectFieldType.union) {
+      throw ArgumentError.value(
+        variant.type.name,
+        'schema.fields',
+        'Union variants must not nest other unions.',
+      );
+    }
+    return _encodeSingleValue(variant, definitions);
+  }
+
   String _foundationModelsType(ObjectFieldType type) {
     return switch (type) {
       ObjectFieldType.string => 'string',
@@ -146,7 +190,19 @@ final class FoundationModelsSchemaEncoder {
       ObjectFieldType.number => 'number',
       ObjectFieldType.boolean => 'boolean',
       ObjectFieldType.object => 'object',
+      ObjectFieldType.union => 'union',
     };
+  }
+
+  String _unionTitle(
+    String schemaName,
+    String fieldName, {
+    bool isArrayItem = false,
+  }) {
+    if (isArrayItem) {
+      return '${schemaName}_${fieldName}_union_item';
+    }
+    return '${schemaName}_${fieldName}_union';
   }
 }
 

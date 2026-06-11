@@ -1,3 +1,8 @@
+## 0.1.0-dev.3
+
+- Add field-level union validation through `ObjectField.union(variants: ...)`
+  while preserving `requiredStringFields`.
+
 ## 0.1.0-dev.2
 
 - Add nested object fields, string enum choices, numeric ranges, string

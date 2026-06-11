@@ -146,8 +146,9 @@ and sends plain system-model prompts through
 model requests when `schemaPath` points to a JSON-encoded FoundationModels
 schema file, and it streams system-model text through a Flutter event channel.
 `FoundationModelsSchemaEncoder` covers verified generic `ObjectSchema` features:
-nested objects, string enums, numeric ranges, string patterns, arrays, and
-optional fields. PCC is not implemented in the native bridge yet. On the current
+nested objects, string enums, field-level `anyOf` unions, numeric ranges,
+string patterns, arrays, and optional fields. PCC is not implemented in the
+native bridge yet. On the current
 Xcode 26.5 SDK, the public
 Swift `FoundationModels` interface exposes `SystemLanguageModel` and
 `LanguageModelSession(model: SystemLanguageModel)`, but no public PCC model
