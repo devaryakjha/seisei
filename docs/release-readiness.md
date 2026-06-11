@@ -9,7 +9,8 @@ MIT `LICENSE` files, `dart tool/validate.dart --release` passes locally, and
 the released packages are published under the verified publisher `jha.sh`.
 The current published package line is `0.1.0-dev.0` for the first wave, with
 `seisei_schema` advanced to `0.1.0-dev.3` for field-level unions and
-`seisei_apple` advanced to `0.1.0-dev.6` for FoundationModels `anyOf` mapping.
+`seisei_apple` advanced to `0.1.0-dev.7` for FoundationModels `anyOf` mapping
+and typed partial decoding of safe schema-backed stream snapshots.
 `seisei` and `seisei_test` advanced to `0.1.0-dev.1` for typed partial stream
 snapshots. `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental
 optional Tagflow document adapter.
@@ -71,17 +72,19 @@ Last verified on 2026-06-11 from `main`:
 - `dart tool/validate.dart --local-afm` passed locally. The system model smoke
   returned `seisei-ok`; the schema-backed nested `ObjectSchema` smoke returned
   `seisei-schema-ok` while validating `title`, `count`, `published`, and
-  `author`; the streaming smoke emitted real deltas and a terminal value.
+  `author`; the streaming smoke emitted real deltas and a terminal value; the
+  schema-backed streaming smoke returned `seisei-schema-ok` through the same
+  Seisei provider path.
 - PCC availability is launch-context sensitive on this machine: PTY checks
   report PCC available and can return `seisei-pcc-ok`, while non-interactive
   Dart subprocesses report `PCC inference is not available in this context`.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
-- GitHub Actions `Validate` run `27362160557` completed successfully on the
-  default branch for `5448911`.
+- GitHub Actions `Validate` run `27363065297` completed successfully on the
+  default branch for `05ee96b`.
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.1`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
-  `0.1.0-dev.3`, `seisei_apple` latest as `0.1.0-dev.6`, and
+  `0.1.0-dev.3`, `seisei_apple` latest as `0.1.0-dev.7`, and
   `seisei_tagflow` latest as `0.1.0-dev.0`; the other released packages remain
   at `0.1.0-dev.0`.

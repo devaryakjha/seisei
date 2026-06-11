@@ -29,7 +29,7 @@ dart tool/validate.dart --local-afm
 
 That mode expects the local `fm` CLI and should only be used on machines that
 provide Apple Foundation Models. It runs a direct `fm respond` smoke check plus
-plain, schema-backed, and streaming
+plain, schema-backed, plain streaming, and schema-backed streaming
 `packages/seisei_apple/bin/local_afm_smoke.dart` runs, which call local AFM
 through `FmCliBackend`, `AppleFoundationModelsProvider`, and `SeiseiClient`.
 
