@@ -31,6 +31,42 @@ void main() {
     expect(chunks.last.value!.title, 'Done');
     expect(chunks.last.isDone, isTrue);
   });
+
+  test('fake provider streams typed partial snapshots before final value',
+      () async {
+    final provider = FakeProvider(
+      id: 'fake',
+      capabilities: {
+        ModelCapability.structuredGeneration,
+        ModelCapability.streaming,
+      },
+      rawValue: {'title': 'Done'},
+      streamPartialRawValues: [
+        {'title': 'Draft'},
+        {'title': 'Almost done'},
+      ],
+    );
+
+    final chunks = await provider
+        .stream(
+          GenerationRequest<_Draft>(
+            prompt: 'Draft',
+            capabilities: {
+              ModelCapability.structuredGeneration,
+              ModelCapability.streaming,
+            },
+            decode: _Draft.fromJson,
+          ),
+        )
+        .toList();
+
+    expect(
+      chunks.map((chunk) => chunk.partialValue?.title),
+      ['Draft', 'Almost done', null],
+    );
+    expect(chunks.last.value!.title, 'Done');
+    expect(chunks.last.isDone, isTrue);
+  });
 }
 
 final class _Draft {

@@ -1,6 +1,6 @@
 name: seisei_test
 description: Deterministic fake providers and assertions for Seisei tests.
-version: 0.1.0-dev.0
+version: 0.1.0-dev.1
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:
@@ -15,7 +15,7 @@ environment:
 resolution: workspace
 
 dependencies:
-  seisei: ^0.1.0-dev.0
+  seisei: ^0.1.0-dev.1
 
 dev_dependencies:
   test: ^1.26.0

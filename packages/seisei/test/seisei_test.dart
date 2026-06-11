@@ -66,6 +66,18 @@ void main() {
     expect(chunks.single.value!.title, 'Stream result');
     expect(chunks.single.isDone, isTrue);
   });
+
+  test('GenerationChunk carries typed partial values separately', () {
+    final chunk = GenerationChunk<_Draft>(
+      providerId: 'echo',
+      partialValue: const _Draft('Partial result'),
+      rawValue: {'title': 'Partial result'},
+    );
+
+    expect(chunk.partialValue!.title, 'Partial result');
+    expect(chunk.value, isNull);
+    expect(chunk.isDone, isFalse);
+  });
 }
 
 final class _Draft {

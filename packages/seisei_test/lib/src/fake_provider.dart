@@ -9,6 +9,7 @@ final class FakeProvider implements SeiseiProvider {
     required this.rawValue,
     this.available = true,
     this.streamDeltas = const [],
+    this.streamPartialRawValues = const [],
   });
 
   @override
@@ -25,6 +26,9 @@ final class FakeProvider implements SeiseiProvider {
 
   /// Scripted stream deltas.
   final List<String> streamDeltas;
+
+  /// Scripted raw partial values decoded into typed stream snapshots.
+  final List<Object?> streamPartialRawValues;
 
   @override
   Future<ProviderAvailability> availability() async {
@@ -57,6 +61,14 @@ final class FakeProvider implements SeiseiProvider {
         providerId: id,
         delta: delta,
         rawValue: delta,
+      );
+    }
+
+    for (final partialRawValue in streamPartialRawValues) {
+      yield GenerationChunk<T>(
+        providerId: id,
+        partialValue: request.decode(partialRawValue),
+        rawValue: partialRawValue,
       );
     }
 

@@ -169,7 +169,7 @@ Deliver after the generic APIs and native capabilities are ready. Current focus
 after the nested-object and verified-constraint work:
 
 - unions beyond string choice enums
-- richer typed partial semantics for schema streaming
+- provider-specific typed partial decoding and path-level structured patches
 - PCC support if a verified API path exists
 - generated Swift App Intent wrappers or tighter Flutter integration above the
   handwritten registration helpers

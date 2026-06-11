@@ -27,6 +27,7 @@ final class GenerationChunk<T> {
   const GenerationChunk({
     required this.providerId,
     this.value,
+    this.partialValue,
     this.delta,
     this.rawValue,
     this.isDone = false,
@@ -37,6 +38,13 @@ final class GenerationChunk<T> {
 
   /// Decoded value when the provider emits complete typed values.
   final T? value;
+
+  /// Decoded partial value when the provider emits structured snapshots.
+  ///
+  /// Providers should use this only for typed snapshots that successfully
+  /// decode through the request decoder but are not terminal model output.
+  /// Terminal values continue to use [value] with [isDone] set to true.
+  final T? partialValue;
 
   /// Incremental textual delta.
   final String? delta;

@@ -101,5 +101,5 @@ FoundationModels schema requests, nested and constrained `ObjectSchema` mapping
 into FoundationModels schema files, system-model streaming, and a minimal
 native App Intents registration helper package for handwritten Swift intents.
 PCC generation, generated App Intent wrappers, cloud providers, production RAG,
-provider-neutral typed partial schema streaming, and Tagflow integration are not
-implemented yet.
+provider-specific typed partial decoding, path-level structured patches, and
+Tagflow integration are not implemented yet.

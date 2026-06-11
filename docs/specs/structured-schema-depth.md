@@ -65,6 +65,8 @@ Current transport semantics stay intentionally small:
 - plain-text streaming uses `GenerationChunk.delta`
 - schema-backed streaming may emit partial structured snapshots in
   `GenerationChunk.rawValue`
+- providers that can safely decode partial snapshots may expose them as
+  `GenerationChunk.partialValue`
 - schema-backed streaming sets `GenerationChunk.value` only on the terminal
   `done` chunk after the request decoder succeeds
 

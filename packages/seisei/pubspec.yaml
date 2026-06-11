@@ -1,6 +1,6 @@
 name: seisei
 description: Provider-neutral typed generation contracts for Dart and Flutter apps.
-version: 0.1.0-dev.0
+version: 0.1.0-dev.1
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:

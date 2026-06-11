@@ -107,8 +107,9 @@ The router should be able to reject Apple modes before request execution:
   forms should stay out of the Apple encoder until they are proven against the
   local SDK.
 - Streaming depth: plain text streaming emits deltas. Schema-backed streaming
-  can surface native partial values, but richer typed partial semantics should
-  wait until `seisei_schema` models partial structured output.
+  can surface native partial values in `GenerationChunk.rawValue`; providers
+  that can safely decode partial snapshots may expose typed snapshots in
+  `GenerationChunk.partialValue`.
 - Podspec release metadata: the repository intentionally does not choose license policy in this workstream, so local plugin metadata is not a release-readiness decision.
 
 ## Validation Commands
