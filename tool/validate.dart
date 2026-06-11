@@ -17,6 +17,7 @@ Future<void> main(List<String> args) async {
     _Check('$root/packages/seisei_ui', ['dart', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
     _Check('$root/packages/seisei_intents', ['dart', 'test']),
+    _Check('$root/packages/seisei_apple_intents', ['swift', 'test']),
     _Check('$root/examples/basic_cli', ['dart', 'run']),
   ];
 
@@ -71,12 +72,7 @@ Future<void> main(List<String> args) async {
   }
 
   final releaseChecks = <_Check>[
-    _Check('$root/packages/seisei', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
+    _Check('$root/packages/seisei', ['flutter', 'pub', 'publish', '--dry-run']),
     _Check('$root/packages/seisei_schema', [
       'flutter',
       'pub',

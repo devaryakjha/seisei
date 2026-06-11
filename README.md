@@ -29,9 +29,13 @@ The current workspace contains:
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
 - `seisei_intents`: generic app-action contracts, tool-call mapping, and fake bridges for future platform intent adapters
 
+Optional native support packages include:
+
+- `SeiseiAppleIntents`: Swift package helpers for handwritten App Intents, app-owned executor injection, and App Shortcut / package registration on Apple platforms
+
 Future packages may include:
 
-- `seisei_flutter_intents`: Flutter/native plugin bridge that registers generated or handwritten App Intents, Siri, Shortcuts, and semantic app actions against the generic `seisei_intents` contracts
+- `seisei_flutter_intents`: Flutter/native bridge for generated wrappers or tighter Flutter app integration above the handwritten Swift registration path
 - `seisei_tagflow`: optional adapter from `seisei_ui` blocks into Tagflow once Tagflow's renderer API is stable
 
 ## Development
@@ -52,7 +56,8 @@ dart tool/validate.dart
 
 The validation command runs dependency resolution, formatting, static analysis,
 Dart package tests, Flutter plugin tests for `seisei_apple`, and the offline CLI
-example.
+example. It also runs `swift test` for the optional `SeiseiAppleIntents`
+package.
 
 Local Apple Foundation Models smoke checks are available on macOS 27 machines that provide `/usr/bin/fm`:
 
@@ -91,7 +96,8 @@ deterministic tests, an offline example, validation tooling, Apple provider
 architecture notes, generic app-action/tool bridge contracts, and a native Apple
 bridge for system-model availability, plain prompts, provider-specific
 FoundationModels schema requests, nested and constrained `ObjectSchema` mapping
-into FoundationModels schema files, and system-model streaming. PCC generation,
-system App Intents registration, cloud providers, production RAG, provider-
-neutral typed partial schema streaming, and Tagflow integration are not
+into FoundationModels schema files, system-model streaming, and a minimal
+native App Intents registration helper package for handwritten Swift intents.
+PCC generation, generated App Intent wrappers, cloud providers, production RAG,
+provider-neutral typed partial schema streaming, and Tagflow integration are not
 implemented yet.

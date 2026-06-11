@@ -18,6 +18,7 @@ It runs:
 - Dart package tests
 - Flutter plugin tests for `seisei_apple`
 - `seisei_intents` app-action bridge contract tests
+- `swift test` for `packages/seisei_apple_intents`
 - the offline CLI example
 
 Local Apple Foundation Models probes are available but are not CI gates:

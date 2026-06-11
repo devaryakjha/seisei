@@ -46,7 +46,13 @@ The package depends on `seisei` only.
 
 Native App Intents registration is not implemented in this package because App Intents are Swift types discovered and processed at build time. A pure Dart package cannot dynamically register those Swift types into an app bundle or extension.
 
-A later native package should:
+The minimal native registration path now lives in the optional Swift package
+`packages/seisei_apple_intents`. It proves the smallest viable boundary:
+handwritten Swift `AppIntent` types, host-owned executor injection through
+`AppDependencyManager`, and host-defined `AppShortcutsProvider` /
+`AppIntentsPackage` roots.
+
+Later native work can still:
 
 - generate or provide Swift `AppIntent` wrappers from `AppActionDefinition`;
 - compile those wrappers in an app target, extension target, Swift package, or static library that the App Intents runtime indexes;
@@ -59,4 +65,5 @@ A later native package should:
 - `seisei_intents` is a workspace package.
 - Package tests cover tool-definition mapping, tool-call mapping, fake bridge invocation, and missing-action failures.
 - Core `seisei` remains provider/platform-neutral.
-- README and validation docs describe system App Intents registration as future native/plugin work.
+- README and validation docs describe the current minimal native registration
+  path and the remaining future work.

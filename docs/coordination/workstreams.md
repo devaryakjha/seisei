@@ -170,7 +170,8 @@ after the nested-object and verified-constraint work:
 - unions beyond string choice enums
 - richer typed partial semantics for schema streaming
 - PCC support if a verified API path exists
-- Swift App Intents registration package
+- generated Swift App Intent wrappers or tighter Flutter integration above the
+  handwritten registration helpers
 
 ## Merge Order
 
