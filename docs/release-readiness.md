@@ -8,7 +8,8 @@ The first publish wave is complete. All publishable packages have package-root
 MIT `LICENSE` files, `dart tool/validate.dart --release` passes locally, and
 the released packages are published under the verified publisher `jha.sh`.
 The current published package line is `0.1.0-dev.0` for the first wave, with
-`seisei_apple` advanced to `0.1.0-dev.1` for the native schema bridge.
+`seisei_apple` advanced to `0.1.0-dev.2` for the native schema bridge and flat
+`ObjectSchema` mapper.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -65,11 +66,12 @@ already complete for the current package set.
 Last verified on 2026-06-11 from `main`:
 
 - `dart tool/validate.dart --local-afm` passed locally. The system model smoke
-  returned `seisei-ok`; PCC remained unavailable in this shell context and is
+  returned `seisei-ok`; the schema-backed `ObjectSchema` smoke returned
+  `seisei-schema-ok`; PCC remained unavailable in this shell context and is
   documented as capability-gated.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_apple`, and `seisei_intents`.
 - GitHub Actions `Validate` completed successfully on the default branch.
-- The pub.dev package API reports `seisei_apple` latest as `0.1.0-dev.1`; the
+- The pub.dev package API reports `seisei_apple` latest as `0.1.0-dev.2`; the
   other released packages remain at `0.1.0-dev.0`.

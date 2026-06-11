@@ -126,7 +126,7 @@ Deliver:
 Merged into `main` as neutral metadata and release-readiness documentation.
 Owner decisions later selected MIT and publisher transfer to `jha.sh`; the first
 publish wave completed at `0.1.0-dev.0`, and `seisei_apple` has advanced to
-`0.1.0-dev.1` for the native schema bridge.
+`0.1.0-dev.2` for the native schema bridge and flat `ObjectSchema` mapper.
 
 ### 9. Optional Tagflow Adapter Path
 
