@@ -35,7 +35,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
     if (!modeAvailable) {
       return ProviderAvailability.unavailable(
-        afm.reason ?? 'Apple Foundation Models mode is unavailable.',
+        _unavailableReason(afm),
       );
     }
 
@@ -125,5 +125,18 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
   String? _schemaPath<T>(GenerationRequest<T> request) {
     return request.metadata[schemaPathMetadataKey] as String?;
+  }
+
+  String _unavailableReason(AppleFoundationModelsAvailability availability) {
+    final reason = availability.reason;
+    final modeName = switch (mode) {
+      AppleFoundationModelsMode.system => 'system',
+      AppleFoundationModelsMode.pcc => 'PCC',
+    };
+    final modeReason = 'Apple Foundation Models $modeName mode is unavailable.';
+    return switch (reason) {
+      null || '' => modeReason,
+      _ => '$modeReason $reason',
+    };
   }
 }

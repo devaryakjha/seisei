@@ -27,6 +27,17 @@ That command uses `FmCliBackend`, `AppleFoundationModelsProvider`, and
 `SeiseiClient` to send the prompt through the local system model. A passing run
 prints `providerId: apple_system` and `response: seisei-ok`.
 
+To verify PCC from the same Seisei path, run:
+
+```sh
+dart run bin/local_afm_smoke.dart --mode pcc
+```
+
+That command requires `fm available` to report PCC availability in the same
+terminal/process context. If it fails with `PCC inference is not available in
+this context`, the local system model can still work while PCC is unavailable
+to that shell.
+
 For a minimal Flutter host, create an app and point `seisei_apple` at this
 workspace with a path dependency:
 

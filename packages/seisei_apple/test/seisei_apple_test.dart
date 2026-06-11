@@ -45,6 +45,25 @@ void main() {
     expect((await provider.availability()).isAvailable, isFalse);
   });
 
+  test('pcc mode explains when only system mode is available', () async {
+    final provider = AppleFoundationModelsProvider(
+      mode: AppleFoundationModelsMode.pcc,
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: false,
+          reason: 'System model available',
+        ),
+      ),
+    );
+
+    final availability = await provider.availability();
+
+    expect(availability.isAvailable, isFalse);
+    expect(availability.reason, contains('PCC mode is unavailable'));
+    expect(availability.reason, contains('System model available'));
+  });
+
   test('privacy rejects pcc for on-device-only requests', () async {
     final provider = AppleFoundationModelsProvider(
       mode: AppleFoundationModelsMode.pcc,
