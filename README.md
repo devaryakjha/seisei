@@ -26,7 +26,7 @@ The current workspace contains:
 - `seisei_router`: provider routing, fallback policies, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
 - `seisei_ui`: renderer-neutral UI blocks and adapter contracts
-- `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes
+- `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and a narrow iOS/macOS Flutter bridge
 - `seisei_intents`: generic app-action contracts, tool-call mapping, and fake bridges for future platform intent adapters
 
 Future packages may include:
@@ -36,19 +36,23 @@ Future packages may include:
 
 ## Development
 
-The local FVM toolchain can be used when `dart` is not on the default `PATH`:
+The workspace now includes a Flutter plugin package, so standard validation
+requires a Flutter SDK even though most packages remain pure Dart. The local FVM
+toolchain can be used when Flutter and Dart are not on the default `PATH`:
 
 ```sh
 PATH=/Users/arya/fvm/cache.git/bin:$PATH dart tool/validate.dart
 ```
 
-On a normal Dart setup:
+On a normal Flutter setup:
 
 ```sh
 dart tool/validate.dart
 ```
 
-The validation command runs dependency resolution, formatting, static analysis, tests, and the offline CLI example.
+The validation command runs dependency resolution, formatting, static analysis,
+Dart package tests, Flutter plugin tests for `seisei_apple`, and the offline CLI
+example.
 
 Local Apple Foundation Models smoke checks are available on macOS 27 machines that provide `/usr/bin/fm`:
 
@@ -69,4 +73,4 @@ These checks are not CI gates because CI runners are not expected to provide AFM
 
 ## Status
 
-Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, Apple provider architecture notes, and generic app-action/tool bridge contracts. Native Swift plugin work, system App Intents registration, cloud providers, production RAG, and Tagflow integration are not implemented yet.
+Seisei now has an MVP scaffold: package boundaries, compileable Dart contracts, deterministic tests, an offline example, validation tooling, Apple provider architecture notes, generic app-action/tool bridge contracts, and a narrow native Apple bridge for system-model availability plus plain prompts. PCC generation, schema-backed native generation, native streaming, system App Intents registration, cloud providers, production RAG, and Tagflow integration are not implemented yet.

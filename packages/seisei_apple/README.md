@@ -1,5 +1,13 @@
 # seisei_apple
 
-Apple Foundation Models provider boundary for Seisei.
+Apple Foundation Models provider boundary and Flutter bridge for Seisei.
 
-This package contains the MVP Apple provider boundary and an `fm` CLI backend for local development probes. CI tests use fake backends; `/usr/bin/fm` is not a portable CI requirement.
+This package contains:
+
+- `AppleFoundationModelsProvider`, which implements Seisei's generic provider contract.
+- `FmCliBackend`, a local `/usr/bin/fm` backend for development probes.
+- `MethodChannelAppleFoundationModelsBackend`, a Flutter method-channel backend for iOS and macOS apps.
+
+The native bridge is intentionally narrow. It checks system-model availability and sends plain system-model prompts through `FoundationModels.LanguageModelSession`. PCC, schema-backed generation, and streaming are not implemented in the native bridge yet.
+
+CI tests use fake and mocked method-channel backends; `/usr/bin/fm` and local Apple Foundation Models are optional validation only.

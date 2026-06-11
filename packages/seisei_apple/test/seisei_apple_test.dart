@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/services.dart';
+import 'package:flutter_test/flutter_test.dart' as flutter_test;
 import 'package:seisei/seisei.dart';
 import 'package:seisei_apple/seisei_apple.dart';
 import 'package:test/test.dart';
@@ -203,6 +205,93 @@ void main() {
       '/tmp/schema.json',
       'Reply with exactly: seisei-ok',
     ]);
+  });
+
+  test('method channel backend maps native availability', () async {
+    const channel = MethodChannel('test.seisei/availability');
+    final binding = flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      call,
+    ) async {
+      expect(call.method, 'availability');
+      return {
+        'systemAvailable': true,
+        'pccAvailable': false,
+        'reason': null,
+      };
+    });
+    addTearDown(() {
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    });
+
+    final backend = MethodChannelAppleFoundationModelsBackend(channel: channel);
+    final availability = await backend.availability();
+
+    expect(availability.systemAvailable, isTrue);
+    expect(availability.pccAvailable, isFalse);
+    expect(availability.reason, isNull);
+  });
+
+  test('method channel backend sends plain system generation requests',
+      () async {
+    const channel = MethodChannel('test.seisei/respond');
+    final binding = flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+    binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      call,
+    ) async {
+      expect(call.method, 'respond');
+      expect(call.arguments, {'prompt': 'Hello', 'mode': 'system'});
+      return 'native-ok';
+    });
+    addTearDown(() {
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+    });
+
+    final backend = MethodChannelAppleFoundationModelsBackend(channel: channel);
+    final response = await backend.respond(
+      const AppleFoundationModelsRequest(
+        prompt: 'Hello',
+        mode: AppleFoundationModelsMode.system,
+      ),
+    );
+
+    expect(response, 'native-ok');
+  });
+
+  test('method channel backend rejects unsupported native bridge paths', () {
+    final backend = MethodChannelAppleFoundationModelsBackend(
+      channel: const MethodChannel('test.seisei/rejects'),
+    );
+
+    expect(
+      () => backend.respond(
+        const AppleFoundationModelsRequest(
+          prompt: 'Hello',
+          mode: AppleFoundationModelsMode.pcc,
+        ),
+      ),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => backend.respond(
+        const AppleFoundationModelsRequest(
+          prompt: 'Hello',
+          mode: AppleFoundationModelsMode.system,
+          schemaPath: '/tmp/schema.json',
+        ),
+      ),
+      throwsUnsupportedError,
+    );
+    expect(
+      () => backend.respond(
+        const AppleFoundationModelsRequest(
+          prompt: 'Hello',
+          mode: AppleFoundationModelsMode.system,
+          stream: true,
+        ),
+      ),
+      throwsUnsupportedError,
+    );
   });
 }
 

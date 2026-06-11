@@ -6,12 +6,17 @@ The standard validation command is:
 dart tool/validate.dart
 ```
 
+The command must run with a Flutter SDK on `PATH` because `seisei_apple` is a
+Flutter plugin package. The script still uses `dart` for pure Dart packages and
+uses `flutter test` only for `packages/seisei_apple`.
+
 It runs:
 
 - workspace dependency resolution
 - formatting check
 - static analysis
-- all package tests
+- Dart package tests
+- Flutter plugin tests for `seisei_apple`
 - `seisei_intents` app-action bridge contract tests
 - the offline CLI example
 
