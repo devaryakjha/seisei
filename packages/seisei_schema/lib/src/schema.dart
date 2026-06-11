@@ -47,6 +47,9 @@ enum ObjectFieldType {
 
   /// Union field.
   union,
+
+  /// Discriminated union field.
+  discriminatedUnion,
 }
 
 /// An object field definition.
@@ -58,6 +61,8 @@ final class ObjectField {
     this.isArray = false,
     this.objectSchema,
     this.variants = const [],
+    this.discriminatorKey,
+    this.discriminatorVariants = const {},
     this.enumValues = const [],
     this.minimum,
     this.maximum,
@@ -77,6 +82,8 @@ final class ObjectField {
   })  : type = ObjectFieldType.string,
         objectSchema = null,
         variants = const [],
+        discriminatorKey = null,
+        discriminatorVariants = const {},
         minimum = null,
         maximum = null;
 
@@ -91,6 +98,8 @@ final class ObjectField {
   })  : type = ObjectFieldType.integer,
         objectSchema = null,
         variants = const [],
+        discriminatorKey = null,
+        discriminatorVariants = const {},
         enumValues = const [],
         pattern = null;
 
@@ -105,6 +114,8 @@ final class ObjectField {
   })  : type = ObjectFieldType.number,
         objectSchema = null,
         variants = const [],
+        discriminatorKey = null,
+        discriminatorVariants = const {},
         enumValues = const [],
         pattern = null;
 
@@ -117,6 +128,8 @@ final class ObjectField {
   })  : type = ObjectFieldType.boolean,
         objectSchema = null,
         variants = const [],
+        discriminatorKey = null,
+        discriminatorVariants = const {},
         enumValues = const [],
         minimum = null,
         maximum = null,
@@ -132,6 +145,8 @@ final class ObjectField {
   })  : type = ObjectFieldType.object,
         objectSchema = schema,
         variants = const [],
+        discriminatorKey = null,
+        discriminatorVariants = const {},
         enumValues = const [],
         minimum = null,
         maximum = null,
@@ -146,6 +161,25 @@ final class ObjectField {
     this.maxItems,
   })  : type = ObjectFieldType.union,
         objectSchema = null,
+        discriminatorKey = null,
+        discriminatorVariants = const {},
+        enumValues = const [],
+        minimum = null,
+        maximum = null,
+        pattern = null;
+
+  /// Creates a discriminated object union.
+  const ObjectField.discriminatedUnion({
+    required this.discriminatorKey,
+    required Map<String, ObjectSchema> variants,
+    this.isRequired = true,
+    this.isArray = false,
+    this.minItems,
+    this.maxItems,
+  })  : type = ObjectFieldType.discriminatedUnion,
+        objectSchema = null,
+        variants = const [],
+        discriminatorVariants = variants,
         enumValues = const [],
         minimum = null,
         maximum = null,
@@ -165,6 +199,12 @@ final class ObjectField {
 
   /// Allowed variants when [type] is [ObjectFieldType.union].
   final List<ObjectField> variants;
+
+  /// Discriminator key when [type] is [ObjectFieldType.discriminatedUnion].
+  final String? discriminatorKey;
+
+  /// Variant schemas keyed by discriminator value.
+  final Map<String, ObjectSchema> discriminatorVariants;
 
   /// Allowed string values when [type] is [ObjectFieldType.string].
   final List<String> enumValues;
@@ -350,6 +390,15 @@ void _validateSingleValue(
     _validateUnionValue(definition, value, path: path, errors: errors);
     return;
   }
+  if (definition.type == ObjectFieldType.discriminatedUnion) {
+    _validateDiscriminatedUnionValue(
+      definition,
+      value,
+      path: path,
+      errors: errors,
+    );
+    return;
+  }
 
   if (!_matchesType(value, definition.type)) {
     final typeName =
@@ -472,6 +521,7 @@ bool _matchesType(Object? value, ObjectFieldType type) {
     ObjectFieldType.boolean => value is bool,
     ObjectFieldType.object => value is Map,
     ObjectFieldType.union => false,
+    ObjectFieldType.discriminatedUnion => false,
   };
 }
 
@@ -490,6 +540,7 @@ String _scalarTypeName(ObjectFieldType type) {
     ObjectFieldType.boolean => 'boolean',
     ObjectFieldType.object => 'object',
     ObjectFieldType.union => 'union',
+    ObjectFieldType.discriminatedUnion => 'union',
   };
 }
 
@@ -499,10 +550,19 @@ void _checkSchemaDefinition(ObjectSchema schema) {
     if (entry.value.type == ObjectFieldType.object) {
       _checkSchemaDefinition(entry.value.objectSchema!);
     }
+    if (entry.value.type == ObjectFieldType.discriminatedUnion) {
+      for (final variant in entry.value.discriminatorVariants.values) {
+        _checkSchemaDefinition(variant);
+      }
+    }
   }
 }
 
 void _checkFieldDefinition(String fieldName, ObjectField definition) {
+  if (definition.type == ObjectFieldType.discriminatedUnion) {
+    _checkDiscriminatedUnionDefinition(fieldName, definition);
+    return;
+  }
   if (definition.type != ObjectFieldType.union) {
     return;
   }
@@ -526,6 +586,108 @@ void _checkFieldDefinition(String fieldName, ObjectField definition) {
         fieldName,
         'schema.fields',
         'Union variants must not nest other unions.',
+      );
+    }
+  }
+}
+
+void _validateDiscriminatedUnionValue(
+  ObjectField definition,
+  Object? value, {
+  required String path,
+  required List<SchemaValidationError> errors,
+}) {
+  if (value is! Map) {
+    errors.add(
+      SchemaValidationError(
+        code: 'object.expected',
+        path: path,
+        message: 'Expected an object union value.',
+      ),
+    );
+    return;
+  }
+
+  final discriminatorKey = definition.discriminatorKey!;
+  final discriminatorPath = '$path.$discriminatorKey';
+  if (!value.containsKey(discriminatorKey) || value[discriminatorKey] == null) {
+    errors.add(
+      SchemaValidationError(
+        code: 'union.discriminator.required',
+        path: discriminatorPath,
+        message: 'Expected a discriminator field.',
+      ),
+    );
+    return;
+  }
+
+  final discriminatorValue = value[discriminatorKey];
+  if (discriminatorValue is! String) {
+    errors.add(
+      SchemaValidationError(
+        code: 'union.discriminator.expected',
+        path: discriminatorPath,
+        message: 'Expected a string discriminator field.',
+      ),
+    );
+    return;
+  }
+
+  final variant = definition.discriminatorVariants[discriminatorValue];
+  if (variant == null) {
+    errors.add(
+      SchemaValidationError(
+        code: 'union.discriminator.unknown',
+        path: discriminatorPath,
+        message: 'Expected a known discriminator value.',
+      ),
+    );
+    return;
+  }
+
+  for (final error in variant.validate(value)) {
+    errors.add(
+      SchemaValidationError(
+        code: error.code,
+        path: _prefixPath(path, error.path),
+        message: error.message,
+      ),
+    );
+  }
+}
+
+void _checkDiscriminatedUnionDefinition(
+  String fieldName,
+  ObjectField definition,
+) {
+  final discriminatorKey = definition.discriminatorKey;
+  if (discriminatorKey == null || discriminatorKey.isEmpty) {
+    throw ArgumentError.value(
+      fieldName,
+      'schema.fields',
+      'Discriminated union fields must define a discriminator key.',
+    );
+  }
+  if (definition.discriminatorVariants.isEmpty) {
+    throw ArgumentError.value(
+      fieldName,
+      'schema.fields',
+      'Discriminated union fields must define at least one variant.',
+    );
+  }
+  for (final entry in definition.discriminatorVariants.entries) {
+    if (entry.key.isEmpty) {
+      throw ArgumentError.value(
+        fieldName,
+        'schema.fields',
+        'Discriminator values must not be empty.',
+      );
+    }
+    if (entry.value.fieldDefinitions.containsKey(discriminatorKey)) {
+      throw ArgumentError.value(
+        fieldName,
+        'schema.fields',
+        'Variant schemas must not define the discriminator field.',
       );
     }
   }

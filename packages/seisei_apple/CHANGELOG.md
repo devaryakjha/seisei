@@ -1,3 +1,8 @@
+## 0.1.0-dev.9
+
+- Encode `ObjectField.discriminatedUnion` schemas as tagged FoundationModels
+  `anyOf` object variants.
+
 ## 0.1.0-dev.8
 
 - Emit `GenerationChunk.structuredPatches` for schema-backed structured

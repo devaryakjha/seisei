@@ -351,6 +351,81 @@ void main() {
     });
   });
 
+  test('encodes discriminated unions as tagged anyOf object variants', () {
+    const schema = ObjectSchema(
+      name: 'MessageEnvelope',
+      fields: {
+        'message': ObjectField.discriminatedUnion(
+          discriminatorKey: 'kind',
+          variants: {
+            'note': ObjectSchema(
+              name: 'NoteMessage',
+              fields: {'text': ObjectField.string()},
+            ),
+            'task': ObjectSchema(
+              name: 'TaskMessage',
+              fields: {
+                'done': ObjectField.boolean(),
+                'title': ObjectField.string(),
+              },
+            ),
+          },
+        ),
+      },
+    );
+
+    final encoded = const FoundationModelsSchemaEncoder().encodeObject(schema);
+
+    expect(encoded, {
+      r'$defs': {
+        'NoteMessage_note': {
+          'additionalProperties': false,
+          'required': ['kind', 'text'],
+          'type': 'object',
+          'properties': {
+            'kind': {
+              'type': 'string',
+              'enum': ['note'],
+            },
+            'text': {'type': 'string'},
+          },
+          'x-order': ['kind', 'text'],
+          'title': 'NoteMessage_note',
+        },
+        'TaskMessage_task': {
+          'additionalProperties': false,
+          'required': ['done', 'kind', 'title'],
+          'type': 'object',
+          'properties': {
+            'done': {'type': 'boolean'},
+            'kind': {
+              'type': 'string',
+              'enum': ['task'],
+            },
+            'title': {'type': 'string'},
+          },
+          'x-order': ['done', 'kind', 'title'],
+          'title': 'TaskMessage_task',
+        },
+        'MessageEnvelope_message_union': {
+          'title': 'MessageEnvelope_message_union',
+          'anyOf': [
+            {r'$ref': r'#/$defs/NoteMessage_note'},
+            {r'$ref': r'#/$defs/TaskMessage_task'},
+          ],
+        },
+      },
+      'additionalProperties': false,
+      'required': ['message'],
+      'type': 'object',
+      'properties': {
+        'message': {r'$ref': r'#/$defs/MessageEnvelope_message_union'},
+      },
+      'x-order': ['message'],
+      'title': 'MessageEnvelope',
+    });
+  });
+
   test('writes FoundationModels schema files and provider metadata', () async {
     final directory = await Directory.systemTemp.createTemp(
       'seisei_afm_schema_test_',

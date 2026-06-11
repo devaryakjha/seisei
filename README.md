@@ -101,11 +101,11 @@ deterministic tests, an offline example, validation tooling, Apple provider
 architecture notes, generic app-action/tool bridge contracts, and a native Apple
 bridge for system-model availability, plain prompts, provider-specific
 FoundationModels schema requests, nested and constrained `ObjectSchema` mapping
-into FoundationModels schema files, system-model streaming with typed partial
-snapshots and path-level structured patches for safe schema-backed chunks, and
-a minimal native App Intents registration helper package for handwritten Swift
-intents, plus an experimental optional Tagflow document adapter for `seisei_ui`
-blocks.
+into FoundationModels schema files including discriminated object unions,
+system-model streaming with typed partial snapshots and path-level structured
+patches for safe schema-backed chunks, and a minimal native App Intents
+registration helper package for handwritten Swift intents, plus an experimental
+optional Tagflow document adapter for `seisei_ui` blocks.
 PCC generation, generated App Intent wrappers, cloud providers, production RAG,
 provider-native patch streams, and broader renderer integration beyond the
 narrow Tagflow content adapter are not implemented yet.

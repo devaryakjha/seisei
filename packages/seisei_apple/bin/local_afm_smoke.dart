@@ -15,15 +15,20 @@ Future<void> main(List<String> args) async {
   }
 
   final mode = _modeFromArgs(args);
-  final schemaSmoke = args.contains('--schema');
+  final discriminatedUnionSmoke = args.contains('--discriminated-union');
+  final schemaSmoke = args.contains('--schema') || discriminatedUnionSmoke;
   final streamSmoke = args.contains('--stream');
   final explicitExpect = _optionValue(args, '--expect');
   final expect = explicitExpect ??
-      switch ((mode, schemaSmoke)) {
-        (AppleFoundationModelsMode.system, true) => 'seisei-schema-ok',
-        (AppleFoundationModelsMode.system, false) => 'seisei-ok',
-        (AppleFoundationModelsMode.pcc, true) => 'seisei-pcc-schema-ok',
-        (AppleFoundationModelsMode.pcc, false) => 'seisei-pcc-ok',
+      switch ((mode, discriminatedUnionSmoke, schemaSmoke)) {
+        (AppleFoundationModelsMode.system, true, _) =>
+          'seisei-discriminated-ok',
+        (AppleFoundationModelsMode.pcc, true, _) =>
+          'seisei-pcc-discriminated-ok',
+        (AppleFoundationModelsMode.system, false, true) => 'seisei-schema-ok',
+        (AppleFoundationModelsMode.system, false, false) => 'seisei-ok',
+        (AppleFoundationModelsMode.pcc, false, true) => 'seisei-pcc-schema-ok',
+        (AppleFoundationModelsMode.pcc, false, false) => 'seisei-pcc-ok',
       };
   final promptParts = <String>[];
   for (var index = 0; index < args.length; index += 1) {
@@ -33,6 +38,9 @@ Future<void> main(List<String> args) async {
       continue;
     }
     if (arg == '--schema') {
+      continue;
+    }
+    if (arg == '--discriminated-union') {
       continue;
     }
     if (arg == '--stream') {
@@ -45,7 +53,9 @@ Future<void> main(List<String> args) async {
   }
   final prompt = promptParts.isEmpty
       ? schemaSmoke
-          ? 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
+          ? discriminatedUnionSmoke
+              ? 'Return JSON with message kind exactly note and text exactly $expect'
+              : 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
           : streamSmoke && explicitExpect == null
               ? 'Say hello in a short sentence.'
               : 'Reply with exactly: $expect'
@@ -70,22 +80,7 @@ Future<void> main(List<String> args) async {
     mode: mode,
   );
   final client = SeiseiClient(provider: provider);
-  const schema = ObjectSchema(
-    name: 'Draft',
-    fields: {
-      'author': ObjectField.object(
-        schema: ObjectSchema(
-          name: 'Author',
-          fields: {
-            'name': ObjectField.string(),
-          },
-        ),
-      ),
-      'count': ObjectField.integer(),
-      'published': ObjectField.boolean(),
-      'title': ObjectField.string(),
-    },
-  );
+  final schema = discriminatedUnionSmoke ? _discriminatedSchema : _draftSchema;
   const encoder = FoundationModelsSchemaEncoder();
   final schemaDirectory = schemaSmoke
       ? await Directory.systemTemp.createTemp('seisei_afm_schema_smoke_')
@@ -105,7 +100,11 @@ Future<void> main(List<String> args) async {
       },
       metadata:
           schemaFile == null ? const {} : encoder.metadataForFile(schemaFile),
-      decode: (rawValue) => _decode(rawValue, schemaSmoke: schemaSmoke),
+      decode: (rawValue) => _decode(
+        rawValue,
+        schemaSmoke: schemaSmoke,
+        discriminatedUnionSmoke: discriminatedUnionSmoke,
+      ),
     );
 
     if (streamSmoke) {
@@ -140,7 +139,11 @@ Future<void> main(List<String> args) async {
     stdout.writeln('streamPartialSnapshots: $streamPartialSnapshots');
   }
   if (schemaFile != null) {
-    stdout.writeln('schema: ObjectSchema(title,count,published,author)');
+    stdout.writeln(
+      discriminatedUnionSmoke
+          ? 'schema: ObjectSchema(discriminated message union)'
+          : 'schema: ObjectSchema(title,count,published,author)',
+    );
   }
   stdout.writeln('response: $responseValue');
 
@@ -160,7 +163,50 @@ Future<void> main(List<String> args) async {
   }
 }
 
-String _decode(Object? rawValue, {required bool schemaSmoke}) {
+const _draftSchema = ObjectSchema(
+  name: 'Draft',
+  fields: {
+    'author': ObjectField.object(
+      schema: ObjectSchema(
+        name: 'Author',
+        fields: {
+          'name': ObjectField.string(),
+        },
+      ),
+    ),
+    'count': ObjectField.integer(),
+    'published': ObjectField.boolean(),
+    'title': ObjectField.string(),
+  },
+);
+
+const _discriminatedSchema = ObjectSchema(
+  name: 'MessageEnvelope',
+  fields: {
+    'message': ObjectField.discriminatedUnion(
+      discriminatorKey: 'kind',
+      variants: {
+        'note': ObjectSchema(
+          name: 'NoteMessage',
+          fields: {'text': ObjectField.string()},
+        ),
+        'task': ObjectSchema(
+          name: 'TaskMessage',
+          fields: {
+            'done': ObjectField.boolean(),
+            'title': ObjectField.string(),
+          },
+        ),
+      },
+    ),
+  },
+);
+
+String _decode(
+  Object? rawValue, {
+  required bool schemaSmoke,
+  required bool discriminatedUnionSmoke,
+}) {
   if (!schemaSmoke) {
     return rawValue! as String;
   }
@@ -169,23 +215,20 @@ String _decode(Object? rawValue, {required bool schemaSmoke}) {
     final String text => jsonDecode(text),
     _ => rawValue,
   };
-  const schema = ObjectSchema(
-    name: 'Draft',
-    fields: {
-      'author': ObjectField.object(
-        schema: ObjectSchema(
-          name: 'Author',
-          fields: {
-            'name': ObjectField.string(),
-          },
-        ),
-      ),
-      'count': ObjectField.integer(),
-      'published': ObjectField.boolean(),
-      'title': ObjectField.string(),
-    },
-  );
-  return schema.decode(decoded, (object) {
+  if (discriminatedUnionSmoke) {
+    return _discriminatedSchema.decode(decoded, (object) {
+      final message = object['message'] as Map;
+      if (message['kind'] != 'note') {
+        throw DecodeException(
+          'Expected note discriminator.',
+          source: object,
+        );
+      }
+      return message['text']! as String;
+    });
+  }
+
+  return _draftSchema.decode(decoded, (object) {
     final author = object['author'] as Map;
     if (author['name'] != 'Aria' ||
         object['count'] != 7 ||
@@ -232,12 +275,16 @@ void _printUsage() {
   );
   stdout
       .writeln('  --schema           Use a Seisei ObjectSchema-backed prompt.');
+  stdout.writeln(
+    '  --discriminated-union Use a schema-backed discriminated union prompt.',
+  );
   stdout.writeln('  --stream           Verify streaming transport.');
   stdout.writeln('  --expect VALUE      Exact expected response text.');
   stdout.writeln('');
   stdout.writeln('Examples:');
   stdout.writeln('  dart run bin/local_afm_smoke.dart');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --schema');
+  stdout.writeln('  dart run bin/local_afm_smoke.dart --discriminated-union');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --stream');
   stdout.writeln('  dart run bin/local_afm_smoke.dart --mode pcc');
 }

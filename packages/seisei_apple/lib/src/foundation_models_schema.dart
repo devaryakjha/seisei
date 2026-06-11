@@ -128,13 +128,23 @@ final class FoundationModelsSchemaEncoder {
     _SchemaDefinitions definitions, {
     String? unionTitle,
   }) {
-    if (field.type == ObjectFieldType.union) {
+    if (field.type == ObjectFieldType.union ||
+        field.type == ObjectFieldType.discriminatedUnion) {
       final title = unionTitle!;
       definitions.add(title, {
         'title': title,
         'anyOf': [
-          for (final variant in field.variants)
-            _encodeUnionVariant(variant, definitions),
+          if (field.type == ObjectFieldType.discriminatedUnion)
+            for (final entry in field.discriminatorVariants.entries)
+              _encodeDiscriminatedUnionVariant(
+                field.discriminatorKey!,
+                entry.key,
+                entry.value,
+                definitions,
+              )
+          else
+            for (final variant in field.variants)
+              _encodeUnionVariant(variant, definitions),
         ],
       });
       return {r'$ref': '#/\$defs/$title'};
@@ -191,7 +201,34 @@ final class FoundationModelsSchemaEncoder {
       ObjectFieldType.boolean => 'boolean',
       ObjectFieldType.object => 'object',
       ObjectFieldType.union => 'union',
+      ObjectFieldType.discriminatedUnion => 'union',
     };
+  }
+
+  Map<String, Object?> _encodeDiscriminatedUnionVariant(
+    String discriminatorKey,
+    String discriminatorValue,
+    ObjectSchema schema,
+    _SchemaDefinitions definitions,
+  ) {
+    final variantName = '${schema.name}_$discriminatorValue';
+    final fields = {
+      discriminatorKey: ObjectField.string(enumValues: [discriminatorValue]),
+      ...schema.fields,
+    };
+    if (schema.requiredStringFields.isNotEmpty) {
+      for (final field in schema.requiredStringFields) {
+        fields.putIfAbsent(field, () => const ObjectField.string());
+      }
+    }
+    definitions.add(
+      variantName,
+      _encodeObjectSchema(
+        ObjectSchema(name: variantName, fields: fields),
+        definitions,
+      ),
+    );
+    return {r'$ref': '#/\$defs/$variantName'};
   }
 
   String _unionTitle(

@@ -163,8 +163,9 @@ safe partial snapshots into `GenerationChunk.partialValue`. They also derive
 path-level `GenerationChunk.structuredPatches` from consecutive structured
 snapshots when the backend emits snapshot objects.
 `FoundationModelsSchemaEncoder` covers verified generic `ObjectSchema` features:
-nested objects, string enums, field-level `anyOf` unions, numeric ranges,
-string patterns, arrays, and optional fields. PCC is not implemented in the
+nested objects, string enums, field-level `anyOf` unions, discriminated object
+unions, numeric ranges, string patterns, arrays, and optional fields. PCC is not
+implemented in the
 native bridge yet. On the current
 Xcode 26.5 SDK, the public
 Swift `FoundationModels` interface exposes `SystemLanguageModel` and

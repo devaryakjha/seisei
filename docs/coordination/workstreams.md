@@ -147,6 +147,9 @@ safe schema-backed streaming snapshots.
 `seisei` later advanced to `0.1.0-dev.2` for provider-neutral structured
 patches, and `seisei_apple` advanced to `0.1.0-dev.8` for schema-backed
 snapshot patch emission.
+`seisei_schema` later advanced to `0.1.0-dev.4` for discriminated object unions,
+with `seisei_apple` at `0.1.0-dev.9` for the matching FoundationModels tagged
+`anyOf` mapping.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -183,7 +186,7 @@ Deliver after the generic APIs and native capabilities are ready. Current focus
 after the nested-object, verified-constraint, field-level union, and typed
 partial chunk work:
 
-- explicit-null or discriminated unions beyond the current field-level `anyOf`
+- explicit-null unions beyond the current field-level and discriminated `anyOf`
   support
 - PCC support if a verified API path exists
 - generated Swift App Intent wrappers or tighter Flutter integration above the

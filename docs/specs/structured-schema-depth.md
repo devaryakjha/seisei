@@ -24,6 +24,7 @@ Supported generic field concepts:
 - nested objects via `ObjectField.object(schema: ...)`
 - string enum-style choices via `ObjectField.string(enumValues: ...)`
 - field-level unions via `ObjectField.union(variants: ...)`
+- discriminated object unions via `ObjectField.discriminatedUnion(...)`
 - integer and number ranges via `minimum` and `maximum`
 - string regex constraints via `pattern`
 - array size constraints via `minItems` and `maxItems`
@@ -38,6 +39,8 @@ Validation rules:
   element when `isArray` is true
 - union fields validate successfully when at least one declared variant matches
   the current value
+- discriminated unions require a string discriminator with a known tag before
+  validating the matching branch schema
 - optional fields continue to treat missing keys and `null` values as absent;
   explicit `null` union members are not part of this workstream
 
@@ -47,11 +50,12 @@ Supported union scope:
 - variants may be scalar or nested object shapes
 - arrays of unions are supported by setting `isArray: true` on the union field
   itself
+- discriminated unions apply to object branches and synthesize a single-value
+  string enum discriminator into provider-specific schemas
 
 Still out of scope in the generic schema layer:
 
 - explicit `null` union members
-- discriminated unions
 - top-level non-object unions
 - literal numeric or boolean enum branches
 
@@ -65,6 +69,7 @@ Supported FoundationModels JSON forms:
 - nested object references through `$defs` and `$ref`
 - string enums through `enum`
 - unions through `anyOf`
+- discriminated object unions through tagged `anyOf` object branches
 - integer and number bounds through `minimum` and `maximum`
 - string regex constraints through `pattern`
 - array bounds through `minItems` and `maxItems`
@@ -102,7 +107,6 @@ events.
 Not part of this workstream:
 
 - explicit-null unions
-- discriminated unions
 - non-string literal enums
 - cross-provider typed partial snapshot APIs
 - provider-native structured patch events

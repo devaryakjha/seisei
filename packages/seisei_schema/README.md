@@ -5,8 +5,8 @@ Structured output schemas and validation helpers for Seisei.
 This package validates JSON-compatible model output before application code
 decodes it into typed Dart values. It provides object-schema validation with
 strings, integers, numbers, booleans, arrays, optional fields, nested objects,
-string enums, field-level unions, numeric ranges, string patterns, and array
-size constraints.
+string enums, field-level unions, discriminated object unions, numeric ranges,
+string patterns, and array size constraints.
 
 ```dart
 const schema = ObjectSchema(
@@ -33,6 +33,15 @@ const schema = ObjectSchema(
           ),
         ),
       ],
+    ),
+    'message': ObjectField.discriminatedUnion(
+      discriminatorKey: 'kind',
+      variants: {
+        'note': ObjectSchema(
+          name: 'NoteMessage',
+          fields: {'text': ObjectField.string()},
+        ),
+      },
     ),
     'status': ObjectField.string(enumValues: ['draft', 'published']),
     'title': ObjectField.string(),

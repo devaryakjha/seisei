@@ -1,3 +1,8 @@
+## 0.1.0-dev.4
+
+- Add `ObjectField.discriminatedUnion` for tagged object unions with stable
+  discriminator validation.
+
 ## 0.1.0-dev.3
 
 - Add field-level union validation through `ObjectField.union(variants: ...)`

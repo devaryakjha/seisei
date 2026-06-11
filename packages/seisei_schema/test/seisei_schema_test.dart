@@ -126,6 +126,39 @@ void main() {
     expect(contact.value, {'city': 'Tokyo'});
   });
 
+  test('validates discriminated unions before decoding', () {
+    const schema = ObjectSchema(
+      name: 'MessageEnvelope',
+      fields: {
+        'message': ObjectField.discriminatedUnion(
+          discriminatorKey: 'kind',
+          variants: {
+            'note': ObjectSchema(
+              name: 'NoteMessage',
+              fields: {'text': ObjectField.string()},
+            ),
+            'task': ObjectSchema(
+              name: 'TaskMessage',
+              fields: {
+                'done': ObjectField.boolean(),
+                'title': ObjectField.string(),
+              },
+            ),
+          },
+        ),
+      },
+    );
+
+    final envelope = schema.decode(
+      {
+        'message': {'kind': 'task', 'title': 'Ship', 'done': false},
+      },
+      (object) => _UnionContact(object['message']!),
+    );
+
+    expect(envelope.value, {'kind': 'task', 'title': 'Ship', 'done': false});
+  });
+
   test('reports stable errors for typed fields', () {
     const schema = ObjectSchema(
       name: 'Draft',
@@ -223,6 +256,48 @@ void main() {
         'values': [1, 'bad'],
       }).map((error) => '${error.path}: ${error.code}'),
       [r'$.value: union.any_of', r'$.values[1]: union.any_of'],
+    );
+  });
+
+  test('reports stable errors for discriminated unions', () {
+    const schema = ObjectSchema(
+      name: 'MessageEnvelope',
+      fields: {
+        'message': ObjectField.discriminatedUnion(
+          discriminatorKey: 'kind',
+          variants: {
+            'note': ObjectSchema(
+              name: 'NoteMessage',
+              fields: {'text': ObjectField.string()},
+            ),
+            'task': ObjectSchema(
+              name: 'TaskMessage',
+              fields: {'title': ObjectField.string()},
+            ),
+          },
+        ),
+      },
+    );
+
+    expect(
+      schema.validate({
+        'message': {'kind': 'task'},
+      }).map((error) => '${error.path}: ${error.code}'),
+      [r'$.message.title: string.required'],
+    );
+
+    expect(
+      schema.validate({
+        'message': {'kind': 'event', 'text': 'Hi'},
+      }).map((error) => '${error.path}: ${error.code}'),
+      [r'$.message.kind: union.discriminator.unknown'],
+    );
+
+    expect(
+      schema.validate({
+        'message': {'text': 'Hi'},
+      }).map((error) => '${error.path}: ${error.code}'),
+      [r'$.message.kind: union.discriminator.required'],
     );
   });
 
