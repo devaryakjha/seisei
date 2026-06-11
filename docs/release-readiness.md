@@ -9,11 +9,13 @@ MIT `LICENSE` files, `dart tool/validate.dart --release` passes locally, and
 the released packages are published under the verified publisher `jha.sh`.
 The current published package line is `0.1.0-dev.0` for the first wave, with
 `seisei` advanced to `0.1.0-dev.2` for provider-neutral structured patches and
-`seisei_schema` advanced to `0.1.0-dev.4` for field-level and discriminated
-object unions. `seisei_apple` advanced to `0.1.0-dev.9` for FoundationModels
-`anyOf` mapping, typed partial decoding of safe schema-backed stream snapshots,
-structured patch emission, and tagged `anyOf` mapping for discriminated object
-unions. `seisei_test` is at `0.1.0-dev.1` for typed partial stream snapshots.
+`seisei_schema` advanced to `0.1.0-dev.5` for field-level unions,
+discriminated object unions, and explicit null union variants. `seisei_apple`
+advanced to `0.1.0-dev.10` for FoundationModels `anyOf` mapping, typed partial
+decoding of safe schema-backed stream snapshots, structured patch emission,
+tagged `anyOf` mapping for discriminated object unions, and explicit
+`{"type":"null"}` `anyOf` branches. `seisei_test` is at `0.1.0-dev.1` for typed
+partial stream snapshots.
 `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental optional
 Tagflow document adapter.
 
@@ -76,19 +78,20 @@ Last verified on 2026-06-11 from `main`:
   `seisei-schema-ok` while validating `title`, `count`, `published`, and
   `author`; the discriminated object union smoke returned
   `seisei-discriminated-ok` through a tagged `anyOf` FoundationModels schema;
-  the streaming smoke emitted real deltas and a terminal value; the
-  schema-backed streaming smoke returned `seisei-schema-ok` through the same
-  Seisei provider path.
+  the explicit null union smoke returned `seisei-null-ok` through an
+  `{"type":"null"}` `anyOf` FoundationModels schema; the streaming smoke emitted
+  real deltas and a terminal value; the schema-backed streaming smoke returned
+  `seisei-schema-ok` through the same Seisei provider path.
 - PCC availability is launch-context sensitive on this machine: PTY checks
   report PCC available and can return `seisei-pcc-ok`, while non-interactive
   Dart subprocesses report `PCC inference is not available in this context`.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
-- GitHub Actions `Validate` run `27364614563` completed successfully on the
-  default branch for `7574fc5`.
+- GitHub Actions `Validate` run `27365326818` completed successfully on the
+  default branch for `c7d3687`.
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
-  `0.1.0-dev.4`, `seisei_apple` latest as `0.1.0-dev.9`, and
+  `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
   `seisei_tagflow` latest as `0.1.0-dev.0`; the other released packages remain
   at `0.1.0-dev.0`.
