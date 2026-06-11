@@ -45,6 +45,9 @@ dart tool/validate.dart --local-pcc
 That mode requires PCC to be available to the current Dart subprocess context.
 It runs `fm available --model pcc`, a direct PCC generation smoke, and the same
 Seisei smoke path with `--mode pcc`.
+Passing `fm` commands in an interactive terminal do not override a failing
+`--local-pcc` run: the validation target is the non-interactive Seisei/Dart
+execution context that the script actually uses.
 
 Release dry-runs are intentionally a readiness gate, not part of normal validation:
 

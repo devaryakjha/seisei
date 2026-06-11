@@ -23,14 +23,13 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
-    final result = await _processRunner(executable, ['available']);
-    final output = '${result.stdout}\n${result.stderr}';
+    final system = await _availabilityProbe(AppleFoundationModelsMode.system);
+    final pcc = await _availabilityProbe(AppleFoundationModelsMode.pcc);
 
     return AppleFoundationModelsAvailability(
-      systemAvailable: output.contains('System model available'),
-      pccAvailable: output.contains('PCC model available') ||
-          output.contains('PCC inference available'),
-      reason: result.exitCode == 0 ? null : output.trim(),
+      systemAvailable: system.isAvailable,
+      pccAvailable: pcc.isAvailable,
+      reason: _availabilityReason(system: system, pcc: pcc),
     );
   }
 
@@ -93,4 +92,68 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
       request.prompt,
     ];
   }
+
+  Future<_AvailabilityProbe> _availabilityProbe(
+    AppleFoundationModelsMode mode,
+  ) async {
+    final result = await _processRunner(executable, [
+      'available',
+      '--model',
+      mode.name,
+    ]);
+    final output = _normalizeOutput('${result.stdout}\n${result.stderr}');
+    final successToken = switch (mode) {
+      AppleFoundationModelsMode.system => 'System model available',
+      AppleFoundationModelsMode.pcc => 'PCC model available',
+    };
+
+    return _AvailabilityProbe(
+      mode: mode,
+      isAvailable: output.contains(successToken),
+      reason: result.exitCode == 0 ? null : output,
+    );
+  }
+
+  String? _availabilityReason({
+    required _AvailabilityProbe system,
+    required _AvailabilityProbe pcc,
+  }) {
+    if (!system.isAvailable && !pcc.isAvailable) {
+      final reasons = [
+        if (system.reason case final reason?) 'system: $reason',
+        if (pcc.reason case final reason?) 'pcc: $reason',
+      ];
+      return reasons.isEmpty ? null : reasons.join('\n');
+    }
+    if (!system.isAvailable) {
+      return system.reason;
+    }
+    if (!pcc.isAvailable) {
+      return pcc.reason;
+    }
+    return null;
+  }
+
+  String _normalizeOutput(String output) {
+    return output
+        .replaceAll(_ansiEscapePattern, '')
+        .split('\n')
+        .map((line) => line.trimRight())
+        .where((line) => line.isNotEmpty)
+        .join('\n');
+  }
 }
+
+final class _AvailabilityProbe {
+  const _AvailabilityProbe({
+    required this.mode,
+    required this.isAvailable,
+    required this.reason,
+  });
+
+  final AppleFoundationModelsMode mode;
+  final bool isAvailable;
+  final String? reason;
+}
+
+final _ansiEscapePattern = RegExp(r'\x1B\[[0-9;]*m');

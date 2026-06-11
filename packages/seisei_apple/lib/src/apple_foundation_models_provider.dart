@@ -145,6 +145,13 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       AppleFoundationModelsMode.pcc => 'PCC',
     };
     final modeReason = 'Apple Foundation Models $modeName mode is unavailable.';
+    if (mode == AppleFoundationModelsMode.pcc &&
+        (reason == null ||
+            reason.isEmpty ||
+            reason.trim() == 'System model available')) {
+      return '$modeReason '
+          'No verified public native FoundationModels PCC API path exists on this SDK.';
+    }
     return switch (reason) {
       null || '' => modeReason,
       _ => '$modeReason $reason',

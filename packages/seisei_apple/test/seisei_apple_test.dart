@@ -43,7 +43,8 @@ void main() {
     expect((await provider.availability()).isAvailable, isFalse);
   });
 
-  test('pcc mode explains when only system mode is available', () async {
+  test('pcc mode rewrites unhelpful system-only availability reasons',
+      () async {
     final provider = AppleFoundationModelsProvider(
       mode: AppleFoundationModelsMode.pcc,
       backend: _FakeAppleBackend(
@@ -59,7 +60,31 @@ void main() {
 
     expect(availability.isAvailable, isFalse);
     expect(availability.reason, contains('PCC mode is unavailable'));
-    expect(availability.reason, contains('System model available'));
+    expect(
+      availability.reason,
+      contains('No verified public native FoundationModels PCC API path'),
+    );
+  });
+
+  test('pcc mode explains the native API gap when no reason is supplied',
+      () async {
+    final provider = AppleFoundationModelsProvider(
+      mode: AppleFoundationModelsMode.pcc,
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: false,
+        ),
+      ),
+    );
+
+    final availability = await provider.availability();
+
+    expect(availability.isAvailable, isFalse);
+    expect(
+      availability.reason,
+      contains('No verified public native FoundationModels PCC API path'),
+    );
   });
 
   test('privacy rejects pcc for on-device-only requests', () async {
@@ -386,22 +411,37 @@ void main() {
     );
   });
 
-  test('fm backend maps system availability when PCC exits nonzero', () async {
+  test('fm backend probes system and pcc availability separately', () async {
+    final calls = <List<String>>[];
     final backend = FmCliBackend(
       executable: 'fm',
-      processRunner: (executable, arguments) async => ProcessResult(
-        1,
-        1,
-        'System model available',
-        'Error: PCC inference is not available in this context.',
-      ),
+      processRunner: (executable, arguments) async {
+        calls.add(arguments);
+        if (arguments.last == 'system') {
+          return ProcessResult(1, 0, 'System model available', '');
+        }
+        return ProcessResult(
+          2,
+          1,
+          '',
+          'Error: \u001b[38;2;255;107;128m'
+              'PCC inference is not available in this context.\u001b[0m',
+        );
+      },
     );
 
     final availability = await backend.availability();
 
     expect(availability.systemAvailable, isTrue);
     expect(availability.pccAvailable, isFalse);
-    expect(availability.reason, contains('PCC inference is not available'));
+    expect(calls, [
+      ['available', '--model', 'system'],
+      ['available', '--model', 'pcc'],
+    ]);
+    expect(
+      availability.reason,
+      'Error: PCC inference is not available in this context.',
+    );
   });
 
   test('fm backend builds schema response arguments', () async {

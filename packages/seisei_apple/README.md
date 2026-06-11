@@ -35,15 +35,41 @@ real streaming chunks arrive and that Seisei emits a terminal value.
 To verify PCC from the same Seisei path, run:
 
 ```sh
+fm available --model pcc
 dart run bin/local_afm_smoke.dart --mode pcc
 ```
 
-That command requires `fm available --model pcc` to report PCC availability in
-the same terminal/process context. On macOS 27, PCC checks can be
-context-sensitive: an interactive terminal can report PCC available while a
-non-interactive Dart subprocess reports `PCC inference is not available in this
-context`. If that happens, the local system model can still work while PCC is
-unavailable to that Seisei validation path.
+Those commands must be run in the same launch context you want to validate. On
+this macOS 27 machine, PCC is context-sensitive:
+
+```sh
+/usr/bin/fm available --model pcc
+```
+
+Run non-interactively, it exits nonzero with:
+
+```text
+Error: PCC inference is not available in this context.
+```
+
+Run in an interactive PTY, it reports:
+
+```text
+PCC model available
+```
+
+The same split applies to direct generation:
+
+```sh
+/usr/bin/fm respond --model pcc 'Reply with exactly: seisei-pcc-ok'
+```
+
+Run non-interactively, it fails with `PCC inference is not available in this
+context`. Run in an interactive PTY, it can return `seisei-pcc-ok`.
+`dart run bin/local_afm_smoke.dart --mode pcc` uses a non-interactive Dart
+subprocess, so it should be treated as a validation of that exact Seisei
+execution context, not as proof that PCC is generally unavailable on the
+machine.
 
 From the repository root, `dart tool/validate.dart --local-afm` checks only the
 system-model path. Use `dart tool/validate.dart --local-pcc` when you want PCC
@@ -121,7 +147,11 @@ model requests when `schemaPath` points to a JSON-encoded FoundationModels
 schema file, and it streams system-model text through a Flutter event channel.
 `FoundationModelsSchemaEncoder` covers verified generic `ObjectSchema` features:
 nested objects, string enums, numeric ranges, string patterns, arrays, and
-optional fields. PCC is not implemented in the native bridge yet.
+optional fields. PCC is not implemented in the native bridge yet. On the current
+Xcode 26.5 SDK, the public
+Swift `FoundationModels` interface exposes `SystemLanguageModel` and
+`LanguageModelSession(model: SystemLanguageModel)`, but no public PCC model
+type that Seisei can compile against.
 
 If you want the typed Seisei client layer, add a direct `seisei` dependency in
 the host app and build `AppleFoundationModelsProvider` on top of the native

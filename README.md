@@ -75,7 +75,9 @@ On this machine, `/usr/bin/fm` reports PCC availability differently depending
 on how it is launched: interactive PTY checks can report PCC available while
 non-interactive Dart subprocesses report `PCC inference is not available in
 this context`. Treat PCC checks as context-sensitive until a production native
-PCC API path is verified.
+PCC API path is verified. The current public Swift `FoundationModels` SDK still
+exposes `LanguageModelSession(model: SystemLanguageModel)` only, so Seisei does
+not claim native PCC support for Flutter/macOS hosts.
 For a supported Flutter host path that exercises the native `seisei_apple`
 bridge, see `packages/seisei_apple/README.md`. The offline CLI example in
 `examples/basic_cli` intentionally stays provider-free and does not call AFM.
