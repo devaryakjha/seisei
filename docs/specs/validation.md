@@ -50,6 +50,18 @@ the shell's inherited stdio. It fails early when it is not attached to an
 interactive terminal, because non-interactive launches can produce a false
 negative for PCC on this machine.
 
+For a fuller context check, use:
+
+```sh
+tool/local_afm_pcc_context_matrix.zsh
+```
+
+That script proves direct system-model `fm` access, direct PCC `fm` access,
+Seisei system-model backend access, and the current expected Seisei PCC backend
+negative in one run. It must also be launched directly from a terminal PTY;
+running it through Dart changes the launch context and can make direct PCC
+appear unavailable.
+
 The Seisei backend gate is:
 
 ```sh

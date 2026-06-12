@@ -106,7 +106,11 @@ Last verified on 2026-06-12 from `main`:
   subprocess backend. `tool/local_pcc_interactive_smoke.zsh` passed in a real
   terminal PTY with `PCC model available` and `seisei-pcc-ok`; running `fm`
   through Dart-launched subprocesses still reported PCC unavailable, even with
-  inherited stdio.
+  inherited stdio. `tool/local_afm_pcc_context_matrix.zsh` now records the
+  supported direct-terminal diagnostic: direct system AFM and PCC pass, Seisei's
+  system-model backend passes, and Seisei's PCC backend remains unavailable in
+  its captured subprocess context. `--local-pcc` remains the stricter Seisei
+  backend gate.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and

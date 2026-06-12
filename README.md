@@ -72,6 +72,10 @@ They include a real Seisei provider call through
 `ObjectSchema` smoke, not only fake clients.
 Use `tool/local_pcc_interactive_smoke.zsh` from a real terminal PTY when you
 want to prove this machine/account can use PCC through direct `fm` commands.
+Use `tool/local_afm_pcc_context_matrix.zsh` from the same kind of direct
+terminal when you want one command that proves direct system AFM, direct PCC,
+Seisei system-model backend access, and the current Seisei PCC backend
+boundary.
 Use `dart tool/validate.dart --local-pcc` when PCC should be a required local
 smoke test in the same non-interactive Dart subprocess context used by the
 current `FmCliBackend`.

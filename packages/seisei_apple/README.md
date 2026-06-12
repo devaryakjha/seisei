@@ -94,6 +94,9 @@ unavailable on the machine.
 From the repository root, `dart tool/validate.dart --local-afm` checks only the
 system-model path. Use `tool/local_pcc_interactive_smoke.zsh` when you want a
 direct interactive PCC machine/account probe. Use
+`tool/local_afm_pcc_context_matrix.zsh` when you want one direct-terminal
+diagnostic that proves direct system AFM, direct PCC, Seisei system-model
+backend access, and the current Seisei PCC backend boundary. Use
 `dart tool/validate.dart --local-pcc` when you want PCC to be a required smoke
 test for Seisei's current captured subprocess backend path.
 
