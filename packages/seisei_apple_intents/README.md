@@ -31,6 +31,9 @@ This package is the smallest real native registration path that fits Seisei:
 - `SeiseiAppIntentSourceGenerator.source(...)`
 - method-channel argument/result conversions for action invocations, action
   results, entity query invocations, and entity resolutions
+- `SeiseiFlutterIntentsWire`
+- `SeiseiAppIntentExecutor.flutterMethodChannel(...)`
+- `SeiseiAppEntityQueryExecutor.flutterMethodChannel(...)`
 
 ## What It Does Not Do
 
@@ -100,12 +103,14 @@ SeiseiAppIntentDependencies.configure(
 ```
 
 If the host forwards into a running `seisei_flutter_intents` runtime, use the
-same wire shape as the Flutter method channel:
+closure-based forwarding executors with the host-owned method-channel transport:
 
 ```swift
-let arguments = invocation.methodChannelArguments
-// Send `arguments` through method "invokeAction" on
-// "dev.jha.seisei/seisei_flutter_intents".
+let executor = SeiseiAppIntentExecutor.flutterMethodChannel { method, arguments in
+    // Send `method` and `arguments` over a Flutter method channel named
+    // SeiseiFlutterIntentsWire.channelName.
+    // The host still owns engine startup, attachment, and lifetime.
+}
 ```
 
 Generate build-time Swift source for scalar, string-enum, and static
@@ -193,7 +198,9 @@ SeiseiAppEntityQueryDependencies.configure(
 Entity query invocations and returned entity resolutions also expose
 `methodChannelArguments` / `methodChannelResult` helpers so hosts do not need to
 recreate the `entityTypeID`, `mode`, `identifiers`, `searchTerm`, `metadata`,
-`id`, `title`, and `subtitle` keys by hand.
+`id`, `title`, and `subtitle` keys by hand. Hosts can also use
+`SeiseiAppEntityQueryExecutor.flutterMethodChannel(...)` with the same
+host-owned method invoker closure.
 
 ## Validation
 

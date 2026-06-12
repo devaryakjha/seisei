@@ -69,6 +69,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - method-channel wire conversions on invocation, result, entity-query
   invocation, and entity-resolution types so host-owned executors can forward
   calls into `seisei_flutter_intents` without recreating payload keys;
+- `SeiseiFlutterIntentsWire` plus closure-based action and entity-query
+  executor factories for hosts that can provide a Flutter method-channel
+  invocation function;
 - `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
   `AppIntent`, `AppShortcutsProvider`, string-backed `AppEnum`, and static
   string-backed or host-backed string `AppEntity` source for a conservative
@@ -91,8 +94,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   method-channel action invocation and host-backed entity query resolution when
   a host app has a running Flutter engine.
 - `SeiseiAppleIntents` provides the matching Swift payload conversion helpers,
-  but does not own Flutter engine startup, retention, or extension-process
-  lifecycle.
+  plus closure-based forwarding executors, but does not own Flutter engine
+  startup, retention, or extension-process lifecycle.
 - `seisei_apple` remains focused on Foundation Models and Flutter platform
   channels; App Intents are not added there.
 - The new package is Swift-only and optional. It is not part of the Dart pub
@@ -127,6 +130,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - invocation and result payloads round-trip predictably;
   - invocation/result/entity-query payloads convert to and from the
     `seisei_flutter_intents` method-channel wire format;
+  - closure-based forwarding executors call `invokeAction` and
+    `resolveEntityQuery` with canonical payloads and decode canonical results;
   - the dependency helper accepts a host executor and a supplied
     `AppDependencyManager`;
   - a handwritten `AppIntent` type compiles around the Seisei helper types;

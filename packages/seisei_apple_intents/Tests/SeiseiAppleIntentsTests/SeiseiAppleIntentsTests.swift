@@ -175,6 +175,68 @@ struct SeiseiAppleIntentsTests {
         #expect(rawMetadata["rank"] as? Int == 1)
     }
 
+    @Test("Flutter method-channel action executor forwards canonical calls")
+    func flutterMethodChannelActionExecutorForwardsCanonicalCalls() async throws {
+        let executor = SeiseiAppIntentExecutor.flutterMethodChannel { method, arguments in
+            #expect(method == SeiseiFlutterIntentsWire.invokeActionMethod)
+            #expect(arguments["id"] as? String == "open_note")
+            #expect(arguments["toolCallId"] as? String == "tool-1")
+            let rawArguments = try #require(arguments["arguments"] as? [String: Any])
+            #expect(rawArguments["note"] as? String == "note-1")
+            return [
+                "value": ["opened": "note-1"],
+                "metadata": ["surface": "shortcuts"],
+            ]
+        }
+
+        let result = try await executor.run(
+            SeiseiAppIntentInvocation(
+                id: "open_note",
+                arguments: ["note": .string("note-1")],
+                toolCallID: "tool-1"
+            )
+        )
+
+        #expect(SeiseiFlutterIntentsWire.channelName == "dev.jha.seisei/seisei_flutter_intents")
+        #expect(result.value == .object(["opened": .string("note-1")]))
+        #expect(result.metadata == ["surface": .string("shortcuts")])
+    }
+
+    @Test("Flutter method-channel entity executor forwards canonical calls")
+    func flutterMethodChannelEntityExecutorForwardsCanonicalCalls() async throws {
+        let executor = SeiseiAppEntityQueryExecutor.flutterMethodChannel { method, arguments in
+            #expect(method == SeiseiFlutterIntentsWire.resolveEntityQueryMethod)
+            #expect(arguments["entityTypeID"] as? String == "note")
+            #expect(arguments["mode"] as? String == "search")
+            #expect(arguments["searchTerm"] as? String == "road")
+            return [
+                [
+                    "id": "note-1",
+                    "title": "Roadmap",
+                    "subtitle": "Planning",
+                    "metadata": ["rank": 1],
+                ],
+            ]
+        }
+
+        let result = try await executor.resolve(
+            SeiseiAppEntityQueryInvocation(
+                entityTypeID: "note",
+                mode: .search,
+                searchTerm: "road"
+            )
+        )
+
+        #expect(result == [
+            SeiseiAppEntityResolution(
+                id: "note-1",
+                title: "Roadmap",
+                subtitle: "Planning",
+                metadata: ["rank": .integer(1)]
+            ),
+        ])
+    }
+
     @Test("handwritten AppIntent types can be constructed around Seisei helpers")
     func handwrittenIntentCompiles() {
         let intent = CreateNoteIntent(

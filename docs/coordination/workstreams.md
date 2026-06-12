@@ -131,8 +131,10 @@ method-channel runtime for native-shaped action invocation and host-backed
 entity query resolution when a host app owns Flutter engine availability. The
 native Swift helper package later added matching method-channel wire conversion
 helpers for action invocation, action result, entity query invocation, and
-entity resolution payloads. A fully managed App Intents extension/app lifecycle
-bridge and richer platform-specific wrappers remain future plugin/native work.
+entity resolution payloads, then closure-based forwarding executors for hosts
+that provide the actual Flutter method-channel transport. A fully managed App
+Intents extension/app lifecycle bridge and richer platform-specific wrappers
+remain future plugin/native work.
 
 ### 8. Release Readiness
 
@@ -220,10 +222,10 @@ after the nested-object, verified-constraint, field-level union, explicit-null
 union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
-- Fully managed Flutter engine/app-extension lifecycle wiring from generated
-  App Intent wrappers into the canonical method-channel payloads, plus richer
-  platform-specific wrappers above the scalar/string-enum/static-entity/
-  host-backed string-entity source generators
+- Fully managed Flutter engine/app-extension lifecycle wiring above the current
+  host-owned method-channel forwarding executors, plus richer platform-specific
+  wrappers above the scalar/string-enum/static-entity/host-backed string-entity
+  source generators
 
 ## Merge Order
 

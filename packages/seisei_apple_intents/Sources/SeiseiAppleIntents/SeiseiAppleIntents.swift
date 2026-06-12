@@ -376,6 +376,56 @@ public enum SeiseiAppIntentBridge {
     }
 }
 
+public enum SeiseiFlutterIntentsWire {
+    public static let channelName = "dev.jha.seisei/seisei_flutter_intents"
+    public static let invokeActionMethod = "invokeAction"
+    public static let resolveEntityQueryMethod = "resolveEntityQuery"
+
+    public typealias MethodInvoker = @Sendable (
+        _ method: String,
+        _ arguments: [String: Any]
+    ) async throws -> Any?
+}
+
+public extension SeiseiAppIntentExecutor {
+    static func flutterMethodChannel(
+        invokeMethod: @escaping SeiseiFlutterIntentsWire.MethodInvoker
+    ) -> SeiseiAppIntentExecutor {
+        SeiseiAppIntentExecutor { invocation in
+            let result = try await invokeMethod(
+                SeiseiFlutterIntentsWire.invokeActionMethod,
+                invocation.methodChannelArguments
+            )
+            guard let result = result as? [String: Any] else {
+                throw SeiseiAppIntentFlutterForwardingError.invalidActionResult
+            }
+            return try SeiseiAppIntentResult(methodChannelResult: result)
+        }
+    }
+}
+
+public extension SeiseiAppEntityQueryExecutor {
+    static func flutterMethodChannel(
+        invokeMethod: @escaping SeiseiFlutterIntentsWire.MethodInvoker
+    ) -> SeiseiAppEntityQueryExecutor {
+        SeiseiAppEntityQueryExecutor { invocation in
+            let result = try await invokeMethod(
+                SeiseiFlutterIntentsWire.resolveEntityQueryMethod,
+                invocation.methodChannelArguments
+            )
+            guard let rows = result as? [[String: Any]] else {
+                throw SeiseiAppIntentFlutterForwardingError.invalidEntityQueryResult
+            }
+            return try rows.map { try SeiseiAppEntityResolution(methodChannelResult: $0) }
+        }
+    }
+}
+
+public enum SeiseiAppIntentFlutterForwardingError: Error, Sendable, Equatable {
+    case invalidActionResult
+    case invalidEntityQueryResult
+}
+
 public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
     case string
     case integer

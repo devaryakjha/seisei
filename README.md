@@ -111,11 +111,11 @@ string-entity wrappers with action and entity-query executor injection and
 testable invocation payload helpers from either Swift definitions or Dart
 `AppActionDefinition` data or a manifest-driven Dart executable. The Swift
 helpers and optional Flutter runtime now share canonical method-channel
-payloads for generated App Intent invocation and host-backed entity query
-calls. The repo also includes an experimental optional Tagflow document adapter
-for `seisei_ui` blocks.
-PCC generation, a fully managed native lifecycle bridge from Apple's App
-Intents runtime into a Flutter engine or extension process, richer
+payloads and host-owned forwarding executors for generated App Intent
+invocation and host-backed entity query calls. The repo also includes an
+experimental optional Tagflow document adapter for `seisei_ui` blocks.
+PCC generation, a fully managed native lifecycle bridge that starts or retains a
+Flutter engine from Apple's App Intents runtime or an extension process, richer
 platform-specific intent parameters, cloud providers, production RAG,
 provider-native patch streams, and broader renderer integration beyond the
 narrow Tagflow content adapter are not implemented yet.
