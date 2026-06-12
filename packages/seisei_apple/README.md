@@ -99,6 +99,8 @@ diagnostic that proves direct system AFM, direct PCC, Seisei system-model
 backend access, and the current Seisei PCC backend boundary. Use
 `dart tool/validate.dart --local-pcc` when you want PCC to be a required smoke
 test for Seisei's current captured subprocess backend path.
+Use `tool/foundation_models_pcc_sdk_audit.zsh` when you want to verify that the
+local public FoundationModels SDK still has no compileable native PCC model API.
 
 For a minimal Flutter host, create an app and point `seisei_apple` at this
 workspace with a path dependency:

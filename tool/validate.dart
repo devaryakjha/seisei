@@ -4,6 +4,7 @@ Future<void> main(List<String> args) async {
   final includeLocalAfm = args.contains('--local-afm');
   final includeLocalPcc = args.contains('--local-pcc');
   final includeIosExtension = args.contains('--ios-app-intents-extension');
+  final includeNativePccSdk = args.contains('--native-pcc-sdk');
   final includeRelease = args.contains('--release');
   final root = Directory.current.path;
 
@@ -139,6 +140,17 @@ Future<void> main(List<String> args) async {
     );
     checks.add(
       _Check(root, ['tool/ios_app_intents_extension_smoke.zsh']),
+    );
+  }
+
+  if (includeNativePccSdk) {
+    stdout.writeln(
+      '\nNative PCC SDK validation audits the local public FoundationModels '
+      'Swift interfaces and compile-checks that system-model sessions compile '
+      'while obvious PCC model entry points do not.',
+    );
+    checks.add(
+      _Check(root, ['tool/foundation_models_pcc_sdk_audit.zsh']),
     );
   }
 

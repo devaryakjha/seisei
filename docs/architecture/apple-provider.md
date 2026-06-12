@@ -25,6 +25,8 @@ The current worker machine provides a usable Apple Foundation Models path:
 - `swiftc -typecheck` fails for
   `LanguageModelSession(model: PrivateCloudComputeLanguageModel())` because
   `PrivateCloudComputeLanguageModel` is not in scope.
+- `swiftc -typecheck` also fails for `LanguageModelSession(model: .pcc)`
+  because `SystemLanguageModel` has no `pcc` member.
 
 This means Seisei can use local AFM as a real implementation target during
 development, but PCC must remain capability-gated, optional, and explicit about
@@ -102,7 +104,8 @@ The router should be able to reject Apple modes before request execution:
 - PCC generation: `/usr/bin/fm available --model pcc` is launch-context
   sensitive here, direct PCC generation follows the same PTY versus
   non-interactive split, and no public native PCC `FoundationModels` API path
-  is verified.
+  is verified. Re-run `tool/foundation_models_pcc_sdk_audit.zsh` when the local
+  Xcode SDK changes.
 - Generic schema mapping depth: `FoundationModelsSchemaEncoder` now supports
   nested objects, string enums, field-level `anyOf` unions, discriminated object
   unions, explicit null union variants, numeric ranges, string patterns, arrays,

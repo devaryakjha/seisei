@@ -112,6 +112,11 @@ Last verified on 2026-06-12 from `main`:
   system-model backend passes, and Seisei's PCC backend remains unavailable in
   its captured subprocess context. `--local-pcc` remains the stricter Seisei
   backend gate.
+- `tool/foundation_models_pcc_sdk_audit.zsh` passed locally against Xcode 26.5.
+  It found no public FoundationModels PCC/cloud model entry point in the Swift
+  interfaces, compiled a positive `SystemLanguageModel.default` session probe,
+  and verified expected compiler failures for `PrivateCloudComputeLanguageModel`
+  and `LanguageModelSession(model: .pcc)`.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and

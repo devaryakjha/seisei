@@ -76,6 +76,26 @@ Passing `fm` commands in an interactive terminal do not override a failing
 `--local-pcc` run: the validation target is the non-interactive Seisei/Dart
 execution context that the script actually uses.
 
+The native/public FoundationModels SDK PCC audit is:
+
+```sh
+PATH=/Users/arya/fvm/cache.git/bin:$PATH tool/foundation_models_pcc_sdk_audit.zsh
+```
+
+It can also be run through the validator:
+
+```sh
+PATH=/Users/arya/fvm/cache.git/bin:$PATH dart tool/validate.dart --native-pcc-sdk
+```
+
+That script searches the local public FoundationModels Swift interfaces for
+PCC/cloud language-model entry points, compile-checks a positive
+`LanguageModelSession(model: SystemLanguageModel.default)` probe, and
+compile-checks expected-negative probes for
+`PrivateCloudComputeLanguageModel()` and `LanguageModelSession(model: .pcc)`.
+It is the local evidence gate for keeping native PCC support disabled until a
+public compileable API appears.
+
 The local iOS App Intents extension smoke is:
 
 ```sh
