@@ -107,7 +107,8 @@ Last verified on 2026-06-12 from `main`:
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and
   `seisei_flutter_intents`.
-- `seisei_intents` `0.1.0-dev.6` was published successfully.
+- `seisei_intents` `0.1.0-dev.7` was published successfully.
+- `seisei_flutter_intents` `0.1.0-dev.0` was published successfully.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
   static string-backed `AppEntity`, host-backed string `AppEntity` query, and
@@ -135,5 +136,6 @@ Last verified on 2026-06-12 from `main`:
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
-  `seisei_intents` latest as `0.1.0-dev.6`; `seisei_router`, `seisei_ui`, and
-  `seisei_tagflow` remain at `0.1.0-dev.0`.
+  `seisei_intents` latest as `0.1.0-dev.7`; `seisei_router`, `seisei_ui`,
+  and `seisei_tagflow` remain at `0.1.0-dev.0`; `seisei_flutter_intents`
+  latest is `0.1.0-dev.0`.
