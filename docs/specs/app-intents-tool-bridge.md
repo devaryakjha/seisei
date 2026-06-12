@@ -58,6 +58,12 @@ contract. It registers a Dart method-channel handler for generated/native App
 Intent calls when a Flutter engine is running, including action invocation and
 host-backed entity query resolution.
 
+`SeiseiAppleIntents` owns the matching Swift-side method-channel wire helpers.
+Its invocation, result, entity-query invocation, and entity-resolution types can
+convert to or from JSON-compatible dictionaries that match
+`seisei_flutter_intents` channel payloads. Host apps still decide where those
+dictionaries are sent and how a Flutter engine is made available.
+
 ## Native Adapter Boundary
 
 A pure Dart package cannot dynamically register App Intents into an app bundle
@@ -99,6 +105,9 @@ Later native work can still:
   source generation tests plus Swift compile tests.
 - `seisei_flutter_intents` tests cover native-to-Dart method-channel action
   invocation and host-backed entity query resolution.
+- `SeiseiAppleIntents` Swift tests cover method-channel wire conversion for
+  action invocations, action results, entity query invocations, and entity
+  resolutions.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

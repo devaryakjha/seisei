@@ -33,7 +33,7 @@ The current workspace contains:
 
 Optional native support packages include:
 
-- `SeiseiAppleIntents`: Swift package helpers for handwritten or generated-source App Intents, app-owned executor injection, and App Shortcut / package registration on Apple platforms
+- `SeiseiAppleIntents`: Swift package helpers for handwritten or generated-source App Intents, app-owned executor injection, method-channel wire payloads, and App Shortcut / package registration on Apple platforms
 
 Future packages may include:
 
@@ -109,10 +109,11 @@ minimal native App Intents registration helper package for handwritten Swift
 intents and generated-source scalar/string-enum/static string-entity/host-backed
 string-entity wrappers with action and entity-query executor injection and
 testable invocation payload helpers from either Swift definitions or Dart
-`AppActionDefinition` data or a manifest-driven Dart executable, plus an
-optional Flutter runtime method-channel bridge for generated App Intent
-invocation and host-backed entity query calls, plus an experimental optional
-Tagflow document adapter for `seisei_ui` blocks.
+`AppActionDefinition` data or a manifest-driven Dart executable. The Swift
+helpers and optional Flutter runtime now share canonical method-channel
+payloads for generated App Intent invocation and host-backed entity query
+calls. The repo also includes an experimental optional Tagflow document adapter
+for `seisei_ui` blocks.
 PCC generation, a fully managed native lifecycle bridge from Apple's App
 Intents runtime into a Flutter engine or extension process, richer
 platform-specific intent parameters, cloud providers, production RAG,

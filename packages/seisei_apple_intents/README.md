@@ -8,6 +8,8 @@ This package is the smallest real native registration path that fits Seisei:
 - Host apps still define their concrete Swift `AppIntent` types.
 - `SeiseiAppleIntents` only provides payload, executor, and dependency helpers
   so those intents can forward work into app-owned Seisei handlers.
+- Swift payload types include JSON-compatible method-channel conversion helpers
+  that match `seisei_flutter_intents` action and entity query calls.
 - Apps that want generated wrappers can use the source generator to emit
   build-time Swift source for a conservative scalar, string-enum, and static
   string-backed AppEntity parameter subset.
@@ -27,6 +29,8 @@ This package is the smallest real native registration path that fits Seisei:
 - `SeiseiAppEntityQueryDependencies.configure(...)`
 - `SeiseiAppIntentBridge.perform(...)`
 - `SeiseiAppIntentSourceGenerator.source(...)`
+- method-channel argument/result conversions for action invocations, action
+  results, entity query invocations, and entity resolutions
 
 ## What It Does Not Do
 
@@ -34,8 +38,8 @@ This package is the smallest real native registration path that fits Seisei:
 - register intents dynamically from Dart or Flutter
 - replace app-owned `AppIntent`, `AppShortcutsProvider`, or
   `AppIntentsPackage` source
-- bridge generated App Entity queries back into Flutter automatically; host
-  apps still own the runtime executor wiring
+- start, retain, or attach a Flutter engine from an App Intents extension; host
+  apps still own runtime executor and lifecycle wiring
 - model rich platform-specific parameters beyond generated string-backed App
   Enums, static string-backed AppEntity wrappers, and host-backed string
   AppEntity query wrappers
@@ -93,6 +97,15 @@ SeiseiAppIntentDependencies.configure(
         return SeiseiAppIntentResult(value: .string(invocation.id))
     }
 )
+```
+
+If the host forwards into a running `seisei_flutter_intents` runtime, use the
+same wire shape as the Flutter method channel:
+
+```swift
+let arguments = invocation.methodChannelArguments
+// Send `arguments` through method "invokeAction" on
+// "dev.jha.seisei/seisei_flutter_intents".
 ```
 
 Generate build-time Swift source for scalar, string-enum, and static
@@ -176,6 +189,11 @@ SeiseiAppEntityQueryDependencies.configure(
     }
 )
 ```
+
+Entity query invocations and returned entity resolutions also expose
+`methodChannelArguments` / `methodChannelResult` helpers so hosts do not need to
+recreate the `entityTypeID`, `mode`, `identifiers`, `searchTerm`, `metadata`,
+`id`, `title`, and `subtitle` keys by hand.
 
 ## Validation
 

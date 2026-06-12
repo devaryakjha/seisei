@@ -84,6 +84,97 @@ struct SeiseiAppleIntentsTests {
         )
     }
 
+    @Test("app action invocation converts to Flutter method-channel arguments")
+    func invocationConvertsToMethodChannelArguments() throws {
+        let invocation = SeiseiAppIntentInvocation(
+            id: "open_note",
+            arguments: [
+                "note": .string("note-1"),
+                "count": .integer(2),
+                "published": .boolean(true),
+                "tags": .array([.string("roadmap"), .null]),
+                "extra": .object(["rank": .number(1.5)]),
+            ],
+            toolCallID: "tool-1",
+            metadata: ["surface": .string("shortcuts")]
+        )
+
+        let arguments = invocation.methodChannelArguments
+        let decoded = try SeiseiAppIntentInvocation(methodChannelArguments: arguments)
+        let rawArguments = try #require(arguments["arguments"] as? [String: Any])
+        let rawTags = try #require(rawArguments["tags"] as? [Any])
+
+        #expect(arguments["id"] as? String == "open_note")
+        #expect(arguments["toolCallId"] as? String == "tool-1")
+        #expect(rawArguments["note"] as? String == "note-1")
+        #expect(rawArguments["count"] as? Int == 2)
+        #expect(rawArguments["published"] as? Bool == true)
+        #expect(rawTags[0] as? String == "roadmap")
+        #expect(rawTags[1] is NSNull)
+        #expect(decoded == invocation)
+    }
+
+    @Test("app action result converts from Flutter method-channel results")
+    func resultConvertsFromMethodChannelResult() throws {
+        let result = try SeiseiAppIntentResult(methodChannelResult: [
+            "value": ["opened": "note-1"],
+            "metadata": ["status": "ok"],
+        ])
+
+        let encoded = result.methodChannelResult
+        let rawValue = try #require(encoded["value"] as? [String: Any])
+        let rawMetadata = try #require(encoded["metadata"] as? [String: Any])
+
+        #expect(result.value == .object(["opened": .string("note-1")]))
+        #expect(result.metadata == ["status": .string("ok")])
+        #expect(rawValue["opened"] as? String == "note-1")
+        #expect(rawMetadata["status"] as? String == "ok")
+    }
+
+    @Test("entity query invocation converts to Flutter method-channel arguments")
+    func entityQueryConvertsToMethodChannelArguments() throws {
+        let invocation = SeiseiAppEntityQueryInvocation(
+            entityTypeID: "note",
+            mode: .search,
+            identifiers: ["note-1"],
+            searchTerm: "road",
+            metadata: ["surface": .string("spotlight")]
+        )
+
+        let arguments = invocation.methodChannelArguments
+        let decoded = try SeiseiAppEntityQueryInvocation(methodChannelArguments: arguments)
+        let rawMetadata = try #require(arguments["metadata"] as? [String: Any])
+
+        #expect(arguments["entityTypeID"] as? String == "note")
+        #expect(arguments["mode"] as? String == "search")
+        #expect(arguments["identifiers"] as? [String] == ["note-1"])
+        #expect(arguments["searchTerm"] as? String == "road")
+        #expect(rawMetadata["surface"] as? String == "spotlight")
+        #expect(decoded == invocation)
+    }
+
+    @Test("entity resolutions convert from Flutter method-channel results")
+    func entityResolutionConvertsFromMethodChannelResult() throws {
+        let resolution = try SeiseiAppEntityResolution(methodChannelResult: [
+            "id": "note-1",
+            "title": "Roadmap",
+            "subtitle": "Planning",
+            "metadata": ["rank": 1],
+        ])
+
+        let encoded = resolution.methodChannelResult
+        let rawMetadata = try #require(encoded["metadata"] as? [String: Any])
+
+        #expect(resolution.id == "note-1")
+        #expect(resolution.title == "Roadmap")
+        #expect(resolution.subtitle == "Planning")
+        #expect(resolution.metadata == ["rank": .integer(1)])
+        #expect(encoded["id"] as? String == "note-1")
+        #expect(encoded["title"] as? String == "Roadmap")
+        #expect(encoded["subtitle"] as? String == "Planning")
+        #expect(rawMetadata["rank"] as? Int == 1)
+    }
+
     @Test("handwritten AppIntent types can be constructed around Seisei helpers")
     func handwrittenIntentCompiles() {
         let intent = CreateNoteIntent(

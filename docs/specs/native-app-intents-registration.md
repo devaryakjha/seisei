@@ -66,6 +66,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   host-owned entity query executor with `AppDependencyManager`;
 - `SeiseiAppIntentBridge.perform(...)`: helper used by handwritten Swift
   intents to forward execution into the registered executor;
+- method-channel wire conversions on invocation, result, entity-query
+  invocation, and entity-resolution types so host-owned executors can forward
+  calls into `seisei_flutter_intents` without recreating payload keys;
 - `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
   `AppIntent`, `AppShortcutsProvider`, string-backed `AppEnum`, and static
   string-backed or host-backed string `AppEntity` source for a conservative
@@ -87,6 +90,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `seisei_flutter_intents` is the optional Flutter runtime adapter. It handles
   method-channel action invocation and host-backed entity query resolution when
   a host app has a running Flutter engine.
+- `SeiseiAppleIntents` provides the matching Swift payload conversion helpers,
+  but does not own Flutter engine startup, retention, or extension-process
+  lifecycle.
 - `seisei_apple` remains focused on Foundation Models and Flutter platform
   channels; App Intents are not added there.
 - The new package is Swift-only and optional. It is not part of the Dart pub
@@ -106,7 +112,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - No fully managed Flutter engine lifecycle from Apple's App Intents runtime in
   this change. Generated wrappers accept host-owned executors, and
   `seisei_flutter_intents` can handle method-channel calls once the host has a
-  running engine, but the host still owns app/extension lifecycle wiring.
+  running engine. `SeiseiAppleIntents` provides the canonical method-channel
+  payload dictionaries, but the host still owns app/extension lifecycle wiring.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
   generators cover scalar string, integer, number, boolean, string enum, and
@@ -118,6 +125,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `swift test` passes for that package locally.
 - Tests prove:
   - invocation and result payloads round-trip predictably;
+  - invocation/result/entity-query payloads convert to and from the
+    `seisei_flutter_intents` method-channel wire format;
   - the dependency helper accepts a host executor and a supplied
     `AppDependencyManager`;
   - a handwritten `AppIntent` type compiles around the Seisei helper types;

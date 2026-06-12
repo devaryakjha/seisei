@@ -128,9 +128,11 @@ Apple's App Intents runtime. Host-backed generated App Entity queries later
 added a Seisei entity-query executor contract and `EntityStringQuery` wrapper
 generation. `seisei_flutter_intents` later added the optional Flutter
 method-channel runtime for native-shaped action invocation and host-backed
-entity query resolution when a host app owns Flutter engine availability. A
-fully managed App Intents extension/app lifecycle bridge and richer
-platform-specific wrappers remain future plugin/native work.
+entity query resolution when a host app owns Flutter engine availability. The
+native Swift helper package later added matching method-channel wire conversion
+helpers for action invocation, action result, entity query invocation, and
+entity resolution payloads. A fully managed App Intents extension/app lifecycle
+bridge and richer platform-specific wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
 
@@ -219,8 +221,9 @@ union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
 - Fully managed Flutter engine/app-extension lifecycle wiring from generated
-  App Intent wrappers and richer platform-specific wrappers above the
-  scalar/string-enum/static-entity/host-backed string-entity source generators
+  App Intent wrappers into the canonical method-channel payloads, plus richer
+  platform-specific wrappers above the scalar/string-enum/static-entity/
+  host-backed string-entity source generators
 
 ## Merge Order
 

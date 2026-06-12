@@ -114,7 +114,9 @@ Last verified on 2026-06-12 from `main`:
   static string-backed `AppEntity`, host-backed string `AppEntity` query, and
   `AppShortcutsProvider` compile tests, plus generated-style
   `SeiseiAppIntentInvocation` payload construction outside Apple's App Intents
-  runtime.
+  runtime, and method-channel wire conversion assertions for action
+  invocations, action results, entity query invocations, and entity
+  resolutions.
 - `seisei_intents` tests passed locally with Dart-side scalar/string-enum/static
   entity/host-backed entity Swift source generation assertions,
   executor-injection initializer assertions, manifest-driven Swift file

@@ -16,22 +16,102 @@ public enum SeiseiAppIntentValue: Sendable, Equatable {
         }
         return value
     }
+
+    public init(jsonValue: Any?) throws {
+        switch jsonValue {
+        case nil:
+            self = .null
+        case is NSNull:
+            self = .null
+        case let value as String:
+            self = .string(value)
+        case let value as Bool:
+            self = .boolean(value)
+        case let value as Int:
+            self = .integer(value)
+        case let value as Double:
+            self = .number(value)
+        case let value as Float:
+            self = .number(Double(value))
+        case let value as [Any?]:
+            self = try .array(value.map { try SeiseiAppIntentValue(jsonValue: $0) })
+        case let value as [String: Any?]:
+            self = try .object(value.mapValues { try SeiseiAppIntentValue(jsonValue: $0) })
+        case let value as [String: Any]:
+            self = try .object(value.mapValues { try SeiseiAppIntentValue(jsonValue: $0) })
+        default:
+            throw SeiseiAppIntentWireError.unsupportedValueType(String(describing: type(of: jsonValue as Any)))
+        }
+    }
+
+    public var jsonValue: Any {
+        switch self {
+        case let .string(value):
+            return value
+        case let .integer(value):
+            return value
+        case let .number(value):
+            return value
+        case let .boolean(value):
+            return value
+        case let .array(values):
+            return values.map(\.jsonValue)
+        case let .object(values):
+            return values.mapValues(\.jsonValue)
+        case .null:
+            return NSNull()
+        }
+    }
+}
+
+public enum SeiseiAppIntentWireError: Error, Sendable, Equatable {
+    case missingString(String)
+    case unsupportedValueType(String)
+    case unsupportedQueryMode(String)
 }
 
 public struct SeiseiAppIntentInvocation: Sendable, Equatable {
     public init(
         id: String,
         arguments: [String: SeiseiAppIntentValue] = [:],
+        toolCallID: String? = nil,
         metadata: [String: SeiseiAppIntentValue] = [:]
     ) {
         self.id = id
         self.arguments = arguments
+        self.toolCallID = toolCallID
         self.metadata = metadata
+    }
+
+    public init(methodChannelArguments: [String: Any]) throws {
+        let id = try Self.requiredString("id", in: methodChannelArguments)
+        let rawArguments = methodChannelArguments["arguments"] as? [String: Any] ?? [:]
+        let rawMetadata = methodChannelArguments["metadata"] as? [String: Any] ?? [:]
+
+        try self.init(
+            id: id,
+            arguments: Self.values(from: rawArguments),
+            toolCallID: methodChannelArguments["toolCallId"] as? String,
+            metadata: Self.values(from: rawMetadata)
+        )
     }
 
     public let id: String
     public let arguments: [String: SeiseiAppIntentValue]
+    public let toolCallID: String?
     public let metadata: [String: SeiseiAppIntentValue]
+
+    public var methodChannelArguments: [String: Any] {
+        var arguments: [String: Any] = [
+            "id": id,
+            "arguments": self.arguments.mapValues(\.jsonValue),
+            "metadata": metadata.mapValues(\.jsonValue),
+        ]
+        if let toolCallID {
+            arguments["toolCallId"] = toolCallID
+        }
+        return arguments
+    }
 }
 
 public struct SeiseiAppIntentResult: Sendable, Equatable {
@@ -48,6 +128,34 @@ public struct SeiseiAppIntentResult: Sendable, Equatable {
 
     public var stringValue: String? {
         value?.stringValue
+    }
+
+    public init(methodChannelResult: [String: Any]) throws {
+        let rawMetadata = methodChannelResult["metadata"] as? [String: Any] ?? [:]
+        try self.init(
+            value: SeiseiAppIntentValue(jsonValue: methodChannelResult["value"]),
+            metadata: SeiseiAppIntentInvocation.values(from: rawMetadata)
+        )
+    }
+
+    public var methodChannelResult: [String: Any] {
+        [
+            "value": value?.jsonValue ?? NSNull(),
+            "metadata": metadata.mapValues(\.jsonValue),
+        ]
+    }
+}
+
+private extension SeiseiAppIntentInvocation {
+    static func requiredString(_ key: String, in dictionary: [String: Any]) throws -> String {
+        guard let value = dictionary[key] as? String else {
+            throw SeiseiAppIntentWireError.missingString(key)
+        }
+        return value
+    }
+
+    static func values(from dictionary: [String: Any]) throws -> [String: SeiseiAppIntentValue] {
+        try dictionary.mapValues { try SeiseiAppIntentValue(jsonValue: $0) }
     }
 }
 
@@ -79,6 +187,30 @@ public enum SeiseiAppEntityQueryMode: Sendable, Equatable {
     case identifiers
     case suggested
     case search
+
+    public init(wireName: String) throws {
+        switch wireName {
+        case "identifiers":
+            self = .identifiers
+        case "suggested":
+            self = .suggested
+        case "search":
+            self = .search
+        default:
+            throw SeiseiAppIntentWireError.unsupportedQueryMode(wireName)
+        }
+    }
+
+    public var wireName: String {
+        switch self {
+        case .identifiers:
+            return "identifiers"
+        case .suggested:
+            return "suggested"
+        case .search:
+            return "search"
+        }
+    }
 }
 
 public struct SeiseiAppEntityQueryInvocation: Sendable, Equatable {
@@ -96,11 +228,40 @@ public struct SeiseiAppEntityQueryInvocation: Sendable, Equatable {
         self.metadata = metadata
     }
 
+    public init(methodChannelArguments: [String: Any]) throws {
+        let entityTypeID = try SeiseiAppIntentInvocation.requiredString("entityTypeID", in: methodChannelArguments)
+        let mode = try SeiseiAppEntityQueryMode(
+            wireName: SeiseiAppIntentInvocation.requiredString("mode", in: methodChannelArguments)
+        )
+        let rawMetadata = methodChannelArguments["metadata"] as? [String: Any] ?? [:]
+
+        try self.init(
+            entityTypeID: entityTypeID,
+            mode: mode,
+            identifiers: methodChannelArguments["identifiers"] as? [String] ?? [],
+            searchTerm: methodChannelArguments["searchTerm"] as? String,
+            metadata: SeiseiAppIntentInvocation.values(from: rawMetadata)
+        )
+    }
+
     public let entityTypeID: String
     public let mode: SeiseiAppEntityQueryMode
     public let identifiers: [String]
     public let searchTerm: String?
     public let metadata: [String: SeiseiAppIntentValue]
+
+    public var methodChannelArguments: [String: Any] {
+        var arguments: [String: Any] = [
+            "entityTypeID": entityTypeID,
+            "mode": mode.wireName,
+            "identifiers": identifiers,
+            "metadata": metadata.mapValues(\.jsonValue),
+        ]
+        if let searchTerm {
+            arguments["searchTerm"] = searchTerm
+        }
+        return arguments
+    }
 }
 
 public struct SeiseiAppEntityResolution: Sendable, Equatable {
@@ -120,6 +281,28 @@ public struct SeiseiAppEntityResolution: Sendable, Equatable {
     public let title: String
     public let subtitle: String?
     public let metadata: [String: SeiseiAppIntentValue]
+
+    public init(methodChannelResult: [String: Any]) throws {
+        let rawMetadata = methodChannelResult["metadata"] as? [String: Any] ?? [:]
+        try self.init(
+            id: SeiseiAppIntentInvocation.requiredString("id", in: methodChannelResult),
+            title: SeiseiAppIntentInvocation.requiredString("title", in: methodChannelResult),
+            subtitle: methodChannelResult["subtitle"] as? String,
+            metadata: SeiseiAppIntentInvocation.values(from: rawMetadata)
+        )
+    }
+
+    public var methodChannelResult: [String: Any] {
+        var result: [String: Any] = [
+            "id": id,
+            "title": title,
+            "metadata": metadata.mapValues(\.jsonValue),
+        ]
+        if let subtitle {
+            result["subtitle"] = subtitle
+        }
+        return result
+    }
 }
 
 public final class SeiseiAppEntityQueryExecutor: @unchecked Sendable {
