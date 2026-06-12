@@ -34,7 +34,9 @@ Future<void> main(List<String> args) async {
     );
   }
 
-  checks.add(_Check('$root/examples/basic_cli', ['dart', 'run']));
+  checks.add(
+    _Check('$root/examples/basic_cli', ['dart', 'run', 'seisei_basic_cli']),
+  );
 
   if (includeLocalAfm) {
     stdout.writeln(
