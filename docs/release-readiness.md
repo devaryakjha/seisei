@@ -118,8 +118,8 @@ Last verified on 2026-06-12 from `main`:
   `seisei_flutter_intents`.
 - `seisei_intents` `0.1.0-dev.9` was published successfully.
 - `seisei_flutter_intents` `0.1.0-dev.2` was published successfully for the
-  macOS headless engine host helper. `0.1.0-dev.3` is pending validation and
-  publication for the iOS headless engine host helper.
+  macOS headless engine host helper. `seisei_flutter_intents` `0.1.0-dev.3`
+  was published successfully for the iOS headless engine host helper.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
   static string-backed `AppEntity`, host-backed string `AppEntity` query, and
@@ -143,6 +143,11 @@ Last verified on 2026-06-12 from `main`:
   `seisei_flutter_intents` imported the plugin module, constructed
   `SeiseiFlutterIntentsEngineHost`, and passed `flutter build macos`, proving
   the native helper compiles in a real Flutter macOS app target.
+- A temporary generated iOS host app with a path dependency on
+  `seisei_flutter_intents` imported the plugin module, constructed
+  `SeiseiFlutterIntentsEngineHost`, and passed
+  `flutter build ios --simulator --no-codesign`, proving the native helper
+  compiles in a real Flutter iOS app target.
 - `dart run seisei_intents:generate_apple_intents --manifest ... --out ...`
   generated an enum-backed `UpdateNoteIntent.swift` file from a temporary
   manifest, including `public enum NoteStatus: String, AppEnum`.
@@ -159,4 +164,4 @@ Last verified on 2026-06-12 from `main`:
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
   `seisei_intents` latest as `0.1.0-dev.9`; `seisei_router`, `seisei_ui`,
   and `seisei_tagflow` remain at `0.1.0-dev.0`; `seisei_flutter_intents`
-  latest is `0.1.0-dev.2` until the iOS helper release is published.
+  latest is `0.1.0-dev.3`.
