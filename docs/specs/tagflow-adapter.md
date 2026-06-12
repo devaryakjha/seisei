@@ -36,6 +36,14 @@ Read-only inspection of `/Users/arya/projects/tagflow` on 2026-06-11 found:
 - `packages/tagflow/README.md` and `CHANGELOG.md` still explicitly mark the
   line as alpha and subject to change before stable `1.0.0`.
 
+Compatibility was refreshed on 2026-06-12 against Tagflow `1.0.0-alpha.3`.
+`dart pub get --dry-run` resolves the current `tagflow: ^1.0.0-alpha.1`
+constraint to `1.0.0-alpha.3`, and the adapter still uses public
+`TagflowDocument` / `TagflowDocumentNode` constructors that remain exported.
+Tagflow's newer native block and patch APIs are intentionally not adopted by
+this adapter yet; Seisei keeps its renderer-neutral `SeiseiBlock` contract and
+continues to emit a narrow `TagflowDocument` output.
+
 ## Seisei Contract Assessment
 
 No `seisei_ui` API change is required for the current adapter:
@@ -109,7 +117,7 @@ invalid URI payloads, or invalid child placement.
 
 - Tagflow is still an alpha dependency. The package should be treated as
   experimental until the Tagflow runtime surface settles beyond
-  `1.0.0-alpha.1`.
+  the current alpha line.
 - The adapter package raises the minimum SDK for that package only. Seisei core
   packages remain on `sdk: ">=3.6.0 <4.0.0"`.
 - The first package does not attempt tables, authored patch updates, renderer

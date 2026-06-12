@@ -10,8 +10,9 @@ options.
 
 ## Status
 
-Experimental. The current implementation targets Tagflow `1.0.0-alpha.1` and a
-small content-oriented block vocabulary only.
+Experimental. The dependency range remains `tagflow: ^1.0.0-alpha.1`; the
+current implementation has also been verified against Tagflow
+`1.0.0-alpha.3`. It supports a small content-oriented block vocabulary only.
 
 ## Supported Blocks
 
@@ -71,4 +72,3 @@ Tagflow.document(document);
 Set `SeiseiTagflowAdapter.documentIdMetadataKey` in
 `SeiseiBlockRenderContext.metadata` when the output document ID should differ
 from the root block ID.
-
