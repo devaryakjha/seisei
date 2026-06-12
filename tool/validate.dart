@@ -97,22 +97,34 @@ Future<void> main(List<String> args) async {
       'subprocess context can use PCC.',
     );
     checks.addAll([
-      _Check(root, ['fm', 'available', '--model', 'pcc']),
-      _Check(root, [
-        'fm',
-        'respond',
-        '--model',
-        'pcc',
-        '--no-stream',
-        'Reply with exactly: seisei-pcc-ok',
-      ]),
-      _Check('$root/packages/seisei_apple', [
-        'dart',
-        'run',
-        'bin/local_afm_smoke.dart',
-        '--mode',
-        'pcc',
-      ]),
+      _Check(
+        root,
+        ['fm', 'available', '--model', 'pcc'],
+        failureHint: _pccContextFailureHint,
+      ),
+      _Check(
+        root,
+        [
+          'fm',
+          'respond',
+          '--model',
+          'pcc',
+          '--no-stream',
+          'Reply with exactly: seisei-pcc-ok',
+        ],
+        failureHint: _pccContextFailureHint,
+      ),
+      _Check(
+        '$root/packages/seisei_apple',
+        [
+          'dart',
+          'run',
+          'bin/local_afm_smoke.dart',
+          '--mode',
+          'pcc',
+        ],
+        failureHint: _pccContextFailureHint,
+      ),
     ]);
   }
 
@@ -203,11 +215,18 @@ Future<void> main(List<String> args) async {
   }
 }
 
+const _pccContextFailureHint =
+    'PCC may still be available from a direct interactive `fm` PTY on this '
+    'machine. This failure means the current Seisei/Dart subprocess context '
+    'could not use PCC. Run `tool/local_pcc_interactive_smoke.zsh` from a '
+    'real terminal PTY to prove machine/account PCC access.';
+
 final class _Check {
-  const _Check(this.workingDirectory, this.command);
+  const _Check(this.workingDirectory, this.command, {this.failureHint});
 
   final String workingDirectory;
   final List<String> command;
+  final String? failureHint;
 
   Future<int> run({bool failFast = true}) async {
     stdout.writeln('\n> ${command.join(' ')}');
@@ -225,6 +244,9 @@ final class _Check {
       return exitCode;
     }
 
+    if (failureHint case final hint?) {
+      stderr.writeln(hint);
+    }
     stderr.writeln('Validation failed with exit code $exitCode.');
     if (failFast) {
       exit(exitCode);
