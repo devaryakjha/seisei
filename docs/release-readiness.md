@@ -117,9 +117,8 @@ Last verified on 2026-06-12 from `main`:
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and
   `seisei_flutter_intents`.
 - `seisei_intents` `0.1.0-dev.9` was published successfully.
-- `seisei_flutter_intents` `0.1.0-dev.1` was published successfully; the local
-  package has advanced to `0.1.0-dev.2` for the macOS headless engine host
-  helper and is pending publication after release validation.
+- `seisei_flutter_intents` `0.1.0-dev.2` was published successfully for the
+  macOS headless engine host helper.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
   static string-backed `AppEntity`, host-backed string `AppEntity` query, and
@@ -159,4 +158,4 @@ Last verified on 2026-06-12 from `main`:
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
   `seisei_intents` latest as `0.1.0-dev.9`; `seisei_router`, `seisei_ui`,
   and `seisei_tagflow` remain at `0.1.0-dev.0`; `seisei_flutter_intents`
-  latest is `0.1.0-dev.1`.
+  latest is `0.1.0-dev.2`.
