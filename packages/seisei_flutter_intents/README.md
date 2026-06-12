@@ -33,6 +33,11 @@ final runtime = SeiseiFlutterIntentsRuntime(
 await runtime.attach();
 ```
 
+The default runtime capabilities are `toolCalling` and
+`systemIntentDiscovery`. Add `AppActionCapability.backgroundExecution` only
+when the host has explicitly provided the app or extension lifecycle needed for
+background App Intents execution.
+
 Native Apple code should invoke the channel
 `dev.jha.seisei/seisei_flutter_intents` with:
 
@@ -44,4 +49,5 @@ Native Apple code should invoke the channel
 This package does not dynamically register App Intents and does not guarantee
 that a Flutter engine is available from every App Intents execution context.
 Host apps still own their Swift `AppIntent` source, app/extension lifecycle,
-and foreground/background execution policy.
+Flutter engine/method-channel availability, and foreground/background
+execution policy.

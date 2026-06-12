@@ -92,10 +92,15 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   Apple frameworks or perform native registration.
 - `seisei_flutter_intents` is the optional Flutter runtime adapter. It handles
   method-channel action invocation and host-backed entity query resolution when
-  a host app has a running Flutter engine.
+  a host app has a running Flutter engine. Its default capabilities do not
+  advertise background execution; hosts opt into
+  `AppActionCapability.backgroundExecution` only when they provide the required
+  app or extension lifecycle.
 - `SeiseiAppleIntents` provides the matching Swift payload conversion helpers,
-  plus closure-based forwarding executors, but does not own Flutter engine
-  startup, retention, or extension-process lifecycle.
+  closure-based forwarding executors, and a combined
+  `SeiseiFlutterIntentsDependencies.configure(invokeMethod:manager:)` helper
+  for registering both action and entity-query executors, but does not own
+  Flutter engine startup, retention, or extension-process lifecycle.
 - `seisei_apple` remains focused on Foundation Models and Flutter platform
   channels; App Intents are not added there.
 - The new package is Swift-only and optional. It is not part of the Dart pub
@@ -116,7 +121,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   this change. Generated wrappers accept host-owned executors, and
   `seisei_flutter_intents` can handle method-channel calls once the host has a
   running engine. `SeiseiAppleIntents` provides the canonical method-channel
-  payload dictionaries, but the host still owns app/extension lifecycle wiring.
+  payload dictionaries and a one-call dependency helper for host-owned method
+  invokers, but the host still owns app/extension lifecycle wiring and must opt
+  into background execution policy explicitly.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
   generators cover scalar string, integer, number, boolean, scalar arrays,

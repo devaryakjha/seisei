@@ -114,9 +114,12 @@ executor injection and testable invocation payload helpers from either Swift
 definitions or Dart `AppActionDefinition` data or a manifest-driven Dart
 executable. The Swift
 helpers and optional Flutter runtime now share canonical method-channel
-payloads and host-owned forwarding executors for generated App Intent
-invocation and host-backed entity query calls. The repo also includes an
-experimental optional Tagflow document adapter for `seisei_ui` blocks.
+payloads, host-owned forwarding executors, and a one-call Swift helper for
+registering both Flutter-backed action and entity-query dependencies. The
+Flutter runtime no longer advertises background execution by default; hosts must
+opt in only when they own the required app or extension lifecycle. The repo also
+includes an experimental optional Tagflow document adapter for `seisei_ui`
+blocks.
 PCC generation, a fully managed native lifecycle bridge that starts or retains a
 Flutter engine from Apple's App Intents runtime or an extension process, richer
 platform-specific intent parameters, cloud providers, production RAG,

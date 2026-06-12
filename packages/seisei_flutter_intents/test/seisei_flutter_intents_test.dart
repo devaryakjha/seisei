@@ -7,6 +7,30 @@ import 'package:seisei_flutter_intents/seisei_flutter_intents.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
+  test('default capabilities do not advertise background execution', () async {
+    final runtime = SeiseiFlutterIntentsRuntime();
+
+    expect(await runtime.capabilities(), {
+      AppActionCapability.toolCalling,
+      AppActionCapability.systemIntentDiscovery,
+    });
+  });
+
+  test('background execution is host opt-in', () async {
+    final runtime = SeiseiFlutterIntentsRuntime(
+      capabilities: const {
+        AppActionCapability.toolCalling,
+        AppActionCapability.systemIntentDiscovery,
+        AppActionCapability.backgroundExecution,
+      },
+    );
+
+    expect(
+      await runtime.capabilities(),
+      contains(AppActionCapability.backgroundExecution),
+    );
+  });
+
   test('invokes registered app actions from native method calls', () async {
     const channel = MethodChannel('test.seisei/flutter-intents/actions');
     final runtime = SeiseiFlutterIntentsRuntime(
@@ -45,44 +69,46 @@ void main() {
     });
   });
 
-  test('resolves host-backed entity queries from native method calls',
-      () async {
-    const channel = MethodChannel('test.seisei/flutter-intents/entities');
-    final runtime = SeiseiFlutterIntentsRuntime(
-      channel: channel,
-      entityQueryHandlers: {
-        'note': (query) async {
-          expect(query.mode, AppEntityQueryMode.search);
-          expect(query.searchTerm, 'road');
-          return const [
-            AppEntityResolution(
-              id: 'note-1',
-              title: 'Roadmap',
-              subtitle: 'Planning',
-              metadata: {'rank': 1},
-            ),
-          ];
+  test(
+    'resolves host-backed entity queries from native method calls',
+    () async {
+      const channel = MethodChannel('test.seisei/flutter-intents/entities');
+      final runtime = SeiseiFlutterIntentsRuntime(
+        channel: channel,
+        entityQueryHandlers: {
+          'note': (query) async {
+            expect(query.mode, AppEntityQueryMode.search);
+            expect(query.searchTerm, 'road');
+            return const [
+              AppEntityResolution(
+                id: 'note-1',
+                title: 'Roadmap',
+                subtitle: 'Planning',
+                metadata: {'rank': 1},
+              ),
+            ];
+          },
         },
-      },
-    );
-    await runtime.attach();
-    addTearDown(runtime.detach);
+      );
+      await runtime.attach();
+      addTearDown(runtime.detach);
 
-    final result = await _invokeNative(channel, 'resolveEntityQuery', {
-      'entityTypeID': 'note',
-      'mode': 'search',
-      'searchTerm': 'road',
-    });
+      final result = await _invokeNative(channel, 'resolveEntityQuery', {
+        'entityTypeID': 'note',
+        'mode': 'search',
+        'searchTerm': 'road',
+      });
 
-    expect(result, [
-      {
-        'id': 'note-1',
-        'title': 'Roadmap',
-        'subtitle': 'Planning',
-        'metadata': {'rank': 1},
-      },
-    ]);
-  });
+      expect(result, [
+        {
+          'id': 'note-1',
+          'title': 'Roadmap',
+          'subtitle': 'Planning',
+          'metadata': {'rank': 1},
+        },
+      ]);
+    },
+  );
 
   test('reports missing app action as a platform error', () async {
     const channel = MethodChannel('test.seisei/flutter-intents/missing');

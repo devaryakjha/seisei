@@ -237,6 +237,57 @@ struct SeiseiAppleIntentsTests {
         ])
     }
 
+    @Test("Flutter dependency helper registers method-channel action and entity executors")
+    func flutterDependenciesConfigureMethodChannelExecutors() async throws {
+        let manager = AppDependencyManager()
+
+        let configuration = SeiseiFlutterIntentsDependencies.configure(
+            invokeMethod: { method, arguments in
+                switch method {
+                case SeiseiFlutterIntentsWire.invokeActionMethod:
+                    #expect(arguments["id"] as? String == "open_note")
+                    return [
+                        "value": ["opened": "note-1"],
+                        "metadata": ["surface": "shortcuts"],
+                    ]
+                case SeiseiFlutterIntentsWire.resolveEntityQueryMethod:
+                    #expect(arguments["entityTypeID"] as? String == "note")
+                    #expect(arguments["mode"] as? String == "search")
+                    return [
+                        [
+                            "id": "note-1",
+                            "title": "Roadmap",
+                        ],
+                    ]
+                default:
+                    Issue.record("Unexpected Flutter intents method: \(method)")
+                    return nil
+                }
+            },
+            manager: manager
+        )
+
+        let actionResult = try await configuration.actionExecutor.run(
+            SeiseiAppIntentInvocation(id: "open_note")
+        )
+        let entityResults = try await configuration.entityQueryExecutor.resolve(
+            SeiseiAppEntityQueryInvocation(
+                entityTypeID: "note",
+                mode: .search,
+                searchTerm: "road"
+            )
+        )
+
+        #expect(actionResult.value == .object(["opened": .string("note-1")]))
+        #expect(actionResult.metadata == ["surface": .string("shortcuts")])
+        #expect(entityResults == [
+            SeiseiAppEntityResolution(
+                id: "note-1",
+                title: "Roadmap"
+            ),
+        ])
+    }
+
     @Test("handwritten AppIntent types can be constructed around Seisei helpers")
     func handwrittenIntentCompiles() {
         let intent = CreateNoteIntent(

@@ -32,6 +32,7 @@ This package is the smallest real native registration path that fits Seisei:
 - method-channel argument/result conversions for action invocations, action
   results, entity query invocations, and entity resolutions
 - `SeiseiFlutterIntentsWire`
+- `SeiseiFlutterIntentsDependencies.configure(...)`
 - `SeiseiAppIntentExecutor.flutterMethodChannel(...)`
 - `SeiseiAppEntityQueryExecutor.flutterMethodChannel(...)`
 
@@ -103,15 +104,22 @@ SeiseiAppIntentDependencies.configure(
 ```
 
 If the host forwards into a running `seisei_flutter_intents` runtime, use the
-closure-based forwarding executors with the host-owned method-channel transport:
+one-call helper with the host-owned method-channel transport:
 
 ```swift
-let executor = SeiseiAppIntentExecutor.flutterMethodChannel { method, arguments in
+SeiseiFlutterIntentsDependencies.configure { method, arguments in
     // Send `method` and `arguments` over a Flutter method channel named
     // SeiseiFlutterIntentsWire.channelName.
+    // Return the decoded method-channel result.
     // The host still owns engine startup, attachment, and lifetime.
 }
 ```
+
+The helper registers both the `SeiseiAppIntentExecutor` for generated or
+handwritten action `perform()` calls and the `SeiseiAppEntityQueryExecutor` for
+host-backed entity queries. It does not create, retain, or attach a Flutter
+engine, and it does not make background execution automatic; that remains an
+explicit host policy.
 
 Generate build-time Swift source for scalar, scalar-array, string-enum, and
 static or host-backed string entity wrappers:

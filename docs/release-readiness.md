@@ -24,9 +24,10 @@ App Intent Swift source generation from generic app-action JSON schemas,
 executor-injection initializers, testable invocation payload helpers, a
 manifest-driven generation executable, JSON wire formats, and generic
 host-backed entity query contracts.
-`seisei_flutter_intents` is at `0.1.0-dev.0` for optional Flutter
+`seisei_flutter_intents` was published at `0.1.0-dev.0` for optional Flutter
 method-channel runtime handling of native-shaped app action invocations and
-host-backed entity query resolution.
+host-backed entity query resolution. This worktree prepares `0.1.0-dev.1` so
+background execution is host opt-in instead of advertised by default.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.

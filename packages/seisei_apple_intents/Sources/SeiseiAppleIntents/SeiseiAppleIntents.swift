@@ -387,6 +387,40 @@ public enum SeiseiFlutterIntentsWire {
     ) async throws -> Any?
 }
 
+public struct SeiseiFlutterIntentsDependencyConfiguration: Sendable {
+    public let actionExecutor: SeiseiAppIntentExecutor
+    public let entityQueryExecutor: SeiseiAppEntityQueryExecutor
+}
+
+public enum SeiseiFlutterIntentsDependencies {
+    @discardableResult
+    public static func configure(
+        invokeMethod: @escaping SeiseiFlutterIntentsWire.MethodInvoker,
+        manager: AppDependencyManager = .shared
+    ) -> SeiseiFlutterIntentsDependencyConfiguration {
+        let actionExecutor = SeiseiAppIntentExecutor.flutterMethodChannel(
+            invokeMethod: invokeMethod
+        )
+        let entityQueryExecutor = SeiseiAppEntityQueryExecutor.flutterMethodChannel(
+            invokeMethod: invokeMethod
+        )
+
+        SeiseiAppIntentDependencies.configure(
+            executor: actionExecutor,
+            manager: manager
+        )
+        SeiseiAppEntityQueryDependencies.configure(
+            executor: entityQueryExecutor,
+            manager: manager
+        )
+
+        return SeiseiFlutterIntentsDependencyConfiguration(
+            actionExecutor: actionExecutor,
+            entityQueryExecutor: entityQueryExecutor
+        )
+    }
+}
+
 public extension SeiseiAppIntentExecutor {
     static func flutterMethodChannel(
         invokeMethod: @escaping SeiseiFlutterIntentsWire.MethodInvoker

@@ -11,7 +11,6 @@ final class SeiseiFlutterIntentsRuntime implements AppActionBridge {
     Set<AppActionCapability> capabilities = const {
       AppActionCapability.toolCalling,
       AppActionCapability.systemIntentDiscovery,
-      AppActionCapability.backgroundExecution,
     },
     MethodChannel? channel,
   })  : _actions = actions,

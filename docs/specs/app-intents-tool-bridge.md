@@ -63,7 +63,9 @@ host-backed entity query resolution.
 Its invocation, result, entity-query invocation, and entity-resolution types can
 convert to or from JSON-compatible dictionaries that match
 `seisei_flutter_intents` channel payloads. It also exposes closure-based
-forwarding executors for the `invokeAction` and `resolveEntityQuery` methods.
+forwarding executors for the `invokeAction` and `resolveEntityQuery` methods,
+plus `SeiseiFlutterIntentsDependencies.configure(invokeMethod:manager:)` as a
+host convenience for registering both executors with `AppDependencyManager`.
 Host apps still supply the actual method-channel transport and decide how a
 Flutter engine is made available.
 
@@ -114,8 +116,9 @@ Later native work can still:
   invocation and host-backed entity query resolution.
 - `SeiseiAppleIntents` Swift tests cover method-channel wire conversion for
   action invocations, action results, entity query invocations, and entity
-  resolutions, plus closure-based forwarding executors for Flutter runtime
-  method calls.
+  resolutions, closure-based forwarding executors for Flutter runtime method
+  calls, and the combined host helper that registers both Flutter forwarding
+  dependencies without linking the native Flutter SDK.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.
