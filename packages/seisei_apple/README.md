@@ -37,7 +37,14 @@ into `GenerationChunk.partialValue` while raw snapshots remain available in
 `GenerationChunk.structuredPatches`.
 
 To verify direct PCC CLI access on the machine, run this from an interactive
-terminal:
+terminal, or use the repository shell smoke:
+
+```sh
+tool/local_pcc_interactive_smoke.zsh
+```
+
+That script requires an inherited terminal PTY and runs these direct `fm`
+commands:
 
 ```sh
 fm available --model pcc
@@ -85,8 +92,10 @@ the current Seisei execution context, not as proof that PCC is generally
 unavailable on the machine.
 
 From the repository root, `dart tool/validate.dart --local-afm` checks only the
-system-model path. Use `dart tool/validate.dart --local-pcc` when you want PCC
-to be a required local smoke test.
+system-model path. Use `tool/local_pcc_interactive_smoke.zsh` when you want a
+direct interactive PCC machine/account probe. Use
+`dart tool/validate.dart --local-pcc` when you want PCC to be a required smoke
+test for Seisei's current captured subprocess backend path.
 
 For a minimal Flutter host, create an app and point `seisei_apple` at this
 workspace with a path dependency:

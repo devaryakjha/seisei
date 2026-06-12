@@ -35,14 +35,20 @@ plain, schema-backed, plain streaming, and schema-backed streaming
 through `FmCliBackend`, `AppleFoundationModelsProvider`, and `SeiseiClient`.
 
 PCC is checked separately because the `fm` CLI can expose a working system model
-while PCC availability depends on launch context. On this machine, interactive
-PTY checks can report PCC available while non-interactive Dart subprocesses
-report `PCC inference is not available in this context`. The direct interactive
-CLI probe is:
+while PCC availability depends on launch context. On this machine, a direct
+interactive shell PTY can report PCC available while Dart-launched subprocesses
+report `PCC inference is not available in this context`, even when Dart itself
+has inherited a PTY. The direct interactive shell probe is:
 
 ```sh
-fm respond --model pcc --no-stream 'Reply with exactly: seisei-pcc-ok'
+tool/local_pcc_interactive_smoke.zsh
 ```
+
+That script runs `fm available --model pcc` and
+`fm respond --model pcc --no-stream 'Reply with exactly: seisei-pcc-ok'` with
+the shell's inherited stdio. It fails early when it is not attached to an
+interactive terminal, because non-interactive launches can produce a false
+negative for PCC on this machine.
 
 The Seisei backend gate is:
 
@@ -83,6 +89,7 @@ packages/seisei_ui
 packages/seisei_tagflow
 packages/seisei_apple
 packages/seisei_intents
+packages/seisei_flutter_intents
 ```
 
 The released packages are published under the verified publisher `jha.sh`.

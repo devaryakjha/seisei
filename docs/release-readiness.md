@@ -102,7 +102,10 @@ Last verified on 2026-06-12 from `main`:
   Rechecked on 2026-06-12: `fm available --model pcc` passed in a PTY and
   failed without a PTY; `dart run packages/seisei_apple/bin/local_afm_smoke.dart
   --mode pcc` reported `pccAvailable: false` through the current Seisei
-  subprocess backend.
+  subprocess backend. `tool/local_pcc_interactive_smoke.zsh` passed in a real
+  terminal PTY with `PCC model available` and `seisei-pcc-ok`; running `fm`
+  through Dart-launched subprocesses still reported PCC unavailable, even with
+  inherited stdio.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and

@@ -91,11 +91,8 @@ Future<void> main(List<String> args) async {
     stdout.writeln(
       '\nPCC validation target: Seisei\'s current Dart `FmCliBackend` '
       'subprocess context. This is a real backend smoke check, but it is not '
-      'a general machine capability probe. To prove interactive PCC access '
-      'separately, run these commands in a real terminal PTY:\n'
-      '  fm available --model pcc\n'
-      '  fm respond --model pcc --no-stream '
-      '\'Reply with exactly: seisei-pcc-ok\'\n'
+      'a general machine capability probe. To prove interactive PCC access, '
+      'run `tool/local_pcc_interactive_smoke.zsh` from a real terminal PTY.\n'
       'A passing interactive PTY `fm` check does not prove this Seisei '
       'subprocess context can use PCC.',
     );
