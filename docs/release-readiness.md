@@ -24,10 +24,10 @@ App Intent Swift source generation from generic app-action JSON schemas,
 executor-injection initializers, testable invocation payload helpers, a
 manifest-driven generation executable, JSON wire formats, and generic
 host-backed entity query contracts.
-`seisei_flutter_intents` was published at `0.1.0-dev.0` for optional Flutter
+`seisei_flutter_intents` is at `0.1.0-dev.1` for optional Flutter
 method-channel runtime handling of native-shaped app action invocations and
-host-backed entity query resolution. This worktree prepares `0.1.0-dev.1` so
-background execution is host opt-in instead of advertised by default.
+host-backed entity query resolution, with background execution as explicit
+host opt-in instead of a default advertised capability.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -112,7 +112,7 @@ Last verified on 2026-06-12 from `main`:
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and
   `seisei_flutter_intents`.
 - `seisei_intents` `0.1.0-dev.9` was published successfully.
-- `seisei_flutter_intents` `0.1.0-dev.0` was published successfully.
+- `seisei_flutter_intents` `0.1.0-dev.1` was published successfully.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
   static string-backed `AppEntity`, host-backed string `AppEntity` query, and
@@ -121,14 +121,17 @@ Last verified on 2026-06-12 from `main`:
   runtime, and method-channel wire conversion assertions for action
   invocations, action results, entity query invocations, and entity
   resolutions, plus closure-based Flutter forwarding executor assertions for
-  action invocation and entity query resolution.
+  action invocation and entity query resolution, and
+  `SeiseiFlutterIntentsDependencies.configure(...)` helper assertions for
+  host-owned method-channel dependency setup.
 - `seisei_intents` tests passed locally with Dart-side scalar/scalar-array/
   string-enum/static entity/host-backed entity Swift source generation assertions,
   executor-injection initializer assertions, manifest-driven Swift file
   generation, JSON wire-format assertions, and stable source-generation
   failures for unsupported parameter schemas.
 - `seisei_flutter_intents` tests passed locally with native-to-Dart
-  method-channel action invocation and host-backed entity query resolution.
+  method-channel action invocation, host-backed entity query resolution, and
+  host opt-in background execution capability coverage.
 - `dart run seisei_intents:generate_apple_intents --manifest ... --out ...`
   generated an enum-backed `UpdateNoteIntent.swift` file from a temporary
   manifest, including `public enum NoteStatus: String, AppEnum`.
@@ -145,4 +148,4 @@ Last verified on 2026-06-12 from `main`:
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
   `seisei_intents` latest as `0.1.0-dev.9`; `seisei_router`, `seisei_ui`,
   and `seisei_tagflow` remain at `0.1.0-dev.0`; `seisei_flutter_intents`
-  latest is `0.1.0-dev.0`.
+  latest is `0.1.0-dev.1`.

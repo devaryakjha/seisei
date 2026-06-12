@@ -186,7 +186,9 @@ advanced to `0.1.0-dev.5` for static string-backed AppEntity generation and to
 contracts, to `0.1.0-dev.8` for string-array App Intent parameter generation,
 and to `0.1.0-dev.9` for integer, number, and boolean array parameter
 generation. `seisei_flutter_intents` shipped at `0.1.0-dev.0` for the optional
-Flutter runtime method-channel adapter.
+Flutter runtime method-channel adapter, then advanced to `0.1.0-dev.1` so
+background execution is host opt-in and Swift hosts can configure both action
+and entity-query Flutter forwarding executors through one dependency helper.
 
 ### 9. Optional Tagflow Adapter Path
 
