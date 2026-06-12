@@ -22,6 +22,11 @@ typedef AppActionHandler = FutureOr<AppActionResult> Function(
   AppActionInvocation invocation,
 );
 
+/// Handles a host-backed app entity query invocation.
+typedef AppEntityQueryHandler = FutureOr<List<AppEntityResolution>> Function(
+  AppEntityQueryInvocation invocation,
+);
+
 /// Generic bridge between Seisei tool calls and app/platform actions.
 abstract interface class AppActionBridge {
   /// Capabilities supported by this bridge implementation.
@@ -45,5 +50,19 @@ final class AppActionNotFoundException implements Exception {
   @override
   String toString() {
     return 'AppActionNotFoundException: $actionId';
+  }
+}
+
+/// Thrown when an entity query bridge cannot find the requested entity type.
+final class AppEntityQueryNotFoundException implements Exception {
+  /// Creates an entity-query-not-found exception.
+  const AppEntityQueryNotFoundException(this.entityTypeId);
+
+  /// Missing entity type identifier.
+  final String entityTypeId;
+
+  @override
+  String toString() {
+    return 'AppEntityQueryNotFoundException: $entityTypeId';
   }
 }

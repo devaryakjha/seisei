@@ -39,6 +39,8 @@ Apple's current developer material says App Intents expose app actions and data 
 - `AppActionBridge`: interface for listing capabilities, listing actions, and invoking actions.
 - `FakeAppActionBridge`: deterministic fake for tests.
 - Mapping helpers between `ToolDefinition` / `ToolCall` and app actions / invocations.
+- JSON-compatible wire formats for app action definitions, invocations,
+  results, host-backed entity query invocations, and entity resolutions.
 - `AppleAppIntentSourceGenerator`: a pure Dart source generator that emits
   conservative scalar and string-backed `AppEnum` Swift `AppIntent` /
   `AppShortcutsProvider` wrappers from `AppActionDefinition` JSON schema data.
@@ -50,6 +52,11 @@ Apple's current developer material says App Intents expose app actions and data 
   manifest-driven source generation path for host projects.
 
 The package depends on `seisei` only.
+
+`seisei_flutter_intents` owns the optional Flutter runtime adapter over this
+contract. It registers a Dart method-channel handler for generated/native App
+Intent calls when a Flutter engine is running, including action invocation and
+host-backed entity query resolution.
 
 ## Native Adapter Boundary
 
@@ -71,7 +78,8 @@ Later native work can still:
 
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
-- bridge `perform()` calls into Flutter/Dart through a host app runtime path;
+- wire generated Swift `perform()` calls to `seisei_flutter_intents` from a
+  host app or extension lifecycle that owns Flutter engine availability;
 - add richer platform-specific parameters above the current scalar,
   string-enum, static string entity, and host-backed string entity contracts;
 - keep `seisei_intents` as the source of generic Dart-side behavior.
@@ -89,6 +97,8 @@ Later native work can still:
   generation tests plus Swift compile tests.
 - Host-backed string entity query generation is opt-in and covered by Dart
   source generation tests plus Swift compile tests.
+- `seisei_flutter_intents` tests cover native-to-Dart method-channel action
+  invocation and host-backed entity query resolution.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

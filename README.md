@@ -29,6 +29,7 @@ The current workspace contains:
 - `seisei_tagflow`: experimental optional adapter from `seisei_ui` blocks into Tagflow runtime documents
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
 - `seisei_intents`: generic app-action contracts, tool-call mapping, fake bridges, scalar, string-enum, static string-entity, and host-backed string-entity Apple App Intent source generation, and a manifest-driven generation executable for future platform intent adapters
+- `seisei_flutter_intents`: optional Flutter method-channel runtime bridge for generated App Intent action invocation and host-backed entity queries
 
 Optional native support packages include:
 
@@ -36,7 +37,7 @@ Optional native support packages include:
 
 Future packages may include:
 
-- `seisei_flutter_intents`: Flutter/native bridge for generated wrappers or tighter Flutter app integration above the handwritten Swift registration path
+- Additional renderer adapters beyond the current optional Tagflow adapter.
 
 ## Development
 
@@ -109,8 +110,11 @@ intents and generated-source scalar/string-enum/static string-entity/host-backed
 string-entity wrappers with action and entity-query executor injection and
 testable invocation payload helpers from either Swift definitions or Dart
 `AppActionDefinition` data or a manifest-driven Dart executable, plus an
-experimental optional Tagflow document adapter for `seisei_ui` blocks.
-PCC generation, a full Flutter runtime bridge from Apple's App Intents runtime,
-richer platform-specific intent parameters, cloud providers, production RAG,
+optional Flutter runtime method-channel bridge for generated App Intent
+invocation and host-backed entity query calls, plus an experimental optional
+Tagflow document adapter for `seisei_ui` blocks.
+PCC generation, a fully managed native lifecycle bridge from Apple's App
+Intents runtime into a Flutter engine or extension process, richer
+platform-specific intent parameters, cloud providers, production RAG,
 provider-native patch streams, and broader renderer integration beyond the
 narrow Tagflow content adapter are not implemented yet.

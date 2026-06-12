@@ -126,8 +126,11 @@ include executor-injection initializers and dependency-free
 `seiseiInvocation()` helpers so host apps can test payload construction outside
 Apple's App Intents runtime. Host-backed generated App Entity queries later
 added a Seisei entity-query executor contract and `EntityStringQuery` wrapper
-generation. A full Flutter runtime bridge from Apple's App Intents runtime and
-richer platform-specific wrappers remain future plugin/native work.
+generation. `seisei_flutter_intents` later added the optional Flutter
+method-channel runtime for native-shaped action invocation and host-backed
+entity query resolution when a host app owns Flutter engine availability. A
+fully managed App Intents extension/app lifecycle bridge and richer
+platform-specific wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
 
@@ -174,7 +177,10 @@ from generic app-action JSON schemas, to `0.1.0-dev.2` for manifest-driven
 Swift file generation and the `generate_apple_intents` executable, and to
 `0.1.0-dev.3` for string enum / AppEnum generation. `seisei_intents` later
 advanced to `0.1.0-dev.5` for static string-backed AppEntity generation and to
-`0.1.0-dev.6` for host-backed string AppEntity query generation.
+`0.1.0-dev.6` for host-backed string AppEntity query generation, then to
+`0.1.0-dev.7` for JSON wire formats and generic host-backed entity query
+contracts. `seisei_flutter_intents` shipped at `0.1.0-dev.0` for the optional
+Flutter runtime method-channel adapter.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -212,9 +218,9 @@ after the nested-object, verified-constraint, field-level union, explicit-null
 union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
-- Flutter runtime invocation from generated App Intent wrappers and richer
-  platform-specific wrappers above the scalar/string-enum/static-entity/
-  host-backed string-entity source generators
+- Fully managed Flutter engine/app-extension lifecycle wiring from generated
+  App Intent wrappers and richer platform-specific wrappers above the
+  scalar/string-enum/static-entity/host-backed string-entity source generators
 
 ## Merge Order
 

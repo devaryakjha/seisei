@@ -18,6 +18,7 @@ Future<void> main(List<String> args) async {
     _Check('$root/packages/seisei_tagflow', ['flutter', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
     _Check('$root/packages/seisei_intents', ['dart', 'test']),
+    _Check('$root/packages/seisei_flutter_intents', ['flutter', 'test']),
   ];
 
   if (Platform.isMacOS) {
@@ -157,6 +158,12 @@ Future<void> main(List<String> args) async {
       '--dry-run',
     ]),
     _Check('$root/packages/seisei_intents', [
+      'flutter',
+      'pub',
+      'publish',
+      '--dry-run',
+    ]),
+    _Check('$root/packages/seisei_flutter_intents', [
       'flutter',
       'pub',
       'publish',

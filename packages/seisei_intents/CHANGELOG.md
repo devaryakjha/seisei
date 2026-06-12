@@ -1,3 +1,8 @@
+## 0.1.0-dev.7
+
+- Add JSON round-trips for app action definitions, invocations, and results.
+- Add generic host-backed app entity query invocation and resolution contracts.
+
 ## 0.1.0-dev.6
 
 - Add generated host-backed Apple `AppEntity` query source for string entity

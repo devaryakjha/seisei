@@ -18,11 +18,15 @@ tagged `anyOf` mapping for discriminated object unions, and explicit
 partial stream snapshots.
 `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental optional
 Tagflow document adapter.
-`seisei_intents` is at `0.1.0-dev.6` for Dart-side scalar, string-enum,
+`seisei_intents` is at `0.1.0-dev.7` for Dart-side scalar, string-enum,
 static string-backed entity, and host-backed string entity Apple App Intent
 Swift source generation from generic app-action JSON schemas,
 executor-injection initializers, testable invocation payload helpers, and a
-manifest-driven generation executable.
+manifest-driven generation executable, plus JSON wire formats and generic
+host-backed entity query contracts.
+`seisei_flutter_intents` is at `0.1.0-dev.0` for optional Flutter
+method-channel runtime handling of native-shaped app action invocations and
+host-backed entity query resolution.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -62,6 +66,8 @@ unless the release process is deliberately changed.
 - [x] Native App Intent helper claims are backed by Swift compile tests and
       `seisei_intents` scalar/string-enum/static-entity source-generation,
       invocation-helper, and manifest-generation tests.
+- [x] Flutter App Intent runtime claims are backed by `seisei_flutter_intents`
+      method-channel tests.
 
 ## Dry-Run Evidence
 
@@ -99,7 +105,8 @@ Last verified on 2026-06-12 from `main`:
   subprocess backend.
 - `dart tool/validate.dart --release` passed locally with zero publish dry-run
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
-  `seisei_ui`, `seisei_tagflow`, `seisei_apple`, and `seisei_intents`.
+  `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and
+  `seisei_flutter_intents`.
 - `seisei_intents` `0.1.0-dev.6` was published successfully.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
@@ -110,8 +117,10 @@ Last verified on 2026-06-12 from `main`:
 - `seisei_intents` tests passed locally with Dart-side scalar/string-enum/static
   entity/host-backed entity Swift source generation assertions,
   executor-injection initializer assertions, manifest-driven Swift file
-  generation, and stable source-generation failures for unsupported parameter
-  schemas.
+  generation, JSON wire-format assertions, and stable source-generation
+  failures for unsupported parameter schemas.
+- `seisei_flutter_intents` tests passed locally with native-to-Dart
+  method-channel action invocation and host-backed entity query resolution.
 - `dart run seisei_intents:generate_apple_intents --manifest ... --out ...`
   generated an enum-backed `UpdateNoteIntent.swift` file from a temporary
   manifest, including `public enum NoteStatus: String, AppEnum`.

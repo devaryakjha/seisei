@@ -1,24 +1,25 @@
-name: seisei_intents
-description: Generic app action and intent bridge contracts for Seisei tools.
-version: 0.1.0-dev.7
+name: seisei_flutter_intents
+description: Flutter runtime bridge for Seisei app actions and generated App Intents.
+version: 0.1.0-dev.0
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:
   - ai
-  - dart
+  - flutter
   - intents
   - tool-calling
   - app-actions
 
 environment:
   sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.3.0"
 resolution: workspace
 
-executables:
-  generate_apple_intents:
-
 dependencies:
-  seisei: ^0.1.0-dev.0
+  flutter:
+    sdk: flutter
+  seisei_intents: ^0.1.0-dev.7
 
 dev_dependencies:
-  test: ^1.26.0
+  flutter_test:
+    sdk: flutter

@@ -13,6 +13,7 @@ workspace:
   - packages/seisei_tagflow
   - packages/seisei_apple
   - packages/seisei_intents
+  - packages/seisei_flutter_intents
   - examples/basic_cli
 
 dev_dependencies:

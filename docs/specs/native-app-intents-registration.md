@@ -84,6 +84,9 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `seisei_intents` remains pure Dart and owns generic action contracts plus
   static Swift source generation from code or manifests. It does not import
   Apple frameworks or perform native registration.
+- `seisei_flutter_intents` is the optional Flutter runtime adapter. It handles
+  method-channel action invocation and host-backed entity query resolution when
+  a host app has a running Flutter engine.
 - `seisei_apple` remains focused on Foundation Models and Flutter platform
   channels; App Intents are not added there.
 - The new package is Swift-only and optional. It is not part of the Dart pub
@@ -100,12 +103,10 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - No direct Dart `ObjectSchema`-to-Swift generator in this change; the shipped
   Dart generator consumes generic `AppActionDefinition.parameters` JSON schema
   data.
-- No full Flutter method-channel invocation from Apple's App Intents runtime in
-  this change. Generated wrappers now build testable invocation payloads and
-  accept host-owned executors, but the app still owns the final runtime bridge.
-- No automatic Flutter/Dart bridge for generated App Entity queries in this
-  change. Host-backed query wrappers can be generated, but the host app still
-  owns wiring `SeiseiAppEntityQueryExecutor` to app data.
+- No fully managed Flutter engine lifecycle from Apple's App Intents runtime in
+  this change. Generated wrappers accept host-owned executors, and
+  `seisei_flutter_intents` can handle method-channel calls once the host has a
+  running engine, but the host still owns app/extension lifecycle wiring.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
   generators cover scalar string, integer, number, boolean, string enum, and
@@ -131,8 +132,10 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - generated-style wrappers can build `SeiseiAppIntentInvocation` payloads
     without directly entering Apple's App Intents runtime.
 - `seisei_intents` tests prove Dart-side generation from
-  `AppActionDefinition` data and stable rejection of unsupported parameter
-  schemas.
+  `AppActionDefinition` data, stable rejection of unsupported parameter
+  schemas, and JSON-compatible wire formats.
+- `seisei_flutter_intents` tests prove method-channel action invocation and
+  host-backed entity query resolution from native-shaped calls.
 - Manifest tests prove generated Swift files can be written from a
   JSON-compatible action manifest.
 - Repository docs stop describing all native App Intents registration as purely

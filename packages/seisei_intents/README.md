@@ -3,6 +3,9 @@
 Generic app-action and intent bridge contracts for Seisei tools.
 
 This package maps `ToolDefinition` and `ToolCall` from `seisei` into host-app action definitions and invocations. It intentionally stays pure Dart so apps can test tool and intent behavior before adding Flutter/native platform code.
+Definitions, invocations, results, and host-backed entity query payloads have
+JSON-compatible round-trips so optional runtime adapters can share the same
+wire format.
 
 Apple App Intents remain native Swift source processed at build time. This
 package defines the generic contract and can generate conservative scalar and

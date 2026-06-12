@@ -50,6 +50,60 @@ void main() {
     expect(roundTrip.name, 'create_note');
   });
 
+  test('round-trips app action and entity query JSON', () {
+    const action = AppActionDefinition(
+      id: 'open_note',
+      title: 'Open Note',
+      description: 'Open a note in the host app.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'note': {'type': 'string'},
+        },
+      },
+      metadata: {'systemImageName': 'note.text'},
+    );
+    const invocation = AppActionInvocation(
+      id: 'open_note',
+      arguments: {'note': 'note-1'},
+      toolCallId: 'call-1',
+      metadata: {'surface': 'shortcuts'},
+    );
+    const result = AppActionResult(
+      value: {'opened': true},
+      metadata: {'source': 'host'},
+    );
+    const query = AppEntityQueryInvocation(
+      entityTypeId: 'note',
+      mode: AppEntityQueryMode.search,
+      searchTerm: 'road',
+      metadata: {'surface': 'shortcuts'},
+    );
+    const resolution = AppEntityResolution(
+      id: 'note-1',
+      title: 'Roadmap',
+      subtitle: 'Planning',
+      metadata: {'rank': 1},
+    );
+
+    expect(AppActionDefinition.fromJson(action.toJson()).metadata, {
+      'systemImageName': 'note.text',
+    });
+    expect(
+      AppActionInvocation.fromJson(invocation.toJson()).toolCallId,
+      'call-1',
+    );
+    expect(AppActionResult.fromJson(result.toJson()).value, {'opened': true});
+    expect(
+      AppEntityQueryInvocation.fromJson(query.toJson()).mode,
+      AppEntityQueryMode.search,
+    );
+    expect(
+      AppEntityResolution.fromJson(resolution.toJson()).subtitle,
+      'Planning',
+    );
+  });
+
   test('fake bridge invokes registered app actions', () async {
     final bridge = FakeAppActionBridge(
       actions: const [
