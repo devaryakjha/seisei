@@ -46,8 +46,32 @@ Native Apple code should invoke the channel
 - `invokeAction`
 - `resolveEntityQuery`
 
+On macOS, native hosts that include FlutterMacOS can use
+`SeiseiFlutterIntentsEngineHost` to start and retain a headless Flutter engine
+before forwarding App Intents calls:
+
+```swift
+import FlutterPluginRegistrant
+import SeiseiAppleIntents
+import seisei_flutter_intents
+
+let host = SeiseiFlutterIntentsEngineHost(
+  pluginRegistrant: { registry in
+    RegisterGeneratedPlugins(registry: registry)
+  }
+)
+
+SeiseiFlutterIntentsDependencies.configure { method, arguments in
+  try await host.invokeMethod(method, arguments: arguments)
+}
+```
+
+Use a custom `entrypoint` only when the Dart function is annotated with
+`@pragma('vm:entry-point')`. Host apps and extensions are still responsible for
+including the Flutter assets, generated plugin registrant, entitlements, and
+background execution policy required by their target.
+
 This package does not dynamically register App Intents and does not guarantee
 that a Flutter engine is available from every App Intents execution context.
-Host apps still own their Swift `AppIntent` source, app/extension lifecycle,
-Flutter engine/method-channel availability, and foreground/background
+Host apps still own their Swift `AppIntent` source and foreground/background
 execution policy.

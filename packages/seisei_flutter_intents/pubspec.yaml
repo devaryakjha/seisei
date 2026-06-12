@@ -1,6 +1,6 @@
 name: seisei_flutter_intents
 description: Flutter runtime bridge for Seisei app actions and generated App Intents.
-version: 0.1.0-dev.1
+version: 0.1.0-dev.2
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:
@@ -18,8 +18,14 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  seisei_intents: ^0.1.0-dev.7
+  seisei_intents: ^0.1.0-dev.9
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+flutter:
+  plugin:
+    platforms:
+      macos:
+        pluginClass: SeiseiFlutterIntentsPlugin

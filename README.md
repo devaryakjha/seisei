@@ -121,11 +121,13 @@ helpers and optional Flutter runtime now share canonical method-channel
 payloads, host-owned forwarding executors, and a one-call Swift helper for
 registering both Flutter-backed action and entity-query dependencies. The
 Flutter runtime no longer advertises background execution by default; hosts must
-opt in only when they own the required app or extension lifecycle. The repo also
-includes an experimental optional Tagflow document adapter for `seisei_ui`
-blocks.
-PCC generation, a fully managed native lifecycle bridge that starts or retains a
-Flutter engine from Apple's App Intents runtime or an extension process, richer
-platform-specific intent parameters, cloud providers, production RAG,
-provider-native patch streams, and broader renderer integration beyond the
-narrow Tagflow content adapter are not implemented yet.
+opt in only when they own the required app or extension lifecycle. On macOS,
+`seisei_flutter_intents` also provides a headless `FlutterEngine` host helper
+for app-owned App Intents forwarding when the host includes FlutterMacOS and the
+generated plugin registrant. The repo also includes an experimental optional
+Tagflow document adapter for `seisei_ui` blocks.
+PCC generation, a fully managed native lifecycle bridge for iOS or arbitrary
+App Intents extension processes, richer platform-specific intent parameters,
+cloud providers, production RAG, provider-native patch streams, and broader
+renderer integration beyond the narrow Tagflow content adapter are not
+implemented yet.

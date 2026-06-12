@@ -96,11 +96,16 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   advertise background execution; hosts opt into
   `AppActionCapability.backgroundExecution` only when they provide the required
   app or extension lifecycle.
+- On macOS, `seisei_flutter_intents` also provides
+  `SeiseiFlutterIntentsEngineHost`, a headless `FlutterEngine` helper that
+  starts and retains an engine and exposes an async method-channel invoker for
+  app-owned App Intents forwarding. The host still provides Flutter assets and
+  generated plugin registration.
 - `SeiseiAppleIntents` provides the matching Swift payload conversion helpers,
   closure-based forwarding executors, and a combined
   `SeiseiFlutterIntentsDependencies.configure(invokeMethod:manager:)` helper
-  for registering both action and entity-query executors, but does not own
-  Flutter engine startup, retention, or extension-process lifecycle.
+  for registering both action and entity-query executors, but does not own iOS
+  or arbitrary extension-process lifecycle.
 - `seisei_apple` remains focused on Foundation Models and Flutter platform
   channels; App Intents are not added there.
 - The new package is Swift-only and optional. It is not part of the Dart pub
@@ -118,12 +123,11 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   Dart generator consumes generic `AppActionDefinition.parameters` JSON schema
   data.
 - No fully managed Flutter engine lifecycle from Apple's App Intents runtime in
-  this change. Generated wrappers accept host-owned executors, and
-  `seisei_flutter_intents` can handle method-channel calls once the host has a
-  running engine. `SeiseiAppleIntents` provides the canonical method-channel
-  payload dictionaries and a one-call dependency helper for host-owned method
-  invokers, but the host still owns app/extension lifecycle wiring and must opt
-  into background execution policy explicitly.
+  iOS or arbitrary extension processes in this change. The macOS helper starts
+  and retains a headless engine, and `seisei_flutter_intents` handles
+  method-channel calls once the host target includes Flutter assets and plugin
+  registration. The host still owns target wiring and must opt into background
+  execution policy explicitly.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
   generators cover scalar string, integer, number, boolean, scalar arrays,

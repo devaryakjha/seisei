@@ -132,9 +132,10 @@ entity query resolution when a host app owns Flutter engine availability. The
 native Swift helper package later added matching method-channel wire conversion
 helpers for action invocation, action result, entity query invocation, and
 entity resolution payloads, then closure-based forwarding executors for hosts
-that provide the actual Flutter method-channel transport. A fully managed App
-Intents extension/app lifecycle bridge and richer platform-specific wrappers
-remain future plugin/native work.
+that provide the actual Flutter method-channel transport. `seisei_flutter_intents`
+then added a macOS headless `FlutterEngine` host helper for app-owned App
+Intents forwarding into Dart. iOS and arbitrary App Intents extension lifecycle
+wiring plus richer platform-specific wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
 
@@ -186,9 +187,11 @@ advanced to `0.1.0-dev.5` for static string-backed AppEntity generation and to
 contracts, to `0.1.0-dev.8` for string-array App Intent parameter generation,
 and to `0.1.0-dev.9` for integer, number, and boolean array parameter
 generation. `seisei_flutter_intents` shipped at `0.1.0-dev.0` for the optional
-Flutter runtime method-channel adapter, then advanced to `0.1.0-dev.1` so
-background execution is host opt-in and Swift hosts can configure both action
-and entity-query Flutter forwarding executors through one dependency helper.
+Flutter runtime method-channel adapter, advanced to `0.1.0-dev.1` so background
+execution is host opt-in and Swift hosts can configure both action and
+entity-query Flutter forwarding executors through one dependency helper, then
+advanced to `0.1.0-dev.2` with a macOS headless `FlutterEngine` host helper for
+App Intents forwarding.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -226,10 +229,11 @@ after the nested-object, verified-constraint, field-level union, explicit-null
 union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
-- Fully managed Flutter engine/app-extension lifecycle wiring above the current
-  host-owned method-channel forwarding executors, plus richer platform-specific
-  wrappers above the scalar/scalar-array/string-enum/static-entity/host-backed
-  string-entity source generators
+- iOS and App Intents extension lifecycle wiring above the current macOS
+  headless engine host helper and host-owned method-channel forwarding
+  executors, plus richer platform-specific wrappers above the scalar/
+  scalar-array/string-enum/static-entity/host-backed string-entity source
+  generators
 
 ## Merge Order
 

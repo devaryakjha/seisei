@@ -24,10 +24,11 @@ App Intent Swift source generation from generic app-action JSON schemas,
 executor-injection initializers, testable invocation payload helpers, a
 manifest-driven generation executable, JSON wire formats, and generic
 host-backed entity query contracts.
-`seisei_flutter_intents` is at `0.1.0-dev.1` for optional Flutter
+`seisei_flutter_intents` is at `0.1.0-dev.2` for optional Flutter
 method-channel runtime handling of native-shaped app action invocations and
 host-backed entity query resolution, with background execution as explicit
-host opt-in instead of a default advertised capability.
+host opt-in instead of a default advertised capability, plus a macOS headless
+`FlutterEngine` host helper for App Intents forwarding.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -116,7 +117,9 @@ Last verified on 2026-06-12 from `main`:
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and
   `seisei_flutter_intents`.
 - `seisei_intents` `0.1.0-dev.9` was published successfully.
-- `seisei_flutter_intents` `0.1.0-dev.1` was published successfully.
+- `seisei_flutter_intents` `0.1.0-dev.1` was published successfully; the local
+  package has advanced to `0.1.0-dev.2` for the macOS headless engine host
+  helper and is pending publication after release validation.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
   static string-backed `AppEntity`, host-backed string `AppEntity` query, and
@@ -136,6 +139,10 @@ Last verified on 2026-06-12 from `main`:
 - `seisei_flutter_intents` tests passed locally with native-to-Dart
   method-channel action invocation, host-backed entity query resolution, and
   host opt-in background execution capability coverage.
+- A temporary generated macOS host app with a path dependency on
+  `seisei_flutter_intents` imported the plugin module, constructed
+  `SeiseiFlutterIntentsEngineHost`, and passed `flutter build macos`, proving
+  the native helper compiles in a real Flutter macOS app target.
 - `dart run seisei_intents:generate_apple_intents --manifest ... --out ...`
   generated an enum-backed `UpdateNoteIntent.swift` file from a temporary
   manifest, including `public enum NoteStatus: String, AppEnum`.
