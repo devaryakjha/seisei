@@ -42,6 +42,8 @@ Apple's current developer material says App Intents expose app actions and data 
 - `AppleAppIntentSourceGenerator`: a pure Dart source generator that emits
   conservative scalar and string-backed `AppEnum` Swift `AppIntent` /
   `AppShortcutsProvider` wrappers from `AppActionDefinition` JSON schema data.
+  String enum schemas can opt into static string-backed `AppEntity` wrappers
+  with `x-seisei-app-intent-kind: entity`.
 - `AppleAppIntentManifest` and `generate_apple_intents`: a repeatable
   manifest-driven source generation path for host projects.
 
@@ -59,16 +61,18 @@ The minimal native registration path now lives in the optional Swift package
 handwritten Swift `AppIntent` types, host-owned executor injection through
 `AppDependencyManager`, and host-defined `AppShortcutsProvider` /
 `AppIntentsPackage` roots. It also includes a build-time Swift source generator
-for a conservative scalar and string-enum parameter wrapper subset, including
-executor-injection initializers and dependency-free invocation payload helpers.
+for a conservative scalar, string-enum, and static string-backed entity
+parameter wrapper subset, including executor-injection initializers and
+dependency-free invocation payload helpers.
 
 Later native work can still:
 
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
 - bridge `perform()` calls into Flutter/Dart through a host app runtime path;
-- map App Entities and richer platform-specific parameters to future typed
-  Seisei action/entity contracts when needed;
+- map dynamic App Entities, host-backed entity queries, and richer
+  platform-specific parameters to future typed Seisei action/entity contracts
+  when needed;
 - keep `seisei_intents` as the source of generic Dart-side behavior.
 
 ## Acceptance Criteria
@@ -80,6 +84,8 @@ Later native work can still:
 - Manifest generation tests cover JSON-compatible action manifests and generated
   Swift file output, including string enum parameter generation and generated
   invocation helper wiring.
+- Static string-backed entity generation is opt-in and covered by Dart source
+  generation tests plus Swift compile tests.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

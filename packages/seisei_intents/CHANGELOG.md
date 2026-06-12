@@ -1,3 +1,8 @@
+## 0.1.0-dev.5
+
+- Add opt-in generated Apple `AppEntity` support for static string-backed
+  entity parameters.
+
 ## 0.1.0-dev.4
 
 - Generate App Intent wrappers with executor-injection initializers,

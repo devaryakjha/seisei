@@ -214,6 +214,48 @@ void main() {
     expect(source, contains('"status": .string(status.rawValue)'));
   });
 
+  test('generates AppEntity Swift source from string entity schemas', () {
+    const action = AppActionDefinition(
+      id: 'open_note',
+      title: 'Open Note',
+      description: 'Open a note.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'note': {
+            'type': 'string',
+            'title': 'Note',
+            'enum': ['note-1'],
+            'x-seisei-app-intent-kind': 'entity',
+            'x-seisei-app-intent-typeName': 'NoteEntity',
+            'x-seisei-app-intent-displayName': 'Note',
+            'x-seisei-app-intent-enumTitles': {'note-1': 'Roadmap'},
+          },
+        },
+        'required': ['note'],
+      },
+    );
+
+    final source = AppleAppIntentSourceGenerator.sourceForAction(
+      action,
+      typeName: 'OpenNoteIntent',
+    );
+
+    expect(
+      source,
+      contains('public enum NoteEntity: String, AppEntity, AppEnum {'),
+    );
+    expect(
+      source,
+      contains(
+        'public typealias DefaultQuery = _RawRepresentableStringQuery<NoteEntity>',
+      ),
+    );
+    expect(source, contains('case note1 = "note-1"'));
+    expect(source, contains('public var note: NoteEntity'));
+    expect(source, contains('"note": .string(note.rawValue)'));
+  });
+
   test('derives Swift intent type names from app action ids', () {
     const action = AppActionDefinition(
       id: 'summarize_note',

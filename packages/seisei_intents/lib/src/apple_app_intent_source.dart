@@ -353,16 +353,35 @@ final class _AppleAppIntentParameter {
       return null;
     }
 
+    final conformance = switch (enumDefinition.kind) {
+      _AppleAppIntentEnumKind.appEnum => 'AppEnum',
+      _AppleAppIntentEnumKind.appEntity => 'AppEntity, AppEnum',
+    };
     final lines = <String>[
-      '$accessLevel enum ${enumDefinition.typeName}: String, AppEnum {',
-      '    $accessLevel static var typeDisplayRepresentation = '
-          'TypeDisplayRepresentation(name: '
-          '${_swiftStringLiteral(enumDefinition.displayName)})',
-      '',
-      '    $accessLevel static var caseDisplayRepresentations: '
-          '[${enumDefinition.typeName}: DisplayRepresentation] {',
-      '        [',
+      '$accessLevel enum ${enumDefinition.typeName}: String, $conformance {',
     ];
+
+    if (enumDefinition.kind == _AppleAppIntentEnumKind.appEntity) {
+      lines
+        ..add(
+          '    $accessLevel typealias DefaultQuery = '
+          '_RawRepresentableStringQuery<${enumDefinition.typeName}>',
+        )
+        ..add('');
+    }
+
+    lines
+      ..add(
+        '    $accessLevel static var typeDisplayRepresentation = '
+        'TypeDisplayRepresentation(name: '
+        '${_swiftStringLiteral(enumDefinition.displayName)})',
+      )
+      ..add('')
+      ..add(
+        '    $accessLevel static var caseDisplayRepresentations: '
+        '[${enumDefinition.typeName}: DisplayRepresentation] {',
+      )
+      ..add('        [');
 
     for (final enumCase in enumDefinition.cases) {
       lines.add(
@@ -391,11 +410,18 @@ final class _AppleAppIntentEnumDefinition {
     required this.typeName,
     required this.displayName,
     required this.cases,
+    required this.kind,
   });
 
   final String typeName;
   final String displayName;
   final List<_AppleAppIntentEnumCase> cases;
+  final _AppleAppIntentEnumKind kind;
+}
+
+enum _AppleAppIntentEnumKind {
+  appEnum,
+  appEntity;
 }
 
 final class _AppleAppIntentEnumCase {
@@ -443,6 +469,17 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
     _ => _humanizeParameterName(parameterName),
   };
 
+  final kind = switch (propertySchema['x-seisei-app-intent-kind']) {
+    'entity' => _AppleAppIntentEnumKind.appEntity,
+    null || 'enum' => _AppleAppIntentEnumKind.appEnum,
+    _ => () {
+        issues.add(
+          '$parameterName: x-seisei-app-intent-kind must be enum or entity',
+        );
+        return _AppleAppIntentEnumKind.appEnum;
+      }(),
+  };
+
   final titleMap = switch (propertySchema['x-seisei-app-intent-enumTitles']) {
     final Map value => value,
     _ => const {},
@@ -474,6 +511,7 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
     typeName: typeName,
     displayName: displayName,
     cases: List.unmodifiable(cases),
+    kind: kind,
   );
 }
 

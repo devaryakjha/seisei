@@ -6,9 +6,10 @@ This package maps `ToolDefinition` and `ToolCall` from `seisei` into host-app ac
 
 Apple App Intents remain native Swift source processed at build time. This
 package defines the generic contract and can generate conservative scalar and
-string-enum Swift wrapper source from `AppActionDefinition` data. The optional
-`packages/seisei_apple_intents` Swift package provides the runtime helper types
-used by handwritten or generated App Intents.
+string-enum Swift wrapper source from `AppActionDefinition` data. String enum
+schemas can also opt into static string-backed `AppEntity` wrappers for entity
+selection parameters. The optional `packages/seisei_apple_intents` Swift package
+provides the runtime helper types used by handwritten or generated App Intents.
 
 ```dart
 const action = AppActionDefinition(
@@ -31,8 +32,17 @@ const action = AppActionDefinition(
           'published': 'Published',
         },
       },
+      'note': {
+        'type': 'string',
+        'title': 'Note',
+        'enum': ['note-1'],
+        'x-seisei-app-intent-kind': 'entity',
+        'x-seisei-app-intent-typeName': 'NoteEntity',
+        'x-seisei-app-intent-displayName': 'Note',
+        'x-seisei-app-intent-enumTitles': {'note-1': 'Roadmap'},
+      },
     },
-    'required': ['title', 'status'],
+    'required': ['title', 'status', 'note'],
   },
 );
 
@@ -48,9 +58,9 @@ final source = AppleAppIntentSourceGenerator.sourceForAction(
 
 Write the generated Swift source into an app, extension, framework, or Swift
 package target that Xcode compiles and indexes. The generator intentionally
-supports only `string`, `integer`, `number`, `boolean`, and string `enum` JSON
-schema parameters, with unsupported shapes reported as
-`AppleAppIntentSourceException`.
+supports only `string`, `integer`, `number`, `boolean`, string `enum`, and
+opt-in static string-backed `AppEntity` JSON schema parameters, with unsupported
+shapes reported as `AppleAppIntentSourceException`.
 
 Generated wrappers include:
 
@@ -81,9 +91,17 @@ For a project-level generation step, create a manifest:
             "enum": ["draft", "published"],
             "x-seisei-app-intent-typeName": "NoteStatus",
             "x-seisei-app-intent-displayName": "Note Status"
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "enum": ["note-1"],
+            "x-seisei-app-intent-kind": "entity",
+            "x-seisei-app-intent-typeName": "NoteEntity",
+            "x-seisei-app-intent-displayName": "Note"
           }
         },
-        "required": ["status"]
+        "required": ["status", "note"]
       },
       "shortcut": {
         "phrases": ["Create a note in \\(.applicationName)"],

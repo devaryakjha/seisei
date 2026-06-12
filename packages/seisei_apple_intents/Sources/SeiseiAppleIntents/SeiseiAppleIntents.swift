@@ -123,6 +123,11 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
         cases: [SeiseiGeneratedAppIntentEnumCase],
         displayName: String
     )
+    case stringEntity(
+        typeName: String,
+        cases: [SeiseiGeneratedAppIntentEntityCase],
+        displayName: String
+    )
 
     fileprivate var swiftType: String {
         switch self {
@@ -134,7 +139,8 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
             return "Double"
         case .boolean:
             return "Bool"
-        case let .stringEnum(typeName, _, _):
+        case let .stringEnum(typeName, _, _),
+             let .stringEntity(typeName, _, _):
             return typeName
         }
     }
@@ -149,13 +155,29 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
             return ".number(\(name))"
         case .boolean:
             return ".boolean(\(name))"
-        case .stringEnum:
+        case .stringEnum, .stringEntity:
             return ".string(\(name).rawValue)"
         }
     }
 }
 
 public struct SeiseiGeneratedAppIntentEnumCase: Sendable, Equatable {
+    public init(
+        name: String,
+        rawValue: String,
+        title: String
+    ) {
+        self.name = name
+        self.rawValue = rawValue
+        self.title = title
+    }
+
+    public let name: String
+    public let rawValue: String
+    public let title: String
+}
+
+public struct SeiseiGeneratedAppIntentEntityCase: Sendable, Equatable {
     public init(
         name: String,
         rawValue: String,
@@ -351,17 +373,44 @@ private extension SeiseiGeneratedAppIntentParameter {
     }
 
     func enumSource(accessLevel: String) -> String? {
-        guard case let .stringEnum(typeName, cases, displayName) = type else {
+        let typeName: String
+        let cases: [(name: String, rawValue: String, title: String)]
+        let displayName: String
+        let conformance: String
+        let includeEntityDefaultQuery: Bool
+
+        switch type {
+        case let .stringEnum(enumTypeName, enumCases, enumDisplayName):
+            typeName = enumTypeName
+            cases = enumCases.map { ($0.name, $0.rawValue, $0.title) }
+            displayName = enumDisplayName
+            conformance = "AppEnum"
+            includeEntityDefaultQuery = false
+        case let .stringEntity(entityTypeName, entityCases, entityDisplayName):
+            typeName = entityTypeName
+            cases = entityCases.map { ($0.name, $0.rawValue, $0.title) }
+            displayName = entityDisplayName
+            conformance = "AppEntity, AppEnum"
+            includeEntityDefaultQuery = true
+        default:
             return nil
         }
 
         var lines = [
-            "\(accessLevel) enum \(typeName): String, AppEnum {",
+            "\(accessLevel) enum \(typeName): String, \(conformance) {",
+        ]
+
+        if includeEntityDefaultQuery {
+            lines.append("    \(accessLevel) typealias DefaultQuery = _RawRepresentableStringQuery<\(typeName)>")
+            lines.append("")
+        }
+
+        lines.append(contentsOf: [
             "    \(accessLevel) static var typeDisplayRepresentation = TypeDisplayRepresentation(name: \(displayName.swiftStringLiteral))",
             "",
             "    \(accessLevel) static var caseDisplayRepresentations: [\(typeName): DisplayRepresentation] {",
             "        [",
-        ]
+        ])
 
         for enumCase in cases {
             lines.append("            .\(enumCase.name): \(enumCase.title.swiftStringLiteral),")

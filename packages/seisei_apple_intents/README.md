@@ -9,8 +9,8 @@ This package is the smallest real native registration path that fits Seisei:
 - `SeiseiAppleIntents` only provides payload, executor, and dependency helpers
   so those intents can forward work into app-owned Seisei handlers.
 - Apps that want generated wrappers can use the source generator to emit
-  build-time Swift source for a conservative scalar and string-enum parameter
-  subset.
+  build-time Swift source for a conservative scalar, string-enum, and static
+  string-backed AppEntity parameter subset.
 
 ## What It Includes
 
@@ -29,8 +29,9 @@ This package is the smallest real native registration path that fits Seisei:
 - register intents dynamically from Dart or Flutter
 - replace app-owned `AppIntent`, `AppShortcutsProvider`, or
   `AppIntentsPackage` source
-- model App Entities or rich platform-specific parameters beyond generated
-  string-backed App Enums
+- model dynamic App Entities, app data queries, or rich platform-specific
+  parameters beyond generated string-backed App Enums and static string-backed
+  AppEntity wrappers
 - add PCC or Tagflow behavior
 
 ## Example
@@ -87,7 +88,8 @@ SeiseiAppIntentDependencies.configure(
 )
 ```
 
-Generate build-time Swift source for a scalar and string-enum wrapper:
+Generate build-time Swift source for scalar, string-enum, and static
+string-backed entity wrappers:
 
 ```swift
 let source = SeiseiAppIntentSourceGenerator.source(
@@ -120,6 +122,21 @@ let source = SeiseiAppIntentSourceGenerator.source(
                         ),
                     ],
                     displayName: "Note Status"
+                )
+            ),
+            SeiseiGeneratedAppIntentParameter(
+                name: "note",
+                title: "Note",
+                type: .stringEntity(
+                    typeName: "NoteEntity",
+                    cases: [
+                        SeiseiGeneratedAppIntentEntityCase(
+                            name: "roadmap",
+                            rawValue: "note-1",
+                            title: "Roadmap"
+                        ),
+                    ],
+                    displayName: "Note"
                 )
             ),
         ],

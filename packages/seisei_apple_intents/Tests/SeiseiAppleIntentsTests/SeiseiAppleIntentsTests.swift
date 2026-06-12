@@ -149,6 +149,41 @@ struct SeiseiAppleIntentsTests {
         #expect(source.contains("\"status\": .string(status.rawValue)"))
     }
 
+    @Test("source generator emits AppEntity wrappers for string entity parameters")
+    func sourceGeneratorEmitsAppEntityWrapper() {
+        let source = SeiseiAppIntentSourceGenerator.source(
+            for: SeiseiGeneratedAppIntentDefinition(
+                typeName: "OpenNoteIntent",
+                actionID: "open_note",
+                title: "Open Note",
+                description: "Open a note.",
+                parameters: [
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "note",
+                        title: "Note",
+                        type: .stringEntity(
+                            typeName: "NoteEntity",
+                            cases: [
+                                SeiseiGeneratedAppIntentEntityCase(
+                                    name: "roadmap",
+                                    rawValue: "note-1",
+                                    title: "Roadmap"
+                                ),
+                            ],
+                            displayName: "Note"
+                        )
+                    ),
+                ]
+            )
+        )
+
+        #expect(source.contains("public enum NoteEntity: String, AppEntity, AppEnum {"))
+        #expect(source.contains("public typealias DefaultQuery = _RawRepresentableStringQuery<NoteEntity>"))
+        #expect(source.contains("case roadmap = \"note-1\""))
+        #expect(source.contains("public var note: NoteEntity"))
+        #expect(source.contains("\"note\": .string(note.rawValue)"))
+    }
+
     @Test("generated-style AppIntent wrappers compile")
     func generatedStyleIntentCompiles() {
         let intent = GeneratedStyleCreateNoteIntent(
@@ -193,6 +228,23 @@ struct SeiseiAppleIntentsTests {
         )
 
         #expect(intent.status == .published)
+    }
+
+    @Test("generated-style AppIntent entity wrappers compile")
+    func generatedStyleEntityIntentCompiles() {
+        let intent = GeneratedStyleOpenNoteIntent(
+            note: .roadmap,
+            executor: SeiseiAppIntentExecutor { invocation in
+                #expect(invocation.id == "open_note")
+                #expect(invocation.arguments["note"] == .string("note-1"))
+                return SeiseiAppIntentResult()
+            }
+        )
+
+        let invocation = intent.seiseiInvocation()
+
+        #expect(intent.note == .roadmap)
+        #expect(invocation.arguments["note"] == .string("note-1"))
     }
 
     @Test("generated-style shortcut providers compile")
@@ -331,6 +383,20 @@ private enum GeneratedStyleNoteStatus: String, AppEnum {
     case published = "published"
 }
 
+private enum GeneratedStyleNoteEntity: String, AppEntity, AppEnum {
+    typealias DefaultQuery = _RawRepresentableStringQuery<GeneratedStyleNoteEntity>
+
+    static var typeDisplayRepresentation = TypeDisplayRepresentation(name: "Note")
+
+    static var caseDisplayRepresentations: [GeneratedStyleNoteEntity: DisplayRepresentation] {
+        [
+            .roadmap: "Roadmap",
+        ]
+    }
+
+    case roadmap = "note-1"
+}
+
 private struct GeneratedStyleUpdateNoteIntent: AppIntent {
     static let title: LocalizedStringResource = "Update Note"
     static let description = IntentDescription("Update note status.")
@@ -359,6 +425,38 @@ private struct GeneratedStyleUpdateNoteIntent: AppIntent {
         SeiseiAppIntentBridge.invocation(
             actionID: "update_note",
             arguments: ["status": .string(status.rawValue)]
+        )
+    }
+}
+
+private struct GeneratedStyleOpenNoteIntent: AppIntent {
+    static let title: LocalizedStringResource = "Open Note"
+    static let description = IntentDescription("Open a note.")
+
+    @Parameter(title: "Note")
+    var note: GeneratedStyleNoteEntity
+
+    @AppDependency
+    private var executor: SeiseiAppIntentExecutor
+
+    init() {
+        self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: "open_note"))
+    }
+
+    init(note: GeneratedStyleNoteEntity, executor: SeiseiAppIntentExecutor) {
+        self.note = note
+        self._executor = AppDependency(default: executor)
+    }
+
+    func perform() async throws -> some IntentResult {
+        _ = try await executor.run(seiseiInvocation())
+        return .result()
+    }
+
+    func seiseiInvocation() -> SeiseiAppIntentInvocation {
+        SeiseiAppIntentBridge.invocation(
+            actionID: "open_note",
+            arguments: ["note": .string(note.rawValue)]
         )
     }
 }

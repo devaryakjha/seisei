@@ -116,15 +116,16 @@ Deliver:
 
 Merged into `main` as generic pure-Dart app-action contracts. Native Swift App
 Intents registration later shipped as optional Swift helpers, and the native
-package now includes a build-time Swift source generator for scalar and string
-enum wrapper source. `seisei_intents` later added pure Dart generation of the
-same scalar and string-enum Swift wrapper source from `AppActionDefinition`
-JSON schema data, then added a manifest-driven executable that writes generated
-Swift files for host targets. Generated wrappers now include executor-injection
-initializers and dependency-free `seiseiInvocation()` helpers so host apps can
-test payload construction outside Apple's App Intents runtime. A full Flutter
-runtime bridge from Apple's App Intents runtime and richer App
-Entity/platform-specific wrappers remain future plugin/native work.
+package now includes a build-time Swift source generator for scalar,
+string-enum, and static string-backed entity wrapper source. `seisei_intents`
+later added pure Dart generation of the same Swift wrapper source from
+`AppActionDefinition` JSON schema data, then added a manifest-driven executable
+that writes generated Swift files for host targets. Generated wrappers now
+include executor-injection initializers and dependency-free
+`seiseiInvocation()` helpers so host apps can test payload construction outside
+Apple's App Intents runtime. A full Flutter runtime bridge from Apple's App
+Intents runtime, dynamic host-backed App Entity queries, and richer
+platform-specific wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
 
@@ -207,9 +208,9 @@ after the nested-object, verified-constraint, field-level union, explicit-null
 union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
-- Flutter runtime invocation from generated App Intent wrappers and richer App
-  Entity or platform-specific wrappers above the scalar/string-enum source
-  generators
+- Flutter runtime invocation from generated App Intent wrappers, dynamic
+  host-backed App Entity queries, and richer platform-specific wrappers above
+  the scalar/string-enum/static-entity source generators
 
 ## Merge Order
 
