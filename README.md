@@ -87,7 +87,7 @@ context`. Treat `tool/local_pcc_interactive_smoke.zsh` as a real machine
 capability probe, but not as proof that Seisei's current Dart backend can use
 PCC. The current public Swift `FoundationModels` SDK still exposes
 `LanguageModelSession(model: SystemLanguageModel)` only, so Seisei does not
-claim native PCC support for Flutter/macOS hosts.
+claim native PCC support for Flutter Apple-platform hosts.
 For a supported Flutter host path that exercises the native `seisei_apple`
 bridge, see `packages/seisei_apple/README.md`. The offline CLI example in
 `examples/basic_cli` intentionally stays provider-free and does not call AFM.

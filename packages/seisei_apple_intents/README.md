@@ -42,8 +42,9 @@ This package is the smallest real native registration path that fits Seisei:
 - register intents dynamically from Dart or Flutter
 - replace app-owned `AppIntent`, `AppShortcutsProvider`, or
   `AppIntentsPackage` source
-- start, retain, or attach a Flutter engine from an App Intents extension; host
-  apps still own runtime executor and lifecycle wiring
+- start, retain, or attach a Flutter engine itself; `seisei_flutter_intents`
+  provides iOS and macOS headless engine helpers for host-owned targets, while
+  host apps and extensions still own runtime executor and lifecycle wiring
 - model rich platform-specific parameters beyond generated scalar arrays,
   string-backed App Enums, static string-backed AppEntity wrappers, and
   host-backed string AppEntity query wrappers
@@ -111,7 +112,9 @@ SeiseiFlutterIntentsDependencies.configure { method, arguments in
     // Send `method` and `arguments` over a Flutter method channel named
     // SeiseiFlutterIntentsWire.channelName.
     // Return the decoded method-channel result.
-    // The host still owns engine startup, attachment, and lifetime.
+    // The host can use seisei_flutter_intents' iOS/macOS engine host helper,
+    // or another app-owned engine. It still owns startup, attachment, and
+    // lifetime.
 }
 ```
 
@@ -119,7 +122,9 @@ The helper registers both the `SeiseiAppIntentExecutor` for generated or
 handwritten action `perform()` calls and the `SeiseiAppEntityQueryExecutor` for
 host-backed entity queries. It does not create, retain, or attach a Flutter
 engine, and it does not make background execution automatic; that remains an
-explicit host policy.
+explicit host policy. Use `SeiseiFlutterIntentsEngineHost` from
+`seisei_flutter_intents` when an iOS or macOS host target should own a headless
+Flutter engine for these calls.
 
 Generate build-time Swift source for scalar, scalar-array, string-enum, and
 static or host-backed string entity wrappers:

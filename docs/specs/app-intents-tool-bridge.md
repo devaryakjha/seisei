@@ -57,7 +57,10 @@ The package depends on `seisei` only.
 `seisei_flutter_intents` owns the optional Flutter runtime adapter over this
 contract. It registers a Dart method-channel handler for generated/native App
 Intent calls when a Flutter engine is running, including action invocation and
-host-backed entity query resolution.
+host-backed entity query resolution. Its iOS and macOS native helpers can start
+and retain a headless Flutter engine for app-owned targets, but host apps and
+extensions still own target wiring, assets, plugin registration, and background
+execution policy.
 
 `SeiseiAppleIntents` owns the matching Swift-side method-channel wire helpers.
 Its invocation, result, entity-query invocation, and entity-resolution types can
@@ -91,7 +94,8 @@ Later native work can still:
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
 - wire generated Swift `perform()` calls to `seisei_flutter_intents` from a
-  host app or extension lifecycle that owns Flutter engine availability;
+  host app or extension lifecycle that owns Flutter engine availability and
+  includes the required Flutter assets;
 - add richer platform-specific parameters above the current scalar,
   scalar-array, string-enum, static string entity, and host-backed string entity
   contracts;
