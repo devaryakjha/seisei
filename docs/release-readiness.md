@@ -148,6 +148,11 @@ Last verified on 2026-06-12 from `main`:
   `SeiseiFlutterIntentsEngineHost`, and passed
   `flutter build ios --simulator --no-codesign`, proving the native helper
   compiles in a real Flutter iOS app target.
+- `tool/ios_app_intents_extension_smoke.zsh` passed locally. It emitted the
+  `seisei_flutter_intents` iOS Swift module in application-extension mode
+  against Flutter's extension-safe iOS engine artifact, then typechecked an
+  `AppIntentsExtension` source shape that imports the module and constructs
+  `SeiseiFlutterIntentsEngineHost`.
 - `dart run seisei_intents:generate_apple_intents --manifest ... --out ...`
   generated an enum-backed `UpdateNoteIntent.swift` file from a temporary
   manifest, including `public enum NoteStatus: String, AppEnum`.

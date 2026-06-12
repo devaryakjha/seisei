@@ -3,6 +3,7 @@ import 'dart:io';
 Future<void> main(List<String> args) async {
   final includeLocalAfm = args.contains('--local-afm');
   final includeLocalPcc = args.contains('--local-pcc');
+  final includeIosExtension = args.contains('--ios-app-intents-extension');
   final includeRelease = args.contains('--release');
   final root = Directory.current.path;
 
@@ -126,6 +127,18 @@ Future<void> main(List<String> args) async {
         failureHint: _pccContextFailureHint,
       ),
     ]);
+  }
+
+  if (includeIosExtension) {
+    stdout.writeln(
+      '\niOS App Intents extension validation typechecks '
+      '`seisei_flutter_intents` against Flutter\'s extension-safe iOS engine '
+      'artifact in Swift application-extension mode. This is a compile smoke, '
+      'not a packaged host extension runtime test.',
+    );
+    checks.add(
+      _Check(root, ['tool/ios_app_intents_extension_smoke.zsh']),
+    );
   }
 
   final releaseChecks = <_Check>[

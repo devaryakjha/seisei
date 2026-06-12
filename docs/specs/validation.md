@@ -76,6 +76,32 @@ Passing `fm` commands in an interactive terminal do not override a failing
 `--local-pcc` run: the validation target is the non-interactive Seisei/Dart
 execution context that the script actually uses.
 
+The local iOS App Intents extension smoke is:
+
+```sh
+PATH=/Users/arya/fvm/cache.git/bin:$PATH tool/ios_app_intents_extension_smoke.zsh
+```
+
+It can also be run through the validator:
+
+```sh
+PATH=/Users/arya/fvm/cache.git/bin:$PATH dart tool/validate.dart --ios-app-intents-extension
+```
+
+That script uses `xcrun swiftc` with the iPhoneSimulator SDK, Flutter's
+`ios/extension_safe/Flutter.xcframework`, and Swift `-application-extension`
+mode. It emits the `seisei_flutter_intents` iOS Swift module from package
+source, then typechecks an `AppIntentsExtension` source file that imports the
+module and constructs `SeiseiFlutterIntentsEngineHost`.
+
+This proves the iOS helper is application-extension typecheckable against
+Flutter's extension-safe engine artifact. It does not package a complete host
+extension target, copy Flutter assets into that target, run App Intents through
+Apple's extension runtime, or prove that starting a Flutter engine is acceptable
+for every App Intents execution context. Host apps and extensions still own
+target wiring, assets, plugin registration, entitlements, and background
+execution policy.
+
 Release dry-runs are intentionally a readiness gate, not part of normal validation:
 
 ```sh
