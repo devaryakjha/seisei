@@ -152,7 +152,10 @@ Last verified on 2026-06-12 from `main`:
   `seisei_flutter_intents` iOS Swift module in application-extension mode
   against Flutter's extension-safe iOS engine artifact, then typechecked an
   `AppIntentsExtension` source shape that imports the module and constructs
-  `SeiseiFlutterIntentsEngineHost`.
+  `SeiseiFlutterIntentsEngineHost`. It also generated a temporary iOS host app,
+  built an embedded `SeiseiSmokeExtension.appex` target that compiles the real
+  helper source and links Flutter's extension-safe iOS engine, validated the
+  embedded extension binary, and verified Xcode produced `Metadata.appintents`.
 - `dart run seisei_intents:generate_apple_intents --manifest ... --out ...`
   generated an enum-backed `UpdateNoteIntent.swift` file from a temporary
   manifest, including `public enum NoteStatus: String, AppEnum`.

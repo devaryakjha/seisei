@@ -131,10 +131,11 @@ Future<void> main(List<String> args) async {
 
   if (includeIosExtension) {
     stdout.writeln(
-      '\niOS App Intents extension validation typechecks '
+      '\niOS App Intents extension validation typechecks and packages '
       '`seisei_flutter_intents` against Flutter\'s extension-safe iOS engine '
-      'artifact in Swift application-extension mode. This is a compile smoke, '
-      'not a packaged host extension runtime test.',
+      'artifact in Swift application-extension mode. It builds a temporary '
+      'iOS host app with an embedded App Intents extension, but it does not '
+      'launch the extension process.',
     );
     checks.add(
       _Check(root, ['tool/ios_app_intents_extension_smoke.zsh']),

@@ -80,13 +80,16 @@ that a Flutter engine is available from every App Intents execution context.
 Host apps still own their Swift `AppIntent` source and foreground/background
 execution policy.
 
-For a local compile smoke of the iOS helper in Swift application-extension mode
-against Flutter's extension-safe engine artifact, run:
+For a local smoke of the iOS helper in Swift application-extension mode against
+Flutter's extension-safe engine artifact, run:
 
 ```sh
 PATH=/Users/arya/fvm/cache.git/bin:$PATH tool/ios_app_intents_extension_smoke.zsh
 ```
 
-That smoke typechecks an `AppIntentsExtension` source shape. It does not package
-a full host extension target or prove runtime engine startup inside Apple's App
-Intents extension process.
+That smoke typechecks an `AppIntentsExtension` source shape, then builds a
+temporary iOS host app with an embedded App Intents extension that compiles the
+real helper source, links Flutter's extension-safe iOS engine, validates the
+embedded extension binary, and verifies `Metadata.appintents`. It does not
+launch Apple's App Intents extension process or prove runtime Flutter engine
+startup.

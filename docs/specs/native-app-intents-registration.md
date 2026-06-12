@@ -130,9 +130,10 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   wiring and must opt into background execution policy explicitly.
 - `tool/ios_app_intents_extension_smoke.zsh` proves the iOS helper typechecks in
   Swift application-extension mode against Flutter's extension-safe iOS engine
-  artifact and an `AppIntentsExtension` source shape. It does not package a full
-  extension target or prove runtime engine startup inside Apple's App Intents
-  extension process.
+  artifact and then builds a temporary iOS host app with an embedded App Intents
+  extension target that compiles the real helper source, links the
+  extension-safe engine, and contains `Metadata.appintents`. It does not prove
+  runtime engine startup inside Apple's App Intents extension process.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
   generators cover scalar string, integer, number, boolean, scalar arrays,

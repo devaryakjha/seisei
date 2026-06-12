@@ -88,19 +88,28 @@ It can also be run through the validator:
 PATH=/Users/arya/fvm/cache.git/bin:$PATH dart tool/validate.dart --ios-app-intents-extension
 ```
 
-That script uses `xcrun swiftc` with the iPhoneSimulator SDK, Flutter's
+This local smoke requires `xcodegen`, `xcodebuild`, `xcrun`, and a Flutter SDK
+with the iOS extension-safe engine artifact available.
+
+That script first uses `xcrun swiftc` with the iPhoneSimulator SDK, Flutter's
 `ios/extension_safe/Flutter.xcframework`, and Swift `-application-extension`
 mode. It emits the `seisei_flutter_intents` iOS Swift module from package
 source, then typechecks an `AppIntentsExtension` source file that imports the
 module and constructs `SeiseiFlutterIntentsEngineHost`.
 
-This proves the iOS helper is application-extension typecheckable against
-Flutter's extension-safe engine artifact. It does not package a complete host
-extension target, copy Flutter assets into that target, run App Intents through
-Apple's extension runtime, or prove that starting a Flutter engine is acceptable
-for every App Intents execution context. Host apps and extensions still own
-target wiring, assets, plugin registration, entitlements, and background
-execution policy.
+It then uses XcodeGen and `xcodebuild` to generate a temporary iOS host app
+with an embedded App Intents extension target. The extension target compiles the
+real `seisei_flutter_intents` iOS Swift source in application-extension mode,
+links Flutter's extension-safe iOS engine, packages
+`SeiseiSmokeHost.app/PlugIns/SeiseiSmokeExtension.appex`, and verifies that
+Xcode extracted `Metadata.appintents`.
+
+This proves the iOS helper is packageable in an embedded App Intents extension
+against Flutter's extension-safe engine artifact. It does not copy a real
+Flutter app's assets into that target, run App Intents through Apple's extension
+runtime, or prove that starting a Flutter engine is acceptable for every App
+Intents execution context. Host apps and extensions still own target wiring,
+assets, plugin registration, entitlements, and background execution policy.
 
 Release dry-runs are intentionally a readiness gate, not part of normal validation:
 
