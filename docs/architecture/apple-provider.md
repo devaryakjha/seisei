@@ -52,8 +52,10 @@ The current native bridge is a compileable Flutter plugin scaffold for iOS and m
   FoundationModels schemas. Streaming uses `streamResponse(to:)` and
   `streamResponse(to:schema:)` behind a Flutter event channel.
 - Availability guard: FoundationModels requires iOS/macOS `26.0` or newer.
-- PCC availability is reported as false because no compileable public native PCC
-  API path has been verified.
+- Native method-channel PCC availability is reported as false because no
+  compileable public native PCC API path has been verified. Direct `fm` PCC
+  availability is tracked separately because it is launch-context sensitive on
+  this machine.
 
 ## Capability Mapping
 

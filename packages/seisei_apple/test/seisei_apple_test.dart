@@ -60,7 +60,12 @@ void main() {
       final availability = await provider.availability();
 
       expect(availability.isAvailable, isFalse);
-      expect(availability.reason, contains('PCC mode is unavailable'));
+      expect(
+        availability.reason,
+        contains(
+          'PCC mode is unavailable in the current Seisei backend context',
+        ),
+      );
       expect(
         availability.reason,
         contains('No verified public native FoundationModels PCC API path'),
