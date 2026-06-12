@@ -19,7 +19,12 @@ This package is the smallest real native registration path that fits Seisei:
 - `SeiseiAppIntentResult`
 - `SeiseiAppIntentExecutor`
 - `SeiseiAppIntentExecutorError`
+- `SeiseiAppEntityQueryInvocation`
+- `SeiseiAppEntityResolution`
+- `SeiseiAppEntityQueryExecutor`
+- `SeiseiAppEntityQueryExecutorError`
 - `SeiseiAppIntentDependencies.configure(...)`
+- `SeiseiAppEntityQueryDependencies.configure(...)`
 - `SeiseiAppIntentBridge.perform(...)`
 - `SeiseiAppIntentSourceGenerator.source(...)`
 
@@ -29,9 +34,11 @@ This package is the smallest real native registration path that fits Seisei:
 - register intents dynamically from Dart or Flutter
 - replace app-owned `AppIntent`, `AppShortcutsProvider`, or
   `AppIntentsPackage` source
-- model dynamic App Entities, app data queries, or rich platform-specific
-  parameters beyond generated string-backed App Enums and static string-backed
-  AppEntity wrappers
+- bridge generated App Entity queries back into Flutter automatically; host
+  apps still own the runtime executor wiring
+- model rich platform-specific parameters beyond generated string-backed App
+  Enums, static string-backed AppEntity wrappers, and host-backed string
+  AppEntity query wrappers
 - add PCC or Tagflow behavior
 
 ## Example
@@ -89,7 +96,7 @@ SeiseiAppIntentDependencies.configure(
 ```
 
 Generate build-time Swift source for scalar, string-enum, and static
-string-backed entity wrappers:
+or host-backed string entity wrappers:
 
 ```swift
 let source = SeiseiAppIntentSourceGenerator.source(
@@ -127,16 +134,10 @@ let source = SeiseiAppIntentSourceGenerator.source(
             SeiseiGeneratedAppIntentParameter(
                 name: "note",
                 title: "Note",
-                type: .stringEntity(
+                type: .hostBackedStringEntity(
                     typeName: "NoteEntity",
-                    cases: [
-                        SeiseiGeneratedAppIntentEntityCase(
-                            name: "roadmap",
-                            rawValue: "note-1",
-                            title: "Roadmap"
-                        ),
-                    ],
-                    displayName: "Note"
+                    displayName: "Note",
+                    entityTypeID: "note"
                 )
             ),
         ],
@@ -155,6 +156,26 @@ index it at build time. Generated wrappers include an executor-injection
 initializer for host tests and a `seiseiInvocation()` helper so apps can verify
 payload construction without directly calling `perform()` outside Apple's App
 Intents runtime.
+
+Host-backed generated entities use `SeiseiAppEntityQueryExecutor` for
+`entities(for:)`, `suggestedEntities()`, and `entities(matching:)`. Register it
+from app startup alongside the action executor:
+
+```swift
+SeiseiAppEntityQueryDependencies.configure(
+    executor: SeiseiAppEntityQueryExecutor { invocation in
+        // Resolve invocation.entityTypeID, invocation.mode, identifiers, or
+        // searchTerm from app-owned data.
+        return [
+            SeiseiAppEntityResolution(
+                id: "note-1",
+                title: "Roadmap",
+                subtitle: "Planning"
+            )
+        ]
+    }
+)
+```
 
 ## Validation
 

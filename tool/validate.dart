@@ -34,6 +34,11 @@ Future<void> main(List<String> args) async {
   checks.add(_Check('$root/examples/basic_cli', ['dart', 'run']));
 
   if (includeLocalAfm) {
+    stdout.writeln(
+      '\nLocal AFM validation runs real `/usr/bin/fm` system-model checks '
+      'and real Seisei provider smokes through '
+      '`packages/seisei_apple/bin/local_afm_smoke.dart`.',
+    );
     checks.addAll([
       _Check(root, ['fm', 'available', '--model', 'system']),
       _Check(root, [
@@ -83,9 +88,15 @@ Future<void> main(List<String> args) async {
 
   if (includeLocalPcc) {
     stdout.writeln(
-      '\nPCC validation runs through non-interactive Dart subprocesses. '
-      'A passing interactive PTY `fm` check does not prove this context can '
-      'use PCC.',
+      '\nPCC validation target: Seisei\'s current Dart `FmCliBackend` '
+      'subprocess context. This is a real backend smoke check, but it is not '
+      'a general machine capability probe. To prove interactive PCC access '
+      'separately, run these commands in a real terminal PTY:\n'
+      '  fm available --model pcc\n'
+      '  fm respond --model pcc --no-stream '
+      '\'Reply with exactly: seisei-pcc-ok\'\n'
+      'A passing interactive PTY `fm` check does not prove this Seisei '
+      'subprocess context can use PCC.',
     );
     checks.addAll([
       _Check(root, ['fm', 'available', '--model', 'pcc']),

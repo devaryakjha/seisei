@@ -117,15 +117,17 @@ Deliver:
 Merged into `main` as generic pure-Dart app-action contracts. Native Swift App
 Intents registration later shipped as optional Swift helpers, and the native
 package now includes a build-time Swift source generator for scalar,
-string-enum, and static string-backed entity wrapper source. `seisei_intents`
+string-enum, static string-backed entity, and host-backed string entity wrapper
+source. `seisei_intents`
 later added pure Dart generation of the same Swift wrapper source from
 `AppActionDefinition` JSON schema data, then added a manifest-driven executable
 that writes generated Swift files for host targets. Generated wrappers now
 include executor-injection initializers and dependency-free
 `seiseiInvocation()` helpers so host apps can test payload construction outside
-Apple's App Intents runtime. A full Flutter runtime bridge from Apple's App
-Intents runtime, dynamic host-backed App Entity queries, and richer
-platform-specific wrappers remain future plugin/native work.
+Apple's App Intents runtime. Host-backed generated App Entity queries later
+added a Seisei entity-query executor contract and `EntityStringQuery` wrapper
+generation. A full Flutter runtime bridge from Apple's App Intents runtime and
+richer platform-specific wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
 
@@ -170,7 +172,9 @@ string-backed `AppEnum` wrapper generation and compile tests. `seisei_intents`
 later advanced to `0.1.0-dev.1` for Dart-side scalar Swift source generation
 from generic app-action JSON schemas, to `0.1.0-dev.2` for manifest-driven
 Swift file generation and the `generate_apple_intents` executable, and to
-`0.1.0-dev.3` for string enum / AppEnum generation.
+`0.1.0-dev.3` for string enum / AppEnum generation. `seisei_intents` later
+advanced to `0.1.0-dev.5` for static string-backed AppEntity generation and to
+`0.1.0-dev.6` for host-backed string AppEntity query generation.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -208,9 +212,9 @@ after the nested-object, verified-constraint, field-level union, explicit-null
 union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
-- Flutter runtime invocation from generated App Intent wrappers, dynamic
-  host-backed App Entity queries, and richer platform-specific wrappers above
-  the scalar/string-enum/static-entity source generators
+- Flutter runtime invocation from generated App Intent wrappers and richer
+  platform-specific wrappers above the scalar/string-enum/static-entity/
+  host-backed string-entity source generators
 
 ## Merge Order
 

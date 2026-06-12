@@ -256,6 +256,55 @@ void main() {
     expect(source, contains('"note": .string(note.rawValue)'));
   });
 
+  test('generates host-backed AppEntity query source from string schemas', () {
+    const action = AppActionDefinition(
+      id: 'open_note',
+      title: 'Open Note',
+      description: 'Open a note.',
+      parameters: {
+        'type': 'object',
+        'properties': {
+          'note': {
+            'type': 'string',
+            'title': 'Note',
+            'x-seisei-app-intent-kind': 'entity',
+            'x-seisei-app-intent-query': 'host',
+            'x-seisei-app-intent-typeName': 'NoteEntity',
+            'x-seisei-app-intent-displayName': 'Note',
+            'x-seisei-app-intent-entityTypeID': 'note',
+          },
+        },
+        'required': ['note'],
+      },
+    );
+
+    final source = AppleAppIntentSourceGenerator.sourceForAction(
+      action,
+      typeName: 'OpenNoteIntent',
+    );
+
+    expect(source, contains('public struct NoteEntity: AppEntity {'));
+    expect(source, contains('public typealias DefaultQuery = NoteEntityQuery'));
+    expect(
+      source,
+      contains('public static var defaultQuery = NoteEntityQuery()'),
+    );
+    expect(
+      source,
+      contains('public struct NoteEntityQuery: EntityStringQuery {'),
+    );
+    expect(
+      source,
+      contains('private var entityExecutor: SeiseiAppEntityQueryExecutor'),
+    );
+    expect(source, contains('entityTypeID: "note"'));
+    expect(source, contains('mode: .identifiers'));
+    expect(source, contains('mode: .suggested'));
+    expect(source, contains('mode: .search'));
+    expect(source, contains('public var note: NoteEntity'));
+    expect(source, contains('"note": .string(note.id)'));
+  });
+
   test('derives Swift intent type names from app action ids', () {
     const action = AppActionDefinition(
       id: 'summarize_note',

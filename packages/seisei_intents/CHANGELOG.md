@@ -1,3 +1,8 @@
+## 0.1.0-dev.6
+
+- Add generated host-backed Apple `AppEntity` query source for string entity
+  parameters using `x-seisei-app-intent-query: host`.
+
 ## 0.1.0-dev.5
 
 - Add opt-in generated Apple `AppEntity` support for static string-backed

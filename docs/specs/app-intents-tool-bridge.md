@@ -43,7 +43,9 @@ Apple's current developer material says App Intents expose app actions and data 
   conservative scalar and string-backed `AppEnum` Swift `AppIntent` /
   `AppShortcutsProvider` wrappers from `AppActionDefinition` JSON schema data.
   String enum schemas can opt into static string-backed `AppEntity` wrappers
-  with `x-seisei-app-intent-kind: entity`.
+  with `x-seisei-app-intent-kind: entity`, and string entity schemas can opt
+  into host-backed `EntityStringQuery` wrappers with
+  `x-seisei-app-intent-query: host`.
 - `AppleAppIntentManifest` and `generate_apple_intents`: a repeatable
   manifest-driven source generation path for host projects.
 
@@ -62,17 +64,16 @@ handwritten Swift `AppIntent` types, host-owned executor injection through
 `AppDependencyManager`, and host-defined `AppShortcutsProvider` /
 `AppIntentsPackage` roots. It also includes a build-time Swift source generator
 for a conservative scalar, string-enum, and static string-backed entity
-parameter wrapper subset, including executor-injection initializers and
-dependency-free invocation payload helpers.
+or host-backed string entity parameter wrapper subset, including
+executor-injection initializers and dependency-free invocation payload helpers.
 
 Later native work can still:
 
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
 - bridge `perform()` calls into Flutter/Dart through a host app runtime path;
-- map dynamic App Entities, host-backed entity queries, and richer
-  platform-specific parameters to future typed Seisei action/entity contracts
-  when needed;
+- add richer platform-specific parameters above the current scalar,
+  string-enum, static string entity, and host-backed string entity contracts;
 - keep `seisei_intents` as the source of generic Dart-side behavior.
 
 ## Acceptance Criteria
@@ -86,6 +87,8 @@ Later native work can still:
   invocation helper wiring.
 - Static string-backed entity generation is opt-in and covered by Dart source
   generation tests plus Swift compile tests.
+- Host-backed string entity query generation is opt-in and covered by Dart
+  source generation tests plus Swift compile tests.
 - Core `seisei` remains provider/platform-neutral.
 - README and validation docs describe the current minimal native registration
   path and the remaining future work.

@@ -335,11 +335,16 @@ final class _AppleAppIntentParameter {
   String get initializerParameter => '$name: $swiftDeclarationType';
 
   String get argumentExpression {
+    final enumDefinition = this.enumDefinition;
     if (enumDefinition != null) {
+      final valueAccessor =
+          enumDefinition.kind == _AppleAppIntentEnumKind.hostBackedAppEntity
+              ? 'id'
+              : 'rawValue';
       if (isRequired) {
-        return '.string($name.rawValue)';
+        return '.string($name.$valueAccessor)';
       }
-      return '$name.map { .string(${r'$0'}.rawValue) } ?? .null';
+      return '$name.map { .string(${r'$0'}.$valueAccessor) } ?? .null';
     }
     if (isRequired) {
       return type.invocationValueExpression(name);
@@ -356,7 +361,11 @@ final class _AppleAppIntentParameter {
     final conformance = switch (enumDefinition.kind) {
       _AppleAppIntentEnumKind.appEnum => 'AppEnum',
       _AppleAppIntentEnumKind.appEntity => 'AppEntity, AppEnum',
+      _AppleAppIntentEnumKind.hostBackedAppEntity => null,
     };
+    if (enumDefinition.kind == _AppleAppIntentEnumKind.hostBackedAppEntity) {
+      return _hostBackedEntitySource(accessLevel, enumDefinition);
+    }
     final lines = <String>[
       '$accessLevel enum ${enumDefinition.typeName}: String, $conformance {',
     ];
@@ -403,6 +412,103 @@ final class _AppleAppIntentParameter {
     lines.add('}');
     return lines.join('\n');
   }
+
+  String _hostBackedEntitySource(
+    String accessLevel,
+    _AppleAppIntentEnumDefinition enumDefinition,
+  ) {
+    final typeName = enumDefinition.typeName;
+    final queryTypeName = '${typeName}Query';
+    final entityTypeID = enumDefinition.entityTypeID!;
+    return [
+      '$accessLevel struct $typeName: AppEntity {',
+      '    $accessLevel typealias DefaultQuery = $queryTypeName',
+      '',
+      '    $accessLevel static var typeDisplayRepresentation = '
+          'TypeDisplayRepresentation(name: '
+          '${_swiftStringLiteral(enumDefinition.displayName)})',
+      '    $accessLevel static var defaultQuery = $queryTypeName()',
+      '',
+      '    $accessLevel let id: String',
+      '    $accessLevel let title: String',
+      '    $accessLevel let subtitle: String?',
+      '    $accessLevel let metadata: [String: SeiseiAppIntentValue]',
+      '',
+      '    $accessLevel var displayRepresentation: DisplayRepresentation {',
+      '        if let subtitle {',
+      '            return DisplayRepresentation(',
+      '                title: LocalizedStringResource(stringLiteral: title),',
+      '                subtitle: LocalizedStringResource(stringLiteral: subtitle)',
+      '            )',
+      '        }',
+      '        return DisplayRepresentation(title: LocalizedStringResource(stringLiteral: title))',
+      '    }',
+      '',
+      '    $accessLevel init(id: String, title: String, subtitle: String? = nil, metadata: [String: SeiseiAppIntentValue] = [:]) {',
+      '        self.id = id',
+      '        self.title = title',
+      '        self.subtitle = subtitle',
+      '        self.metadata = metadata',
+      '    }',
+      '',
+      '    $accessLevel init(resolution: SeiseiAppEntityResolution) {',
+      '        self.init(',
+      '            id: resolution.id,',
+      '            title: resolution.title,',
+      '            subtitle: resolution.subtitle,',
+      '            metadata: resolution.metadata',
+      '        )',
+      '    }',
+      '}',
+      '',
+      '$accessLevel struct $queryTypeName: EntityStringQuery {',
+      '    @AppDependency',
+      '    private var entityExecutor: SeiseiAppEntityQueryExecutor',
+      '',
+      '    $accessLevel init() {',
+      '        self._entityExecutor = AppDependency(default: '
+          'SeiseiAppEntityQueryExecutor.unconfigured(entityTypeID: '
+          '${_swiftStringLiteral(entityTypeID)}))',
+      '    }',
+      '',
+      '    $accessLevel init(entityExecutor: SeiseiAppEntityQueryExecutor) {',
+      '        self._entityExecutor = AppDependency(default: entityExecutor)',
+      '    }',
+      '',
+      '    $accessLevel func entities(for identifiers: [$typeName.ID]) async throws -> [$typeName] {',
+      '        let resolutions = try await entityExecutor.resolve(',
+      '            SeiseiAppEntityQueryInvocation(',
+      '                entityTypeID: ${_swiftStringLiteral(entityTypeID)},',
+      '                mode: .identifiers,',
+      '                identifiers: identifiers',
+      '            )',
+      '        )',
+      '        return resolutions.map { $typeName(resolution: ${r'$0'}) }',
+      '    }',
+      '',
+      '    $accessLevel func suggestedEntities() async throws -> [$typeName] {',
+      '        let resolutions = try await entityExecutor.resolve(',
+      '            SeiseiAppEntityQueryInvocation(',
+      '                entityTypeID: ${_swiftStringLiteral(entityTypeID)},',
+      '                mode: .suggested',
+      '            )',
+      '        )',
+      '        return resolutions.map { $typeName(resolution: ${r'$0'}) }',
+      '    }',
+      '',
+      '    $accessLevel func entities(matching string: String) async throws -> [$typeName] {',
+      '        let resolutions = try await entityExecutor.resolve(',
+      '            SeiseiAppEntityQueryInvocation(',
+      '                entityTypeID: ${_swiftStringLiteral(entityTypeID)},',
+      '                mode: .search,',
+      '                searchTerm: string',
+      '            )',
+      '        )',
+      '        return resolutions.map { $typeName(resolution: ${r'$0'}) }',
+      '    }',
+      '}',
+    ].join('\n');
+  }
 }
 
 final class _AppleAppIntentEnumDefinition {
@@ -411,17 +517,20 @@ final class _AppleAppIntentEnumDefinition {
     required this.displayName,
     required this.cases,
     required this.kind,
+    this.entityTypeID,
   });
 
   final String typeName;
   final String displayName;
   final List<_AppleAppIntentEnumCase> cases;
   final _AppleAppIntentEnumKind kind;
+  final String? entityTypeID;
 }
 
 enum _AppleAppIntentEnumKind {
   appEnum,
-  appEntity;
+  appEntity,
+  hostBackedAppEntity;
 }
 
 final class _AppleAppIntentEnumCase {
@@ -442,15 +551,18 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
   List<String> issues,
 ) {
   final values = propertySchema['enum'];
-  if (values == null) {
+  final hasAppIntentTypeMetadata = values != null ||
+      propertySchema.containsKey('x-seisei-app-intent-kind') ||
+      propertySchema.containsKey('x-seisei-app-intent-query') ||
+      propertySchema.containsKey('x-seisei-app-intent-typeName') ||
+      propertySchema.containsKey('x-seisei-app-intent-displayName') ||
+      propertySchema.containsKey('x-seisei-app-intent-entityTypeID') ||
+      propertySchema.containsKey('x-seisei-app-intent-enumTitles');
+  if (!hasAppIntentTypeMetadata) {
     return null;
   }
   if (propertySchema['type'] != 'string') {
     issues.add('$parameterName: App Intent enums require string type');
-    return null;
-  }
-  if (values is! List || values.isEmpty) {
-    issues.add('$parameterName: enum must be a non-empty list of strings');
     return null;
   }
 
@@ -469,7 +581,9 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
     _ => _humanizeParameterName(parameterName),
   };
 
-  final kind = switch (propertySchema['x-seisei-app-intent-kind']) {
+  final rawKind = propertySchema['x-seisei-app-intent-kind'];
+  final query = propertySchema['x-seisei-app-intent-query'];
+  final kind = switch (rawKind) {
     'entity' => _AppleAppIntentEnumKind.appEntity,
     null || 'enum' => _AppleAppIntentEnumKind.appEnum,
     _ => () {
@@ -479,6 +593,44 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
         return _AppleAppIntentEnumKind.appEnum;
       }(),
   };
+  if (query != null && query != 'static' && query != 'host') {
+    issues.add(
+      '$parameterName: x-seisei-app-intent-query must be static or host',
+    );
+  }
+  if (query == 'host') {
+    if (rawKind != 'entity') {
+      issues.add(
+        '$parameterName: host-backed App Intent queries require '
+        'x-seisei-app-intent-kind entity',
+      );
+    }
+    return _AppleAppIntentEnumDefinition(
+      typeName: typeName,
+      displayName: displayName,
+      cases: const [],
+      kind: _AppleAppIntentEnumKind.hostBackedAppEntity,
+      entityTypeID: switch (
+          propertySchema['x-seisei-app-intent-entityTypeID']) {
+        final String value => value,
+        _ => parameterName,
+      },
+    );
+  }
+
+  if (values == null) {
+    if (rawKind != null) {
+      issues.add(
+        '$parameterName: static App Intent enums and entities require enum '
+        'values; use x-seisei-app-intent-query host for host-backed entities',
+      );
+    }
+    return null;
+  }
+  if (values is! List || values.isEmpty) {
+    issues.add('$parameterName: enum must be a non-empty list of strings');
+    return null;
+  }
 
   final titleMap = switch (propertySchema['x-seisei-app-intent-enumTitles']) {
     final Map value => value,

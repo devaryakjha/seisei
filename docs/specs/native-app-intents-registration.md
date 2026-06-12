@@ -57,19 +57,24 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `SeiseiAppIntentExecutor`: a host-owned async executor closure wrapper;
 - `SeiseiAppIntentExecutorError`: stable error for generated wrappers that are
   executed before a host configures an executor;
+- `SeiseiAppEntityQueryInvocation`, `SeiseiAppEntityResolution`, and
+  `SeiseiAppEntityQueryExecutor`: host-owned dynamic entity lookup contracts for
+  generated `EntityStringQuery` wrappers;
 - `SeiseiAppIntentDependencies.configure(...)`: helper that registers the
   executor with `AppDependencyManager`;
+- `SeiseiAppEntityQueryDependencies.configure(...)`: helper that registers a
+  host-owned entity query executor with `AppDependencyManager`;
 - `SeiseiAppIntentBridge.perform(...)`: helper used by handwritten Swift
   intents to forward execution into the registered executor;
 - `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
   `AppIntent`, `AppShortcutsProvider`, string-backed `AppEnum`, and static
-  string-backed `AppEntity` source for a conservative parameter subset with
-  executor-injection initializers and dependency-free invocation payload
-  helpers.
+  string-backed or host-backed string `AppEntity` source for a conservative
+  parameter subset with executor-injection initializers and dependency-free
+  invocation payload helpers.
 - `AppleAppIntentSourceGenerator` in `seisei_intents`: pure Dart source
   generation from generic `AppActionDefinition` JSON schema data into the same
   conservative Swift wrapper shape, including string enum JSON schema
-  parameters and opt-in static string-backed entity parameters.
+  parameters plus opt-in static or host-backed string entity parameters.
 - `generate_apple_intents`: a Dart executable that writes those generated Swift
   files from a JSON manifest into a host app, extension, framework, or Swift
   package target.
@@ -98,12 +103,13 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - No full Flutter method-channel invocation from Apple's App Intents runtime in
   this change. Generated wrappers now build testable invocation payloads and
   accept host-owned executors, but the app still owns the final runtime bridge.
-- No dynamic host-backed App Entity queries in this change. Static
-  string-backed entities are generated only from explicit string enum schemas.
+- No automatic Flutter/Dart bridge for generated App Entity queries in this
+  change. Host-backed query wrappers can be generated, but the host app still
+  owns wiring `SeiseiAppEntityQueryExecutor` to app data.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
   generators cover scalar string, integer, number, boolean, string enum, and
-  opt-in static string-backed entity parameters only.
+  opt-in static or host-backed string entity parameters only.
 
 ## Acceptance Criteria
 
@@ -119,6 +125,8 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - generated source contains stable `AppIntent`, `AppShortcutsProvider`, and
     string-backed `AppEnum` / static string-backed `AppEntity` wrappers for
     supported parameters;
+  - generated host-backed string `AppEntity` wrappers compile around
+    `EntityStringQuery` and the Seisei entity-query executor contract;
   - a generated-style wrapper shape compiles with optional parameter forwarding;
   - generated-style wrappers can build `SeiseiAppIntentInvocation` payloads
     without directly entering Apple's App Intents runtime.

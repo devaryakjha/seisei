@@ -75,9 +75,89 @@ public enum SeiseiAppIntentExecutorError: Error, Sendable, Equatable {
     case unconfigured(actionID: String)
 }
 
+public enum SeiseiAppEntityQueryMode: Sendable, Equatable {
+    case identifiers
+    case suggested
+    case search
+}
+
+public struct SeiseiAppEntityQueryInvocation: Sendable, Equatable {
+    public init(
+        entityTypeID: String,
+        mode: SeiseiAppEntityQueryMode,
+        identifiers: [String] = [],
+        searchTerm: String? = nil,
+        metadata: [String: SeiseiAppIntentValue] = [:]
+    ) {
+        self.entityTypeID = entityTypeID
+        self.mode = mode
+        self.identifiers = identifiers
+        self.searchTerm = searchTerm
+        self.metadata = metadata
+    }
+
+    public let entityTypeID: String
+    public let mode: SeiseiAppEntityQueryMode
+    public let identifiers: [String]
+    public let searchTerm: String?
+    public let metadata: [String: SeiseiAppIntentValue]
+}
+
+public struct SeiseiAppEntityResolution: Sendable, Equatable {
+    public init(
+        id: String,
+        title: String,
+        subtitle: String? = nil,
+        metadata: [String: SeiseiAppIntentValue] = [:]
+    ) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.metadata = metadata
+    }
+
+    public let id: String
+    public let title: String
+    public let subtitle: String?
+    public let metadata: [String: SeiseiAppIntentValue]
+}
+
+public final class SeiseiAppEntityQueryExecutor: @unchecked Sendable {
+    public typealias Resolve = @Sendable (SeiseiAppEntityQueryInvocation) async throws -> [SeiseiAppEntityResolution]
+
+    private let resolveHandler: Resolve
+
+    public init(resolve: @escaping Resolve) {
+        self.resolveHandler = resolve
+    }
+
+    public func resolve(_ invocation: SeiseiAppEntityQueryInvocation) async throws -> [SeiseiAppEntityResolution] {
+        try await resolveHandler(invocation)
+    }
+
+    public static func unconfigured(entityTypeID: String) -> SeiseiAppEntityQueryExecutor {
+        SeiseiAppEntityQueryExecutor { _ in
+            throw SeiseiAppEntityQueryExecutorError.unconfigured(entityTypeID: entityTypeID)
+        }
+    }
+}
+
+public enum SeiseiAppEntityQueryExecutorError: Error, Sendable, Equatable {
+    case unconfigured(entityTypeID: String)
+}
+
 public enum SeiseiAppIntentDependencies {
     public static func configure(
         executor: SeiseiAppIntentExecutor,
+        manager: AppDependencyManager = .shared
+    ) {
+        manager.add(dependency: executor)
+    }
+}
+
+public enum SeiseiAppEntityQueryDependencies {
+    public static func configure(
+        executor: SeiseiAppEntityQueryExecutor,
         manager: AppDependencyManager = .shared
     ) {
         manager.add(dependency: executor)
@@ -128,6 +208,11 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
         cases: [SeiseiGeneratedAppIntentEntityCase],
         displayName: String
     )
+    case hostBackedStringEntity(
+        typeName: String,
+        displayName: String,
+        entityTypeID: String
+    )
 
     fileprivate var swiftType: String {
         switch self {
@@ -140,7 +225,8 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
         case .boolean:
             return "Bool"
         case let .stringEnum(typeName, _, _),
-             let .stringEntity(typeName, _, _):
+             let .stringEntity(typeName, _, _),
+             let .hostBackedStringEntity(typeName, _, _):
             return typeName
         }
     }
@@ -157,6 +243,8 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
             return ".boolean(\(name))"
         case .stringEnum, .stringEntity:
             return ".string(\(name).rawValue)"
+        case .hostBackedStringEntity:
+            return ".string(\(name).id)"
         }
     }
 }
@@ -373,29 +461,45 @@ private extension SeiseiGeneratedAppIntentParameter {
     }
 
     func enumSource(accessLevel: String) -> String? {
-        let typeName: String
-        let cases: [(name: String, rawValue: String, title: String)]
-        let displayName: String
-        let conformance: String
-        let includeEntityDefaultQuery: Bool
-
         switch type {
         case let .stringEnum(enumTypeName, enumCases, enumDisplayName):
-            typeName = enumTypeName
-            cases = enumCases.map { ($0.name, $0.rawValue, $0.title) }
-            displayName = enumDisplayName
-            conformance = "AppEnum"
-            includeEntityDefaultQuery = false
+            return staticEnumSource(
+                accessLevel: accessLevel,
+                typeName: enumTypeName,
+                cases: enumCases.map { ($0.name, $0.rawValue, $0.title) },
+                displayName: enumDisplayName,
+                conformance: "AppEnum",
+                includeEntityDefaultQuery: false
+            )
         case let .stringEntity(entityTypeName, entityCases, entityDisplayName):
-            typeName = entityTypeName
-            cases = entityCases.map { ($0.name, $0.rawValue, $0.title) }
-            displayName = entityDisplayName
-            conformance = "AppEntity, AppEnum"
-            includeEntityDefaultQuery = true
+            return staticEnumSource(
+                accessLevel: accessLevel,
+                typeName: entityTypeName,
+                cases: entityCases.map { ($0.name, $0.rawValue, $0.title) },
+                displayName: entityDisplayName,
+                conformance: "AppEntity, AppEnum",
+                includeEntityDefaultQuery: true
+            )
+        case let .hostBackedStringEntity(typeName, displayName, entityTypeID):
+            return hostBackedEntitySource(
+                accessLevel: accessLevel,
+                typeName: typeName,
+                displayName: displayName,
+                entityTypeID: entityTypeID
+            )
         default:
             return nil
         }
+    }
 
+    func staticEnumSource(
+        accessLevel: String,
+        typeName: String,
+        cases: [(name: String, rawValue: String, title: String)],
+        displayName: String,
+        conformance: String,
+        includeEntityDefaultQuery: Bool
+    ) -> String {
         var lines = [
             "\(accessLevel) enum \(typeName): String, \(conformance) {",
         ]
@@ -425,6 +529,100 @@ private extension SeiseiGeneratedAppIntentParameter {
         }
 
         lines.append("}")
+        return lines.joined(separator: "\n")
+    }
+
+    func hostBackedEntitySource(
+        accessLevel: String,
+        typeName: String,
+        displayName: String,
+        entityTypeID: String
+    ) -> String {
+        let queryTypeName = "\(typeName)Query"
+        let lines = [
+            "\(accessLevel) struct \(typeName): AppEntity {",
+            "    \(accessLevel) typealias DefaultQuery = \(queryTypeName)",
+            "",
+            "    \(accessLevel) static var typeDisplayRepresentation = TypeDisplayRepresentation(name: \(displayName.swiftStringLiteral))",
+            "    \(accessLevel) static var defaultQuery = \(queryTypeName)()",
+            "",
+            "    \(accessLevel) let id: String",
+            "    \(accessLevel) let title: String",
+            "    \(accessLevel) let subtitle: String?",
+            "    \(accessLevel) let metadata: [String: SeiseiAppIntentValue]",
+            "",
+            "    \(accessLevel) var displayRepresentation: DisplayRepresentation {",
+            "        if let subtitle {",
+            "            return DisplayRepresentation(",
+            "                title: LocalizedStringResource(stringLiteral: title),",
+            "                subtitle: LocalizedStringResource(stringLiteral: subtitle)",
+            "            )",
+            "        }",
+            "        return DisplayRepresentation(title: LocalizedStringResource(stringLiteral: title))",
+            "    }",
+            "",
+            "    \(accessLevel) init(id: String, title: String, subtitle: String? = nil, metadata: [String: SeiseiAppIntentValue] = [:]) {",
+            "        self.id = id",
+            "        self.title = title",
+            "        self.subtitle = subtitle",
+            "        self.metadata = metadata",
+            "    }",
+            "",
+            "    \(accessLevel) init(resolution: SeiseiAppEntityResolution) {",
+            "        self.init(",
+            "            id: resolution.id,",
+            "            title: resolution.title,",
+            "            subtitle: resolution.subtitle,",
+            "            metadata: resolution.metadata",
+            "        )",
+            "    }",
+            "}",
+            "",
+            "\(accessLevel) struct \(queryTypeName): EntityStringQuery {",
+            "    @AppDependency",
+            "    private var entityExecutor: SeiseiAppEntityQueryExecutor",
+            "",
+            "    \(accessLevel) init() {",
+            "        self._entityExecutor = AppDependency(default: SeiseiAppEntityQueryExecutor.unconfigured(entityTypeID: \(entityTypeID.swiftStringLiteral)))",
+            "    }",
+            "",
+            "    \(accessLevel) init(entityExecutor: SeiseiAppEntityQueryExecutor) {",
+            "        self._entityExecutor = AppDependency(default: entityExecutor)",
+            "    }",
+            "",
+            "    \(accessLevel) func entities(for identifiers: [\(typeName).ID]) async throws -> [\(typeName)] {",
+            "        let resolutions = try await entityExecutor.resolve(",
+            "            SeiseiAppEntityQueryInvocation(",
+            "                entityTypeID: \(entityTypeID.swiftStringLiteral),",
+            "                mode: .identifiers,",
+            "                identifiers: identifiers",
+            "            )",
+            "        )",
+            "        return resolutions.map { \(typeName)(resolution: $0) }",
+            "    }",
+            "",
+            "    \(accessLevel) func suggestedEntities() async throws -> [\(typeName)] {",
+            "        let resolutions = try await entityExecutor.resolve(",
+            "            SeiseiAppEntityQueryInvocation(",
+            "                entityTypeID: \(entityTypeID.swiftStringLiteral),",
+            "                mode: .suggested",
+            "            )",
+            "        )",
+            "        return resolutions.map { \(typeName)(resolution: $0) }",
+            "    }",
+            "",
+            "    \(accessLevel) func entities(matching string: String) async throws -> [\(typeName)] {",
+            "        let resolutions = try await entityExecutor.resolve(",
+            "            SeiseiAppEntityQueryInvocation(",
+            "                entityTypeID: \(entityTypeID.swiftStringLiteral),",
+            "                mode: .search,",
+            "                searchTerm: string",
+            "            )",
+            "        )",
+            "        return resolutions.map { \(typeName)(resolution: $0) }",
+            "    }",
+            "}",
+        ]
         return lines.joined(separator: "\n")
     }
 }
