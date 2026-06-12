@@ -18,11 +18,11 @@ tagged `anyOf` mapping for discriminated object unions, and explicit
 partial stream snapshots.
 `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental optional
 Tagflow document adapter.
-`seisei_intents` is at `0.1.0-dev.7` for Dart-side scalar, string-enum,
-static string-backed entity, and host-backed string entity Apple App Intent
-Swift source generation from generic app-action JSON schemas,
-executor-injection initializers, testable invocation payload helpers, and a
-manifest-driven generation executable, plus JSON wire formats and generic
+`seisei_intents` is at `0.1.0-dev.8` for Dart-side scalar, string-array,
+string-enum, static string-backed entity, and host-backed string entity Apple
+App Intent Swift source generation from generic app-action JSON schemas,
+executor-injection initializers, testable invocation payload helpers, a
+manifest-driven generation executable, JSON wire formats, and generic
 host-backed entity query contracts.
 `seisei_flutter_intents` is at `0.1.0-dev.0` for optional Flutter
 method-channel runtime handling of native-shaped app action invocations and
@@ -121,8 +121,8 @@ Last verified on 2026-06-12 from `main`:
   invocations, action results, entity query invocations, and entity
   resolutions, plus closure-based Flutter forwarding executor assertions for
   action invocation and entity query resolution.
-- `seisei_intents` tests passed locally with Dart-side scalar/string-enum/static
-  entity/host-backed entity Swift source generation assertions,
+- `seisei_intents` tests passed locally with Dart-side scalar/string-array/
+  string-enum/static entity/host-backed entity Swift source generation assertions,
   executor-injection initializer assertions, manifest-driven Swift file
   generation, JSON wire-format assertions, and stable source-generation
   failures for unsupported parameter schemas.

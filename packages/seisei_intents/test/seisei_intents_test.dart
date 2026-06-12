@@ -170,6 +170,11 @@ void main() {
           'priority': {'type': 'integer', 'title': 'Priority'},
           'score': {'type': 'number', 'title': 'Score'},
           'archived': {'type': 'boolean', 'title': 'Archived'},
+          'tags': {
+            'type': 'array',
+            'items': {'type': 'string'},
+            'title': 'Tags',
+          },
         },
         'required': ['title', 'score', 'archived'],
       },
@@ -196,10 +201,17 @@ void main() {
     expect(source, contains('public var priority: Int?'));
     expect(source, contains('public var score: Double'));
     expect(source, contains('public var archived: Bool'));
+    expect(source, contains('public var tags: [String]?'));
     expect(source, contains('"title": .string(title)'));
     expect(
       source,
       contains(r'"priority": priority.map { .integer($0) } ?? .null'),
+    );
+    expect(
+      source,
+      contains(
+        r'"tags": tags.map { .array($0.map { .string($0) }) } ?? .null',
+      ),
     );
     expect(
       source,
@@ -389,6 +401,10 @@ void main() {
         'type': 'object',
         'properties': {
           'payload': {'type': 'object'},
+          'ids': {
+            'type': 'array',
+            'items': {'type': 'integer'},
+          },
           'invalid-name': {'type': 'string'},
         },
       },
@@ -402,6 +418,7 @@ void main() {
           'issues',
           containsAll([
             'payload: unsupported App Intent parameter type object',
+            'ids: unsupported App Intent parameter type array<integer>',
             'invalid-name: Swift parameter names must be valid identifiers',
           ]),
         ),

@@ -253,10 +253,12 @@ abstract final class AppleAppIntentSourceGenerator {
         continue;
       }
 
-      final typeName = propertySchema['type'];
-      final type = _AppleAppIntentParameterType.fromJsonSchemaType(typeName);
+      final type = _AppleAppIntentParameterType.fromJsonSchema(propertySchema);
       if (type == null) {
-        issues.add('$name: unsupported App Intent parameter type $typeName');
+        issues.add(
+          '$name: unsupported App Intent parameter type '
+          '${_schemaTypeDescription(propertySchema)}',
+        );
         continue;
       }
 
@@ -281,24 +283,31 @@ enum _AppleAppIntentParameterType {
   string('String', 'string'),
   integer('Int', 'integer'),
   number('Double', 'number'),
-  boolean('Bool', 'boolean');
+  boolean('Bool', 'boolean'),
+  stringArray('[String]', 'array');
 
   const _AppleAppIntentParameterType(this.swiftType, this.valueCase);
 
   final String swiftType;
   final String valueCase;
 
-  static _AppleAppIntentParameterType? fromJsonSchemaType(Object? type) {
-    return switch (type) {
+  static _AppleAppIntentParameterType? fromJsonSchema(
+    Map<Object?, Object?> schema,
+  ) {
+    return switch (schema['type']) {
       'string' => string,
       'integer' => integer,
       'number' => number,
       'boolean' => boolean,
+      'array' when _isStringArraySchema(schema) => stringArray,
       _ => null,
     };
   }
 
   String invocationValueExpression(String name) {
+    if (this == stringArray) {
+      return '.array($name.map { .string(${r'$0'}) })';
+    }
     return '.$valueCase($name)';
   }
 }
@@ -665,6 +674,21 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
     cases: List.unmodifiable(cases),
     kind: kind,
   );
+}
+
+bool _isStringArraySchema(Map<Object?, Object?> schema) {
+  final items = schema['items'];
+  return items is Map && items['type'] == 'string';
+}
+
+String _schemaTypeDescription(Map<Object?, Object?> schema) {
+  if (schema['type'] == 'array') {
+    final items = schema['items'];
+    if (items is Map) {
+      return 'array<${items['type']}>';
+    }
+  }
+  return '${schema['type']}';
 }
 
 String _argumentsExpression(List<_AppleAppIntentParameter> parameters) {

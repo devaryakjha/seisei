@@ -1,3 +1,8 @@
+## 0.1.0-dev.8
+
+- Add generated Apple App Intent support for string array JSON schema
+  parameters.
+
 ## 0.1.0-dev.7
 
 - Add JSON round-trips for app action definitions, invocations, and results.

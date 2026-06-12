@@ -281,6 +281,12 @@ struct SeiseiAppleIntentsTests {
                         type: .integer,
                         isRequired: false
                     ),
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "tags",
+                        title: "Tags",
+                        type: .stringArray,
+                        isRequired: false
+                    ),
                 ],
                 shortcut: SeiseiGeneratedAppShortcutDefinition(
                     phrases: ["Create a note in \\(.applicationName)"],
@@ -294,8 +300,10 @@ struct SeiseiAppleIntentsTests {
         #expect(source.contains("@Parameter(title: \"Title\")"))
         #expect(source.contains("public var title: String"))
         #expect(source.contains("public var priority: Int?"))
+        #expect(source.contains("public var tags: [String]?"))
         #expect(source.contains("\"title\": .string(title)"))
         #expect(source.contains("\"priority\": priority.map { .integer($0) } ?? .null"))
+        #expect(source.contains("\"tags\": tags.map { .array($0.map { .string($0) }) } ?? .null"))
         #expect(source.contains("self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: \"create_note\"))"))
         #expect(source.contains("executor: SeiseiAppIntentExecutor"))
         #expect(source.contains("self._executor = AppDependency(default: executor)"))
@@ -418,16 +426,19 @@ struct SeiseiAppleIntentsTests {
         let intent = GeneratedStyleCreateNoteIntent(
             title: "Roadmap",
             priority: nil,
+            tags: nil,
             executor: SeiseiAppIntentExecutor { invocation in
                 #expect(invocation.id == "create_note")
                 #expect(invocation.arguments["title"] == .string("Roadmap"))
                 #expect(invocation.arguments["priority"] == .null)
+                #expect(invocation.arguments["tags"] == .null)
                 return SeiseiAppIntentResult()
             }
         )
 
         #expect(intent.title == "Roadmap")
         #expect(intent.priority == nil)
+        #expect(intent.tags == nil)
     }
 
     @Test("generated-style AppIntent builds a testable invocation")
@@ -435,6 +446,7 @@ struct SeiseiAppleIntentsTests {
         let intent = GeneratedStyleCreateNoteIntent(
             title: "Roadmap",
             priority: 2,
+            tags: ["planning", "draft"],
             executor: SeiseiAppIntentExecutor { _ in SeiseiAppIntentResult() }
         )
 
@@ -443,6 +455,10 @@ struct SeiseiAppleIntentsTests {
         #expect(invocation.id == "create_note")
         #expect(invocation.arguments["title"] == .string("Roadmap"))
         #expect(invocation.arguments["priority"] == .integer(2))
+        #expect(invocation.arguments["tags"] == .array([
+            .string("planning"),
+            .string("draft"),
+        ]))
     }
 
     @Test("generated-style AppIntent enum wrappers compile")
@@ -575,6 +591,9 @@ private struct GeneratedStyleCreateNoteIntent: AppIntent {
     @Parameter(title: "Priority")
     var priority: Int?
 
+    @Parameter(title: "Tags")
+    var tags: [String]?
+
     @AppDependency
     private var executor: SeiseiAppIntentExecutor
 
@@ -587,10 +606,12 @@ private struct GeneratedStyleCreateNoteIntent: AppIntent {
     init(
         title: String,
         priority: Int?,
+        tags: [String]?,
         executor: SeiseiAppIntentExecutor
     ) {
         self.title = title
         self.priority = priority
+        self.tags = tags
         self._executor = AppDependency(default: executor)
     }
 
@@ -605,6 +626,7 @@ private struct GeneratedStyleCreateNoteIntent: AppIntent {
             arguments: [
                 "title": .string(title),
                 "priority": priority.map { .integer($0) } ?? .null,
+                "tags": tags.map { .array($0.map { .string($0) }) } ?? .null,
             ]
         )
     }

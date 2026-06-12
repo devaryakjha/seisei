@@ -42,8 +42,9 @@ Apple's current developer material says App Intents expose app actions and data 
 - JSON-compatible wire formats for app action definitions, invocations,
   results, host-backed entity query invocations, and entity resolutions.
 - `AppleAppIntentSourceGenerator`: a pure Dart source generator that emits
-  conservative scalar and string-backed `AppEnum` Swift `AppIntent` /
-  `AppShortcutsProvider` wrappers from `AppActionDefinition` JSON schema data.
+  conservative scalar, string-array, and string-backed `AppEnum` Swift
+  `AppIntent` / `AppShortcutsProvider` wrappers from `AppActionDefinition`
+  JSON schema data.
   String enum schemas can opt into static string-backed `AppEntity` wrappers
   with `x-seisei-app-intent-kind: entity`, and string entity schemas can opt
   into host-backed `EntityStringQuery` wrappers with
@@ -88,7 +89,7 @@ Later native work can still:
   or static library that the App Intents runtime indexes;
 - wire generated Swift `perform()` calls to `seisei_flutter_intents` from a
   host app or extension lifecycle that owns Flutter engine availability;
-- add richer platform-specific parameters above the current scalar,
+- add richer platform-specific parameters above the current scalar, string-array,
   string-enum, static string entity, and host-backed string entity contracts;
 - keep `seisei_intents` as the source of generic Dart-side behavior.
 
@@ -98,6 +99,8 @@ Later native work can still:
 - Package tests cover tool-definition mapping, tool-call mapping, fake bridge
   invocation, missing-action failures, Dart-side Swift source generation, and
   stable source-generation failures for unsupported parameter schemas.
+- String array parameter generation is covered by Dart source generation tests
+  plus Swift compile tests.
 - Manifest generation tests cover JSON-compatible action manifests and generated
   Swift file output, including string enum parameter generation and generated
   invocation helper wiring.
