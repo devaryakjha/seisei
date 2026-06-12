@@ -8,11 +8,11 @@ JSON-compatible round-trips so optional runtime adapters can share the same
 wire format.
 
 Apple App Intents remain native Swift source processed at build time. This
-package defines the generic contract and can generate conservative scalar and
-string-enum Swift wrapper source from `AppActionDefinition` data. String enum
-schemas can also opt into static string-backed `AppEntity` wrappers for entity
-selection parameters, or host-backed `AppEntity` query wrappers for app data
-that must be resolved at runtime. The optional
+package defines the generic contract and can generate conservative scalar,
+scalar-array, and string-enum Swift wrapper source from `AppActionDefinition`
+data. String enum schemas can also opt into static string-backed `AppEntity`
+wrappers for entity selection parameters, or host-backed `AppEntity` query
+wrappers for app data that must be resolved at runtime. The optional
 `packages/seisei_apple_intents` Swift package provides the runtime helper types
 used by handwritten or generated App Intents.
 
@@ -26,6 +26,16 @@ const action = AppActionDefinition(
     'properties': {
       'title': {'type': 'string', 'title': 'Title'},
       'priority': {'type': 'integer', 'title': 'Priority'},
+      'tags': {
+        'type': 'array',
+        'items': {'type': 'string'},
+        'title': 'Tags',
+      },
+      'scores': {
+        'type': 'array',
+        'items': {'type': 'number'},
+        'title': 'Scores',
+      },
       'status': {
         'type': 'string',
         'title': 'Status',
@@ -64,8 +74,9 @@ final source = AppleAppIntentSourceGenerator.sourceForAction(
 Write the generated Swift source into an app, extension, framework, or Swift
 package target that Xcode compiles and indexes. The generator intentionally
 supports only `string`, `integer`, `number`, `boolean`, string `enum`, and
-opt-in static or host-backed string `AppEntity` JSON schema parameters, with
-unsupported shapes reported as `AppleAppIntentSourceException`.
+arrays of those scalar types, plus opt-in static or host-backed string
+`AppEntity` JSON schema parameters, with unsupported shapes reported as
+`AppleAppIntentSourceException`.
 
 Use static string-backed entities when the entity set is small and known at
 build time:

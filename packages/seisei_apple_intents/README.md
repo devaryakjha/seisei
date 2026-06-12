@@ -11,8 +11,8 @@ This package is the smallest real native registration path that fits Seisei:
 - Swift payload types include JSON-compatible method-channel conversion helpers
   that match `seisei_flutter_intents` action and entity query calls.
 - Apps that want generated wrappers can use the source generator to emit
-  build-time Swift source for a conservative scalar, string-enum, and static
-  string-backed AppEntity parameter subset.
+  build-time Swift source for a conservative scalar, scalar-array,
+  string-enum, and static string-backed AppEntity parameter subset.
 
 ## What It Includes
 
@@ -43,9 +43,9 @@ This package is the smallest real native registration path that fits Seisei:
   `AppIntentsPackage` source
 - start, retain, or attach a Flutter engine from an App Intents extension; host
   apps still own runtime executor and lifecycle wiring
-- model rich platform-specific parameters beyond generated string-backed App
-  Enums, static string-backed AppEntity wrappers, and host-backed string
-  AppEntity query wrappers
+- model rich platform-specific parameters beyond generated scalar arrays,
+  string-backed App Enums, static string-backed AppEntity wrappers, and
+  host-backed string AppEntity query wrappers
 - add PCC or Tagflow behavior
 
 ## Example
@@ -113,8 +113,8 @@ let executor = SeiseiAppIntentExecutor.flutterMethodChannel { method, arguments 
 }
 ```
 
-Generate build-time Swift source for scalar, string-enum, and static
-or host-backed string entity wrappers:
+Generate build-time Swift source for scalar, scalar-array, string-enum, and
+static or host-backed string entity wrappers:
 
 ```swift
 let source = SeiseiAppIntentSourceGenerator.source(

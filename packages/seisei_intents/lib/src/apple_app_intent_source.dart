@@ -284,12 +284,20 @@ enum _AppleAppIntentParameterType {
   integer('Int', 'integer'),
   number('Double', 'number'),
   boolean('Bool', 'boolean'),
-  stringArray('[String]', 'array');
+  stringArray('[String]', 'array', arrayItemValueCase: 'string'),
+  integerArray('[Int]', 'array', arrayItemValueCase: 'integer'),
+  numberArray('[Double]', 'array', arrayItemValueCase: 'number'),
+  booleanArray('[Bool]', 'array', arrayItemValueCase: 'boolean');
 
-  const _AppleAppIntentParameterType(this.swiftType, this.valueCase);
+  const _AppleAppIntentParameterType(
+    this.swiftType,
+    this.valueCase, {
+    this.arrayItemValueCase,
+  });
 
   final String swiftType;
   final String valueCase;
+  final String? arrayItemValueCase;
 
   static _AppleAppIntentParameterType? fromJsonSchema(
     Map<Object?, Object?> schema,
@@ -299,14 +307,14 @@ enum _AppleAppIntentParameterType {
       'integer' => integer,
       'number' => number,
       'boolean' => boolean,
-      'array' when _isStringArraySchema(schema) => stringArray,
+      'array' => _arrayParameterType(schema),
       _ => null,
     };
   }
 
   String invocationValueExpression(String name) {
-    if (this == stringArray) {
-      return '.array($name.map { .string(${r'$0'}) })';
+    if (arrayItemValueCase case final itemValueCase?) {
+      return '.array($name.map { .$itemValueCase(${r'$0'}) })';
     }
     return '.$valueCase($name)';
   }
@@ -676,9 +684,20 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
   );
 }
 
-bool _isStringArraySchema(Map<Object?, Object?> schema) {
+_AppleAppIntentParameterType? _arrayParameterType(
+  Map<Object?, Object?> schema,
+) {
   final items = schema['items'];
-  return items is Map && items['type'] == 'string';
+  if (items is! Map) {
+    return null;
+  }
+  return switch (items['type']) {
+    'string' => _AppleAppIntentParameterType.stringArray,
+    'integer' => _AppleAppIntentParameterType.integerArray,
+    'number' => _AppleAppIntentParameterType.numberArray,
+    'boolean' => _AppleAppIntentParameterType.booleanArray,
+    _ => null,
+  };
 }
 
 String _schemaTypeDescription(Map<Object?, Object?> schema) {

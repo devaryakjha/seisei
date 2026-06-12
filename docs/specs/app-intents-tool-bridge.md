@@ -42,7 +42,7 @@ Apple's current developer material says App Intents expose app actions and data 
 - JSON-compatible wire formats for app action definitions, invocations,
   results, host-backed entity query invocations, and entity resolutions.
 - `AppleAppIntentSourceGenerator`: a pure Dart source generator that emits
-  conservative scalar, string-array, and string-backed `AppEnum` Swift
+  conservative scalar, scalar-array, and string-backed `AppEnum` Swift
   `AppIntent` / `AppShortcutsProvider` wrappers from `AppActionDefinition`
   JSON schema data.
   String enum schemas can opt into static string-backed `AppEntity` wrappers
@@ -79,9 +79,10 @@ The minimal native registration path now lives in the optional Swift package
 handwritten Swift `AppIntent` types, host-owned executor injection through
 `AppDependencyManager`, and host-defined `AppShortcutsProvider` /
 `AppIntentsPackage` roots. It also includes a build-time Swift source generator
-for a conservative scalar, string-enum, and static string-backed entity
-or host-backed string entity parameter wrapper subset, including
-executor-injection initializers and dependency-free invocation payload helpers.
+  for a conservative scalar, scalar-array, string-enum, and static
+  string-backed entity or host-backed string entity parameter wrapper subset,
+  including executor-injection initializers and dependency-free invocation
+  payload helpers.
 
 Later native work can still:
 
@@ -89,8 +90,9 @@ Later native work can still:
   or static library that the App Intents runtime indexes;
 - wire generated Swift `perform()` calls to `seisei_flutter_intents` from a
   host app or extension lifecycle that owns Flutter engine availability;
-- add richer platform-specific parameters above the current scalar, string-array,
-  string-enum, static string entity, and host-backed string entity contracts;
+- add richer platform-specific parameters above the current scalar,
+  scalar-array, string-enum, static string entity, and host-backed string entity
+  contracts;
 - keep `seisei_intents` as the source of generic Dart-side behavior.
 
 ## Acceptance Criteria
@@ -99,7 +101,7 @@ Later native work can still:
 - Package tests cover tool-definition mapping, tool-call mapping, fake bridge
   invocation, missing-action failures, Dart-side Swift source generation, and
   stable source-generation failures for unsupported parameter schemas.
-- String array parameter generation is covered by Dart source generation tests
+- Scalar array parameter generation is covered by Dart source generation tests
   plus Swift compile tests.
 - Manifest generation tests cover JSON-compatible action manifests and generated
   Swift file output, including string enum parameter generation and generated

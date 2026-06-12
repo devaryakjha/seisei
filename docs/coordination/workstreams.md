@@ -183,7 +183,8 @@ Swift file generation and the `generate_apple_intents` executable, and to
 advanced to `0.1.0-dev.5` for static string-backed AppEntity generation and to
 `0.1.0-dev.6` for host-backed string AppEntity query generation, then to
 `0.1.0-dev.7` for JSON wire formats and generic host-backed entity query
-contracts, and to `0.1.0-dev.8` for string-array App Intent parameter
+contracts, to `0.1.0-dev.8` for string-array App Intent parameter generation,
+and to `0.1.0-dev.9` for integer, number, and boolean array parameter
 generation. `seisei_flutter_intents` shipped at `0.1.0-dev.0` for the optional
 Flutter runtime method-channel adapter.
 
@@ -225,7 +226,7 @@ union, and typed partial chunk work:
 - PCC support if a verified API path exists
 - Fully managed Flutter engine/app-extension lifecycle wiring above the current
   host-owned method-channel forwarding executors, plus richer platform-specific
-  wrappers above the scalar/string-array/string-enum/static-entity/host-backed
+  wrappers above the scalar/scalar-array/string-enum/static-entity/host-backed
   string-entity source generators
 
 ## Merge Order

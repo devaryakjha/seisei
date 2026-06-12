@@ -175,6 +175,21 @@ void main() {
             'items': {'type': 'string'},
             'title': 'Tags',
           },
+          'ranks': {
+            'type': 'array',
+            'items': {'type': 'integer'},
+            'title': 'Ranks',
+          },
+          'weights': {
+            'type': 'array',
+            'items': {'type': 'number'},
+            'title': 'Weights',
+          },
+          'flags': {
+            'type': 'array',
+            'items': {'type': 'boolean'},
+            'title': 'Flags',
+          },
         },
         'required': ['title', 'score', 'archived'],
       },
@@ -202,6 +217,9 @@ void main() {
     expect(source, contains('public var score: Double'));
     expect(source, contains('public var archived: Bool'));
     expect(source, contains('public var tags: [String]?'));
+    expect(source, contains('public var ranks: [Int]?'));
+    expect(source, contains('public var weights: [Double]?'));
+    expect(source, contains('public var flags: [Bool]?'));
     expect(source, contains('"title": .string(title)'));
     expect(
       source,
@@ -211,6 +229,24 @@ void main() {
       source,
       contains(
         r'"tags": tags.map { .array($0.map { .string($0) }) } ?? .null',
+      ),
+    );
+    expect(
+      source,
+      contains(
+        r'"ranks": ranks.map { .array($0.map { .integer($0) }) } ?? .null',
+      ),
+    );
+    expect(
+      source,
+      contains(
+        r'"weights": weights.map { .array($0.map { .number($0) }) } ?? .null',
+      ),
+    );
+    expect(
+      source,
+      contains(
+        r'"flags": flags.map { .array($0.map { .boolean($0) }) } ?? .null',
       ),
     );
     expect(
@@ -401,9 +437,9 @@ void main() {
         'type': 'object',
         'properties': {
           'payload': {'type': 'object'},
-          'ids': {
+          'payloads': {
             'type': 'array',
-            'items': {'type': 'integer'},
+            'items': {'type': 'object'},
           },
           'invalid-name': {'type': 'string'},
         },
@@ -418,7 +454,7 @@ void main() {
           'issues',
           containsAll([
             'payload: unsupported App Intent parameter type object',
-            'ids: unsupported App Intent parameter type array<integer>',
+            'payloads: unsupported App Intent parameter type array<object>',
             'invalid-name: Swift parameter names must be valid identifiers',
           ]),
         ),

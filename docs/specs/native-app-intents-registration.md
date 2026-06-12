@@ -75,7 +75,7 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `SeiseiAppIntentSourceGenerator`: helper that emits build-time Swift
   `AppIntent`, `AppShortcutsProvider`, string-backed `AppEnum`, and static
   string-backed or host-backed string `AppEntity` source for a conservative
-  scalar and string-array parameter subset with executor-injection initializers
+  scalar and scalar-array parameter subset with executor-injection initializers
   and dependency-free invocation payload helpers.
 - `AppleAppIntentSourceGenerator` in `seisei_intents`: pure Dart source
   generation from generic `AppActionDefinition` JSON schema data into the same
@@ -119,7 +119,7 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   payload dictionaries, but the host still owns app/extension lifecycle wiring.
 - No promise that arbitrary `AppActionDefinition.parameters` can be converted
   into App Intent parameters automatically; the current Dart and Swift
-  generators cover scalar string, integer, number, boolean, string array,
+  generators cover scalar string, integer, number, boolean, scalar arrays,
   string enum, and opt-in static or host-backed string entity parameters only.
 
 ## Acceptance Criteria
@@ -138,7 +138,7 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   - a handwritten `AppShortcutsProvider` compiles with a Seisei-backed intent;
   - a handwritten `AppIntentsPackage` compiles and exposes included packages.
   - generated source contains stable `AppIntent`, `AppShortcutsProvider`, and
-    string-array / string-backed `AppEnum` / static string-backed `AppEntity`
+    scalar-array / string-backed `AppEnum` / static string-backed `AppEntity`
     wrappers for supported parameters;
   - generated host-backed string `AppEntity` wrappers compile around
     `EntityStringQuery` and the Seisei entity-query executor contract;

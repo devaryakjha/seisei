@@ -432,6 +432,9 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
     case number
     case boolean
     case stringArray
+    case integerArray
+    case numberArray
+    case booleanArray
     case stringEnum(
         typeName: String,
         cases: [SeiseiGeneratedAppIntentEnumCase],
@@ -460,6 +463,12 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
             return "Bool"
         case .stringArray:
             return "[String]"
+        case .integerArray:
+            return "[Int]"
+        case .numberArray:
+            return "[Double]"
+        case .booleanArray:
+            return "[Bool]"
         case let .stringEnum(typeName, _, _),
              let .stringEntity(typeName, _, _),
              let .hostBackedStringEntity(typeName, _, _):
@@ -479,6 +488,12 @@ public enum SeiseiGeneratedAppIntentParameterType: Sendable, Equatable {
             return ".boolean(\(name))"
         case .stringArray:
             return ".array(\(name).map { .string($0) })"
+        case .integerArray:
+            return ".array(\(name).map { .integer($0) })"
+        case .numberArray:
+            return ".array(\(name).map { .number($0) })"
+        case .booleanArray:
+            return ".array(\(name).map { .boolean($0) })"
         case .stringEnum, .stringEntity:
             return ".string(\(name).rawValue)"
         case .hostBackedStringEntity:

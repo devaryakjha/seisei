@@ -287,6 +287,24 @@ struct SeiseiAppleIntentsTests {
                         type: .stringArray,
                         isRequired: false
                     ),
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "ranks",
+                        title: "Ranks",
+                        type: .integerArray,
+                        isRequired: false
+                    ),
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "weights",
+                        title: "Weights",
+                        type: .numberArray,
+                        isRequired: false
+                    ),
+                    SeiseiGeneratedAppIntentParameter(
+                        name: "flags",
+                        title: "Flags",
+                        type: .booleanArray,
+                        isRequired: false
+                    ),
                 ],
                 shortcut: SeiseiGeneratedAppShortcutDefinition(
                     phrases: ["Create a note in \\(.applicationName)"],
@@ -301,9 +319,15 @@ struct SeiseiAppleIntentsTests {
         #expect(source.contains("public var title: String"))
         #expect(source.contains("public var priority: Int?"))
         #expect(source.contains("public var tags: [String]?"))
+        #expect(source.contains("public var ranks: [Int]?"))
+        #expect(source.contains("public var weights: [Double]?"))
+        #expect(source.contains("public var flags: [Bool]?"))
         #expect(source.contains("\"title\": .string(title)"))
         #expect(source.contains("\"priority\": priority.map { .integer($0) } ?? .null"))
         #expect(source.contains("\"tags\": tags.map { .array($0.map { .string($0) }) } ?? .null"))
+        #expect(source.contains("\"ranks\": ranks.map { .array($0.map { .integer($0) }) } ?? .null"))
+        #expect(source.contains("\"weights\": weights.map { .array($0.map { .number($0) }) } ?? .null"))
+        #expect(source.contains("\"flags\": flags.map { .array($0.map { .boolean($0) }) } ?? .null"))
         #expect(source.contains("self._executor = AppDependency(default: SeiseiAppIntentExecutor.unconfigured(actionID: \"create_note\"))"))
         #expect(source.contains("executor: SeiseiAppIntentExecutor"))
         #expect(source.contains("self._executor = AppDependency(default: executor)"))
@@ -427,11 +451,17 @@ struct SeiseiAppleIntentsTests {
             title: "Roadmap",
             priority: nil,
             tags: nil,
+            ranks: nil,
+            weights: nil,
+            flags: nil,
             executor: SeiseiAppIntentExecutor { invocation in
                 #expect(invocation.id == "create_note")
                 #expect(invocation.arguments["title"] == .string("Roadmap"))
                 #expect(invocation.arguments["priority"] == .null)
                 #expect(invocation.arguments["tags"] == .null)
+                #expect(invocation.arguments["ranks"] == .null)
+                #expect(invocation.arguments["weights"] == .null)
+                #expect(invocation.arguments["flags"] == .null)
                 return SeiseiAppIntentResult()
             }
         )
@@ -439,6 +469,9 @@ struct SeiseiAppleIntentsTests {
         #expect(intent.title == "Roadmap")
         #expect(intent.priority == nil)
         #expect(intent.tags == nil)
+        #expect(intent.ranks == nil)
+        #expect(intent.weights == nil)
+        #expect(intent.flags == nil)
     }
 
     @Test("generated-style AppIntent builds a testable invocation")
@@ -447,6 +480,9 @@ struct SeiseiAppleIntentsTests {
             title: "Roadmap",
             priority: 2,
             tags: ["planning", "draft"],
+            ranks: [1, 2],
+            weights: [0.25, 0.75],
+            flags: [true, false],
             executor: SeiseiAppIntentExecutor { _ in SeiseiAppIntentResult() }
         )
 
@@ -458,6 +494,18 @@ struct SeiseiAppleIntentsTests {
         #expect(invocation.arguments["tags"] == .array([
             .string("planning"),
             .string("draft"),
+        ]))
+        #expect(invocation.arguments["ranks"] == .array([
+            .integer(1),
+            .integer(2),
+        ]))
+        #expect(invocation.arguments["weights"] == .array([
+            .number(0.25),
+            .number(0.75),
+        ]))
+        #expect(invocation.arguments["flags"] == .array([
+            .boolean(true),
+            .boolean(false),
         ]))
     }
 
@@ -594,6 +642,15 @@ private struct GeneratedStyleCreateNoteIntent: AppIntent {
     @Parameter(title: "Tags")
     var tags: [String]?
 
+    @Parameter(title: "Ranks")
+    var ranks: [Int]?
+
+    @Parameter(title: "Weights")
+    var weights: [Double]?
+
+    @Parameter(title: "Flags")
+    var flags: [Bool]?
+
     @AppDependency
     private var executor: SeiseiAppIntentExecutor
 
@@ -607,11 +664,17 @@ private struct GeneratedStyleCreateNoteIntent: AppIntent {
         title: String,
         priority: Int?,
         tags: [String]?,
+        ranks: [Int]?,
+        weights: [Double]?,
+        flags: [Bool]?,
         executor: SeiseiAppIntentExecutor
     ) {
         self.title = title
         self.priority = priority
         self.tags = tags
+        self.ranks = ranks
+        self.weights = weights
+        self.flags = flags
         self._executor = AppDependency(default: executor)
     }
 
@@ -627,6 +690,9 @@ private struct GeneratedStyleCreateNoteIntent: AppIntent {
                 "title": .string(title),
                 "priority": priority.map { .integer($0) } ?? .null,
                 "tags": tags.map { .array($0.map { .string($0) }) } ?? .null,
+                "ranks": ranks.map { .array($0.map { .integer($0) }) } ?? .null,
+                "weights": weights.map { .array($0.map { .number($0) }) } ?? .null,
+                "flags": flags.map { .array($0.map { .boolean($0) }) } ?? .null,
             ]
         )
     }

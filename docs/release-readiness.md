@@ -18,7 +18,7 @@ tagged `anyOf` mapping for discriminated object unions, and explicit
 partial stream snapshots.
 `seisei_tagflow` is published at `0.1.0-dev.0` as an experimental optional
 Tagflow document adapter.
-`seisei_intents` is at `0.1.0-dev.8` for Dart-side scalar, string-array,
+`seisei_intents` is at `0.1.0-dev.9` for Dart-side scalar, scalar-array,
 string-enum, static string-backed entity, and host-backed string entity Apple
 App Intent Swift source generation from generic app-action JSON schemas,
 executor-injection initializers, testable invocation payload helpers, a
@@ -64,7 +64,7 @@ unless the release process is deliberately changed.
 - [x] UI blocks can be validated before rendering.
 - [x] Tagflow remains optional and is isolated in `seisei_tagflow`.
 - [x] Native App Intent helper claims are backed by Swift compile tests and
-      `seisei_intents` scalar/string-enum/static-entity source-generation,
+      `seisei_intents` scalar/scalar-array/string-enum/static-entity source-generation,
       invocation-helper, and manifest-generation tests.
 - [x] Flutter App Intent runtime claims are backed by `seisei_flutter_intents`
       method-channel tests.
@@ -110,7 +110,7 @@ Last verified on 2026-06-12 from `main`:
   warnings across `seisei`, `seisei_schema`, `seisei_router`, `seisei_test`,
   `seisei_ui`, `seisei_tagflow`, `seisei_apple`, `seisei_intents`, and
   `seisei_flutter_intents`.
-- `seisei_intents` `0.1.0-dev.8` was published successfully.
+- `seisei_intents` `0.1.0-dev.9` was published successfully.
 - `seisei_flutter_intents` `0.1.0-dev.0` was published successfully.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
@@ -121,7 +121,7 @@ Last verified on 2026-06-12 from `main`:
   invocations, action results, entity query invocations, and entity
   resolutions, plus closure-based Flutter forwarding executor assertions for
   action invocation and entity query resolution.
-- `seisei_intents` tests passed locally with Dart-side scalar/string-array/
+- `seisei_intents` tests passed locally with Dart-side scalar/scalar-array/
   string-enum/static entity/host-backed entity Swift source generation assertions,
   executor-injection initializer assertions, manifest-driven Swift file
   generation, JSON wire-format assertions, and stable source-generation
@@ -142,6 +142,6 @@ Last verified on 2026-06-12 from `main`:
 - The pub.dev package API reports `seisei` latest as `0.1.0-dev.2`,
   `seisei_test` latest as `0.1.0-dev.1`, `seisei_schema` latest as
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
-  `seisei_intents` latest as `0.1.0-dev.8`; `seisei_router`, `seisei_ui`,
+  `seisei_intents` latest as `0.1.0-dev.9`; `seisei_router`, `seisei_ui`,
   and `seisei_tagflow` remain at `0.1.0-dev.0`; `seisei_flutter_intents`
   latest is `0.1.0-dev.0`.

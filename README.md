@@ -28,7 +28,7 @@ The current workspace contains:
 - `seisei_ui`: renderer-neutral UI blocks and adapter contracts
 - `seisei_tagflow`: experimental optional adapter from `seisei_ui` blocks into Tagflow runtime documents
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
-- `seisei_intents`: generic app-action contracts, tool-call mapping, fake bridges, scalar, string-array, string-enum, static string-entity, and host-backed string-entity Apple App Intent source generation, and a manifest-driven generation executable for future platform intent adapters
+- `seisei_intents`: generic app-action contracts, tool-call mapping, fake bridges, scalar, scalar-array, string-enum, static string-entity, and host-backed string-entity Apple App Intent source generation, and a manifest-driven generation executable for future platform intent adapters
 - `seisei_flutter_intents`: optional Flutter method-channel runtime bridge for generated App Intent action invocation and host-backed entity queries
 
 Optional native support packages include:
@@ -108,7 +108,7 @@ into FoundationModels schema files including field-level explicit null and
 discriminated object unions, system-model streaming with typed partial
 snapshots and path-level structured patches for safe schema-backed chunks, and a
 minimal native App Intents registration helper package for handwritten Swift
-intents and generated-source scalar/string-array/string-enum/static
+intents and generated-source scalar/scalar-array/string-enum/static
 string-entity/host-backed string-entity wrappers with action and entity-query
 executor injection and testable invocation payload helpers from either Swift
 definitions or Dart `AppActionDefinition` data or a manifest-driven Dart
