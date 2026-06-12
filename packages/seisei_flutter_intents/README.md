@@ -46,9 +46,11 @@ Native Apple code should invoke the channel
 - `invokeAction`
 - `resolveEntityQuery`
 
-On macOS, native hosts that include FlutterMacOS can use
+On iOS and macOS, native hosts that include Flutter can use
 `SeiseiFlutterIntentsEngineHost` to start and retain a headless Flutter engine
-before forwarding App Intents calls:
+before forwarding App Intents calls. On iOS, the helper uses the public
+`FlutterEngine` headless execution APIs; on macOS, it uses the matching
+FlutterMacOS APIs.
 
 ```swift
 import FlutterPluginRegistrant
@@ -67,9 +69,11 @@ SeiseiFlutterIntentsDependencies.configure { method, arguments in
 ```
 
 Use a custom `entrypoint` only when the Dart function is annotated with
-`@pragma('vm:entry-point')`. Host apps and extensions are still responsible for
-including the Flutter assets, generated plugin registrant, entitlements, and
-background execution policy required by their target.
+`@pragma('vm:entry-point')`. iOS hosts can also pass `libraryURI`,
+`initialRoute`, and `dartEntrypointArguments` when their app architecture needs
+them. Host apps and extensions are still responsible for including the Flutter
+assets, generated plugin registrant, entitlements, and background execution
+policy required by their target.
 
 This package does not dynamically register App Intents and does not guarantee
 that a Flutter engine is available from every App Intents execution context.

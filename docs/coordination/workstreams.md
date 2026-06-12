@@ -133,8 +133,8 @@ native Swift helper package later added matching method-channel wire conversion
 helpers for action invocation, action result, entity query invocation, and
 entity resolution payloads, then closure-based forwarding executors for hosts
 that provide the actual Flutter method-channel transport. `seisei_flutter_intents`
-then added a macOS headless `FlutterEngine` host helper for app-owned App
-Intents forwarding into Dart. iOS and arbitrary App Intents extension lifecycle
+then added iOS and macOS headless `FlutterEngine` host helpers for app-owned
+App Intents forwarding into Dart. Arbitrary App Intents extension lifecycle
 wiring plus richer platform-specific wrappers remain future plugin/native work.
 
 ### 8. Release Readiness
@@ -191,7 +191,8 @@ Flutter runtime method-channel adapter, advanced to `0.1.0-dev.1` so background
 execution is host opt-in and Swift hosts can configure both action and
 entity-query Flutter forwarding executors through one dependency helper, then
 advanced to `0.1.0-dev.2` with a macOS headless `FlutterEngine` host helper for
-App Intents forwarding.
+App Intents forwarding, then to `0.1.0-dev.3` with the matching iOS headless
+engine host helper.
 
 ### 9. Optional Tagflow Adapter Path
 
@@ -229,9 +230,9 @@ after the nested-object, verified-constraint, field-level union, explicit-null
 union, and typed partial chunk work:
 
 - PCC support if a verified API path exists
-- iOS and App Intents extension lifecycle wiring above the current macOS
-  headless engine host helper and host-owned method-channel forwarding
-  executors, plus richer platform-specific wrappers above the scalar/
+- App Intents extension lifecycle wiring above the current iOS/macOS headless
+  engine host helpers and host-owned method-channel forwarding executors, plus
+  richer platform-specific wrappers above the scalar/
   scalar-array/string-enum/static-entity/host-backed string-entity source
   generators
 

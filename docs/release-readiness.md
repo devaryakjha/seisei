@@ -24,11 +24,11 @@ App Intent Swift source generation from generic app-action JSON schemas,
 executor-injection initializers, testable invocation payload helpers, a
 manifest-driven generation executable, JSON wire formats, and generic
 host-backed entity query contracts.
-`seisei_flutter_intents` is at `0.1.0-dev.2` for optional Flutter
+`seisei_flutter_intents` is at `0.1.0-dev.3` for optional Flutter
 method-channel runtime handling of native-shaped app action invocations and
 host-backed entity query resolution, with background execution as explicit
-host opt-in instead of a default advertised capability, plus a macOS headless
-`FlutterEngine` host helper for App Intents forwarding.
+host opt-in instead of a default advertised capability, plus iOS and macOS
+headless `FlutterEngine` host helpers for App Intents forwarding.
 
 Future publishable packages should use the same license and publisher policy
 unless the release process is deliberately changed.
@@ -118,7 +118,8 @@ Last verified on 2026-06-12 from `main`:
   `seisei_flutter_intents`.
 - `seisei_intents` `0.1.0-dev.9` was published successfully.
 - `seisei_flutter_intents` `0.1.0-dev.2` was published successfully for the
-  macOS headless engine host helper.
+  macOS headless engine host helper. `0.1.0-dev.3` is pending validation and
+  publication for the iOS headless engine host helper.
 - `swift test` for `packages/seisei_apple_intents` passed locally with
   generated-source assertions and generated-style `AppIntent`, `AppEnum`,
   static string-backed `AppEntity`, host-backed string `AppEntity` query, and
@@ -158,4 +159,4 @@ Last verified on 2026-06-12 from `main`:
   `0.1.0-dev.5`, `seisei_apple` latest as `0.1.0-dev.10`, and
   `seisei_intents` latest as `0.1.0-dev.9`; `seisei_router`, `seisei_ui`,
   and `seisei_tagflow` remain at `0.1.0-dev.0`; `seisei_flutter_intents`
-  latest is `0.1.0-dev.2`.
+  latest is `0.1.0-dev.2` until the iOS helper release is published.
