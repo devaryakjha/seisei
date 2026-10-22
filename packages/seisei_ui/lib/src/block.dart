@@ -48,9 +48,8 @@ final class SeiseiBlock {
       actions: (json['actions'] as List? ?? const [])
           .cast<Map>()
           .map(
-            (action) => SeiseiBlockAction.fromJson(
-              action.cast<String, Object?>(),
-            ),
+            (action) =>
+                SeiseiBlockAction.fromJson(action.cast<String, Object?>()),
           )
           .toList(),
     );
@@ -60,10 +59,7 @@ final class SeiseiBlock {
 /// User action declared by a block.
 final class SeiseiBlockAction {
   /// Creates a block action.
-  const SeiseiBlockAction({
-    required this.type,
-    this.payload = const {},
-  });
+  const SeiseiBlockAction({required this.type, this.payload = const {}});
 
   /// Action type such as `submit` or `toolCall`.
   final String type;

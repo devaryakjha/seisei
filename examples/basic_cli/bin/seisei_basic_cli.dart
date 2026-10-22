@@ -3,10 +3,7 @@ import 'package:seisei_schema/seisei_schema.dart';
 import 'package:seisei_test/seisei_test.dart';
 
 Future<void> main() async {
-  const schema = ObjectSchema(
-    name: 'Summary',
-    requiredStringFields: {'text'},
-  );
+  const schema = ObjectSchema(name: 'Summary', requiredStringFields: {'text'});
   final provider = FakeProvider(
     id: 'offline',
     capabilities: {

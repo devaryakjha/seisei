@@ -3,18 +3,14 @@ import 'dart:io';
 import 'backend.dart';
 
 /// Injectable process runner used by tests.
-typedef ProcessRunner = Future<ProcessResult> Function(
-  String executable,
-  List<String> arguments,
-);
+typedef ProcessRunner =
+    Future<ProcessResult> Function(String executable, List<String> arguments);
 
 /// Backend that talks to the local `/usr/bin/fm` CLI.
 final class FmCliBackend implements AppleFoundationModelsBackend {
   /// Creates an `fm` CLI backend.
-  FmCliBackend({
-    this.executable = '/usr/bin/fm',
-    ProcessRunner? processRunner,
-  }) : _processRunner = processRunner ?? Process.run;
+  FmCliBackend({this.executable = '/usr/bin/fm', ProcessRunner? processRunner})
+    : _processRunner = processRunner ?? Process.run;
 
   /// CLI executable.
   final String executable;
@@ -61,17 +57,15 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
       yield text;
     }
 
-    final stderr =
-        await process.stderr.transform(systemEncoding.decoder).join();
+    final stderr = await process.stderr
+        .transform(systemEncoding.decoder)
+        .join();
     final exitCode = await process.exitCode;
     if (exitCode != 0) {
       throw ProcessException(executable, args, stderr, exitCode);
     }
 
-    yield {
-      'done': true,
-      'value': chunks.join().trim(),
-    };
+    yield {'done': true, 'value': chunks.join().trim()};
   }
 
   List<String> _respondArgs(
@@ -81,10 +75,7 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
     return [
       'respond',
       if (stream) '--stream' else '--no-stream',
-      if (request.mode == AppleFoundationModelsMode.pcc) ...[
-        '--model',
-        'pcc',
-      ],
+      if (request.mode == AppleFoundationModelsMode.pcc) ...['--model', 'pcc'],
       if (request.schemaPath case final schemaPath?) ...[
         '--schema',
         schemaPath,

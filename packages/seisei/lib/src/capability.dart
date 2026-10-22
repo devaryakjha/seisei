@@ -4,9 +4,7 @@ final class ModelCapability {
   const ModelCapability(this.id);
 
   /// Structured generation that returns machine-readable values.
-  static const structuredGeneration = ModelCapability(
-    'structured_generation',
-  );
+  static const structuredGeneration = ModelCapability('structured_generation');
 
   /// Incremental response chunks.
   static const streaming = ModelCapability('streaming');
@@ -63,7 +61,7 @@ final class ProviderAvailability {
 
   /// Unavailable provider result.
   const ProviderAvailability.unavailable(String reason)
-      : this(isAvailable: false, reason: reason);
+    : this(isAvailable: false, reason: reason);
 
   /// Whether requests can currently be sent.
   final bool isAvailable;

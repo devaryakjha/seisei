@@ -227,9 +227,7 @@ void main() {
     );
     expect(
       source,
-      contains(
-        r'"tags": tags.map { .array($0.map { .string($0) }) } ?? .null',
-      ),
+      contains(r'"tags": tags.map { .array($0.map { .string($0) }) } ?? .null'),
     );
     expect(
       source,
@@ -264,9 +262,7 @@ void main() {
     expect(source, contains('"archived": .boolean(archived)'));
     expect(
       source,
-      contains(
-        'public struct CreateNoteIntentShortcuts: AppShortcutsProvider',
-      ),
+      contains('public struct CreateNoteIntentShortcuts: AppShortcutsProvider'),
     );
     expect(
       source,

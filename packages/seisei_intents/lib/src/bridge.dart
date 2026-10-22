@@ -18,14 +18,14 @@ enum AppActionCapability {
 }
 
 /// Handles an app action invocation.
-typedef AppActionHandler = FutureOr<AppActionResult> Function(
-  AppActionInvocation invocation,
-);
+typedef AppActionHandler =
+    FutureOr<AppActionResult> Function(AppActionInvocation invocation);
 
 /// Handles a host-backed app entity query invocation.
-typedef AppEntityQueryHandler = FutureOr<List<AppEntityResolution>> Function(
-  AppEntityQueryInvocation invocation,
-);
+typedef AppEntityQueryHandler =
+    FutureOr<List<AppEntityResolution>> Function(
+      AppEntityQueryInvocation invocation,
+    );
 
 /// Generic bridge between Seisei tool calls and app/platform actions.
 abstract interface class AppActionBridge {

@@ -9,13 +9,11 @@ final class MethodChannelAppleFoundationModelsBackend
   MethodChannelAppleFoundationModelsBackend({
     MethodChannel? channel,
     EventChannel? streamChannel,
-  })  : _channel = channel ?? defaultChannel,
-        _streamChannel = streamChannel ?? defaultStreamChannel;
+  }) : _channel = channel ?? defaultChannel,
+       _streamChannel = streamChannel ?? defaultStreamChannel;
 
   /// Channel used by the native iOS and macOS plugin implementations.
-  static const defaultChannel = MethodChannel(
-    'dev.jha.seisei/seisei_apple',
-  );
+  static const defaultChannel = MethodChannel('dev.jha.seisei/seisei_apple');
 
   /// Event channel used by native iOS and macOS streaming implementations.
   static const defaultStreamChannel = EventChannel(
@@ -61,7 +59,7 @@ final class MethodChannelAppleFoundationModelsBackend
     return _channel.invokeMethod<Object?>('respond', {
       'prompt': request.prompt,
       'mode': request.mode.name,
-      if (request.schemaPath case final schemaPath?) 'schemaPath': schemaPath,
+      'schemaPath': ?request.schemaPath,
     });
   }
 
@@ -76,7 +74,7 @@ final class MethodChannelAppleFoundationModelsBackend
     return _streamChannel.receiveBroadcastStream({
       'prompt': request.prompt,
       'mode': request.mode.name,
-      if (request.schemaPath case final schemaPath?) 'schemaPath': schemaPath,
+      'schemaPath': ?request.schemaPath,
     });
   }
 }

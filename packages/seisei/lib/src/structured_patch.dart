@@ -20,22 +20,17 @@ final class StructuredPatch {
   });
 
   /// Creates an add patch.
-  const StructuredPatch.add({
-    required this.path,
-    required this.value,
-  }) : operation = StructuredPatchOperation.add;
+  const StructuredPatch.add({required this.path, required this.value})
+    : operation = StructuredPatchOperation.add;
 
   /// Creates a replace patch.
-  const StructuredPatch.replace({
-    required this.path,
-    required this.value,
-  }) : operation = StructuredPatchOperation.replace;
+  const StructuredPatch.replace({required this.path, required this.value})
+    : operation = StructuredPatchOperation.replace;
 
   /// Creates a remove patch.
-  const StructuredPatch.remove({
-    required this.path,
-  })  : operation = StructuredPatchOperation.remove,
-        value = null;
+  const StructuredPatch.remove({required this.path})
+    : operation = StructuredPatchOperation.remove,
+      value = null;
 
   /// Patch operation.
   final StructuredPatchOperation operation;
@@ -55,11 +50,8 @@ final class StructuredPatch {
   }
 
   @override
-  int get hashCode => Object.hash(
-        operation,
-        Object.hashAll(path),
-        _structuredHash(value),
-      );
+  int get hashCode =>
+      Object.hash(operation, Object.hashAll(path), _structuredHash(value));
 
   @override
   String toString() {
@@ -91,12 +83,10 @@ void _diffStructuredValue(
 
   if (previous is List && next is List && previous.length == next.length) {
     for (var index = 0; index < previous.length; index += 1) {
-      _diffStructuredValue(
-        previous[index],
-        next[index],
-        [...path, index],
-        patches,
-      );
+      _diffStructuredValue(previous[index], next[index], [
+        ...path,
+        index,
+      ], patches);
     }
     return;
   }
@@ -116,12 +106,7 @@ void _diffMaps(
       patches.add(StructuredPatch.remove(path: [...path, key]));
       continue;
     }
-    _diffStructuredValue(
-      entry.value,
-      next[entry.key],
-      [...path, key],
-      patches,
-    );
+    _diffStructuredValue(entry.value, next[entry.key], [...path, key], patches);
   }
 
   for (final entry in next.entries) {
@@ -193,10 +178,10 @@ bool _listEquals(List<Object> left, List<Object> right) {
 int _structuredHash(Object? value) {
   return switch (value) {
     final Map map => Object.hashAll(
-        map.entries.map(
-          (entry) => Object.hash(entry.key, _structuredHash(entry.value)),
-        ),
+      map.entries.map(
+        (entry) => Object.hash(entry.key, _structuredHash(entry.value)),
       ),
+    ),
     final List list => Object.hashAll(list.map(_structuredHash)),
     _ => value.hashCode,
   };

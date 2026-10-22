@@ -101,34 +101,27 @@ Future<void> main(List<String> args) async {
       'subprocess context can use PCC.',
     );
     checks.addAll([
-      _Check(
-        root,
-        ['fm', 'available', '--model', 'pcc'],
-        failureHint: _pccContextFailureHint,
-      ),
-      _Check(
-        root,
-        [
-          'fm',
-          'respond',
-          '--model',
-          'pcc',
-          '--no-stream',
-          'Reply with exactly: seisei-pcc-ok',
-        ],
-        failureHint: _pccContextFailureHint,
-      ),
-      _Check(
-        '$root/packages/seisei_apple',
-        [
-          'dart',
-          'run',
-          'bin/local_afm_smoke.dart',
-          '--mode',
-          'pcc',
-        ],
-        failureHint: _pccContextFailureHint,
-      ),
+      _Check(root, [
+        'fm',
+        'available',
+        '--model',
+        'pcc',
+      ], failureHint: _pccContextFailureHint),
+      _Check(root, [
+        'fm',
+        'respond',
+        '--model',
+        'pcc',
+        '--no-stream',
+        'Reply with exactly: seisei-pcc-ok',
+      ], failureHint: _pccContextFailureHint),
+      _Check('$root/packages/seisei_apple', [
+        'dart',
+        'run',
+        'bin/local_afm_smoke.dart',
+        '--mode',
+        'pcc',
+      ], failureHint: _pccContextFailureHint),
     ]);
   }
 
@@ -140,9 +133,7 @@ Future<void> main(List<String> args) async {
       'iOS host app with an embedded App Intents extension, but it does not '
       'launch the extension process.',
     );
-    checks.add(
-      _Check(root, ['tool/ios_app_intents_extension_smoke.zsh']),
-    );
+    checks.add(_Check(root, ['tool/ios_app_intents_extension_smoke.zsh']));
   }
 
   if (includeNativePccSdk) {
@@ -151,9 +142,7 @@ Future<void> main(List<String> args) async {
       'Swift interfaces and compile-checks that system-model sessions compile '
       'while obvious PCC model entry points do not.',
     );
-    checks.add(
-      _Check(root, ['tool/foundation_models_pcc_sdk_audit.zsh']),
-    );
+    checks.add(_Check(root, ['tool/foundation_models_pcc_sdk_audit.zsh']));
   }
 
   final releaseChecks = <_Check>[

@@ -125,10 +125,7 @@ abstract final class AppleAppIntentSourceGenerator {
     if (parameters.isNotEmpty) {
       lines.add(
         '    $accessLevel init('
-        '${[
-          ...parameters.map((parameter) => parameter.initializerParameter),
-          'executor: SeiseiAppIntentExecutor',
-        ].join(', ')}) {',
+        '${[...parameters.map((parameter) => parameter.initializerParameter), 'executor: SeiseiAppIntentExecutor'].join(', ')}) {',
       );
       for (final parameter in parameters) {
         lines.add('        self.${parameter.name} = ${parameter.name}');
@@ -356,8 +353,8 @@ final class _AppleAppIntentParameter {
     if (enumDefinition != null) {
       final valueAccessor =
           enumDefinition.kind == _AppleAppIntentEnumKind.hostBackedAppEntity
-              ? 'id'
-              : 'rawValue';
+          ? 'id'
+          : 'rawValue';
       if (isRequired) {
         return '.string($name.$valueAccessor)';
       }
@@ -544,11 +541,7 @@ final class _AppleAppIntentEnumDefinition {
   final String? entityTypeID;
 }
 
-enum _AppleAppIntentEnumKind {
-  appEnum,
-  appEntity,
-  hostBackedAppEntity;
-}
+enum _AppleAppIntentEnumKind { appEnum, appEntity, hostBackedAppEntity }
 
 final class _AppleAppIntentEnumCase {
   const _AppleAppIntentEnumCase({
@@ -568,7 +561,8 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
   List<String> issues,
 ) {
   final values = propertySchema['enum'];
-  final hasAppIntentTypeMetadata = values != null ||
+  final hasAppIntentTypeMetadata =
+      values != null ||
       propertySchema.containsKey('x-seisei-app-intent-kind') ||
       propertySchema.containsKey('x-seisei-app-intent-query') ||
       propertySchema.containsKey('x-seisei-app-intent-typeName') ||
@@ -588,15 +582,16 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
     _ => _swiftTypeNameFromParameterName(parameterName),
   };
   if (!_isSwiftIdentifier(typeName)) {
-    issues
-        .add('$parameterName: enum type name must be a valid Swift identifier');
+    issues.add(
+      '$parameterName: enum type name must be a valid Swift identifier',
+    );
   }
 
   final displayName =
       switch (propertySchema['x-seisei-app-intent-displayName']) {
-    final String value => value,
-    _ => _humanizeParameterName(parameterName),
-  };
+        final String value => value,
+        _ => _humanizeParameterName(parameterName),
+      };
 
   final rawKind = propertySchema['x-seisei-app-intent-kind'];
   final query = propertySchema['x-seisei-app-intent-query'];
@@ -604,11 +599,11 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
     'entity' => _AppleAppIntentEnumKind.appEntity,
     null || 'enum' => _AppleAppIntentEnumKind.appEnum,
     _ => () {
-        issues.add(
-          '$parameterName: x-seisei-app-intent-kind must be enum or entity',
-        );
-        return _AppleAppIntentEnumKind.appEnum;
-      }(),
+      issues.add(
+        '$parameterName: x-seisei-app-intent-kind must be enum or entity',
+      );
+      return _AppleAppIntentEnumKind.appEnum;
+    }(),
   };
   if (query != null && query != 'static' && query != 'host') {
     issues.add(
@@ -627,11 +622,11 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
       displayName: displayName,
       cases: const [],
       kind: _AppleAppIntentEnumKind.hostBackedAppEntity,
-      entityTypeID: switch (
-          propertySchema['x-seisei-app-intent-entityTypeID']) {
-        final String value => value,
-        _ => parameterName,
-      },
+      entityTypeID:
+          switch (propertySchema['x-seisei-app-intent-entityTypeID']) {
+            final String value => value,
+            _ => parameterName,
+          },
     );
   }
 

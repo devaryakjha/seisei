@@ -156,9 +156,7 @@ final class _EchoProvider implements SeiseiProvider {
     GenerationRequest<T> request,
   ) async {
     final available = await availability();
-    final unsupported = request.capabilities.difference(
-      available.capabilities,
-    );
+    final unsupported = request.capabilities.difference(available.capabilities);
     if (unsupported.isNotEmpty) {
       throw UnsupportedCapabilityException(
         providerId: id,

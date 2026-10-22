@@ -67,8 +67,8 @@ final class AppActionDefinition {
       id: json['id']! as String,
       title: json['title']! as String,
       description: json['description']! as String,
-      parameters:
-          (json['parameters'] as Map? ?? const {}).cast<String, Object?>(),
+      parameters: (json['parameters'] as Map? ?? const {})
+          .cast<String, Object?>(),
       exposure: _AppActionExposureWire.fromWireName(json['exposure']),
       metadata: (json['metadata'] as Map? ?? const {}).cast<String, Object?>(),
     );
@@ -142,8 +142,8 @@ final class AppActionInvocation {
   factory AppActionInvocation.fromJson(Map<String, Object?> json) {
     return AppActionInvocation(
       id: json['id']! as String,
-      arguments:
-          (json['arguments'] as Map? ?? const {}).cast<String, Object?>(),
+      arguments: (json['arguments'] as Map? ?? const {})
+          .cast<String, Object?>(),
       toolCallId: json['toolCallId'] as String?,
       metadata: (json['metadata'] as Map? ?? const {}).cast<String, Object?>(),
     );
@@ -184,10 +184,7 @@ final class AppActionInvocation {
 /// Result returned by an app action handler.
 final class AppActionResult {
   /// Creates an action result.
-  const AppActionResult({
-    this.value,
-    this.metadata = const {},
-  });
+  const AppActionResult({this.value, this.metadata = const {}});
 
   /// JSON-compatible result value returned by the host app.
   final Object? value;
@@ -205,10 +202,7 @@ final class AppActionResult {
 
   /// Converts this result to JSON-compatible data.
   Map<String, Object?> toJson() {
-    return {
-      'value': value,
-      'metadata': metadata,
-    };
+    return {'value': value, 'metadata': metadata};
   }
 }
 
@@ -239,10 +233,10 @@ extension _AppEntityQueryModeWire on AppEntityQueryMode {
       'suggested' => AppEntityQueryMode.suggested,
       'search' => AppEntityQueryMode.search,
       _ => throw ArgumentError.value(
-          value,
-          'mode',
-          'Expected identifiers, suggested, or search.',
-        ),
+        value,
+        'mode',
+        'Expected identifiers, suggested, or search.',
+      ),
     };
   }
 }
