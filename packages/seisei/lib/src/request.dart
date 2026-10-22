@@ -33,4 +33,23 @@ final class GenerationRequest<T> {
 
   /// Converts raw provider output into the requested type.
   final GenerationDecoder<T> decode;
+
+  /// Returns a copy of this request with the given fields replaced.
+  GenerationRequest<T> copyWith({
+    String? prompt,
+    Set<ModelCapability>? capabilities,
+    PrivacyPolicy? privacyPolicy,
+    List<ToolDefinition>? tools,
+    Map<String, Object?>? metadata,
+    GenerationDecoder<T>? decode,
+  }) {
+    return GenerationRequest<T>(
+      prompt: prompt ?? this.prompt,
+      decode: decode ?? this.decode,
+      capabilities: capabilities ?? this.capabilities,
+      privacyPolicy: privacyPolicy ?? this.privacyPolicy,
+      tools: tools ?? this.tools,
+      metadata: metadata ?? this.metadata,
+    );
+  }
 }

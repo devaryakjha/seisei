@@ -393,6 +393,41 @@ void main() {
       expect(response.providerId, 'backup');
       expect(response.value, 'from backup');
     });
+
+    test(
+      'should serve on-device-preferred requests when a router allows cloud '
+      'fallback',
+      () async {
+        server.enqueue(JsonReply(completionBody(content: 'from cloud')));
+        const router = _OnDeviceFirst(allowCloudFallback: true);
+
+        final response = await router
+            .build(provider)
+            .generate(
+              _textRequest(privacyPolicy: PrivacyPolicy.onDevicePreferred),
+            );
+
+        expect(response.providerId, provider.id);
+        expect(response.value, 'from cloud');
+      },
+    );
+
+    test(
+      'should keep on-device-preferred requests off the network by default',
+      () async {
+        const router = _OnDeviceFirst(allowCloudFallback: false);
+
+        await expectLater(
+          router
+              .build(provider)
+              .generate(
+                _textRequest(privacyPolicy: PrivacyPolicy.onDevicePreferred),
+              ),
+          throwsA(isA<PrivacyPolicyRejectedException>()),
+        );
+        expect(server.requests, isEmpty);
+      },
+    );
   });
 
   group('stream', () {
@@ -548,4 +583,38 @@ void main() {
       );
     });
   });
+}
+
+/// Builds the on-device-first route with an unavailable on-device provider.
+final class _OnDeviceFirst {
+  const _OnDeviceFirst({required this.allowCloudFallback});
+
+  final bool allowCloudFallback;
+
+  SeiseiRouter build(SeiseiProvider cloud) {
+    return SeiseiRouter([
+      _UnavailableOnDeviceProvider(),
+      cloud,
+    ], allowCloudFallback: allowCloudFallback);
+  }
+}
+
+final class _UnavailableOnDeviceProvider implements SeiseiProvider {
+  @override
+  String get id => 'on-device';
+
+  @override
+  Future<ProviderAvailability> availability() async {
+    return const ProviderAvailability.unavailable('Model is not ready.');
+  }
+
+  @override
+  Future<GenerationResponse<T>> generate<T>(GenerationRequest<T> request) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) {
+    throw UnimplementedError();
+  }
 }

@@ -30,7 +30,9 @@ final reply = await client.generate(
 The provider sends data to a remote server, so it only serves requests whose
 privacy policy is `PrivacyPolicy.cloudAllowed`, and it never reports
 `ModelCapability.onDeviceInference`. Other policies fail with
-`PrivacyPolicyRejectedException` before any request is sent.
+`PrivacyPolicyRejectedException` before any request is sent. To use it as a
+fallback for on-device-preferred requests, put it after an on-device provider
+in a `SeiseiRouter` created with `allowCloudFallback: true`.
 
 ### Other servers
 
