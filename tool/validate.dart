@@ -6,6 +6,7 @@ Future<void> main(List<String> args) async {
   final includeIosExtension = args.contains('--ios-app-intents-extension');
   final includeNativePccSdk = args.contains('--native-pcc-sdk');
   final includeRelease = args.contains('--release');
+  final includeLocalOllama = args.contains('--local-ollama');
   final root = Directory.current.path;
 
   final checks = <_Check>[
@@ -14,6 +15,7 @@ Future<void> main(List<String> args) async {
     _Check(root, ['dart', 'analyze', '--fatal-infos']),
     _Check('$root/packages/seisei', ['dart', 'test']),
     _Check('$root/packages/seisei_test', ['dart', 'test']),
+    _Check('$root/packages/seisei_openai', ['dart', 'test']),
     _Check('$root/packages/seisei_flutter', ['flutter', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
     _Check('$root/packages/seisei_intents', ['flutter', 'test']),
@@ -141,6 +143,21 @@ Future<void> main(List<String> args) async {
     checks.add(_Check(root, ['tool/foundation_models_pcc_sdk_audit.zsh']));
   }
 
+  if (includeLocalOllama) {
+    stdout.writeln(
+      '\nLocal Ollama validation runs real requests against an Ollama '
+      'server through `packages/seisei_openai/example/ollama_smoke.dart`. '
+      'Set OLLAMA_MODEL to pick a model.',
+    );
+    checks.add(
+      _Check('$root/packages/seisei_openai', [
+        'dart',
+        'run',
+        'example/ollama_smoke.dart',
+      ]),
+    );
+  }
+
   final releaseChecks = <_Check>[
     for (final package in _publishedPackages)
       _Check('$root/packages/$package', [
@@ -194,6 +211,7 @@ const _publishedPackages = [
   'seisei_flutter',
   'seisei_apple',
   'seisei_intents',
+  'seisei_openai',
   'discontinued/seisei_schema',
   'discontinued/seisei_router',
   'discontinued/seisei_flutter_intents',
