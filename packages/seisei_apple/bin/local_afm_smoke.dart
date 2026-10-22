@@ -6,7 +6,6 @@ import 'package:seisei_apple/src/apple_foundation_models_provider.dart';
 import 'package:seisei_apple/src/backend.dart';
 import 'package:seisei_apple/src/fm_cli_backend.dart';
 import 'package:seisei_apple/src/foundation_models_schema.dart';
-import 'package:seisei_schema/seisei_schema.dart';
 
 Future<void> main(List<String> args) async {
   if (args.contains('--help') || args.contains('-h')) {
@@ -68,13 +67,15 @@ Future<void> main(List<String> args) async {
     }
     promptParts.add(arg);
   }
+  final schemaPrompt = discriminatedUnionSmoke
+      ? 'Return JSON with message kind exactly note and text exactly $expect'
+      : explicitNullUnionSmoke
+      ? 'Return JSON with label exactly $expect and value exactly null'
+      : 'Return JSON with title exactly $expect, count 7, published true, '
+            'and author name Aria';
   final prompt = promptParts.isEmpty
       ? schemaSmoke
-            ? discriminatedUnionSmoke
-                  ? 'Return JSON with message kind exactly note and text exactly $expect'
-                  : explicitNullUnionSmoke
-                  ? 'Return JSON with label exactly $expect and value exactly null'
-                  : 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
+            ? schemaPrompt
             : streamSmoke && explicitExpect == null
             ? 'Say hello in a short sentence.'
             : 'Reply with exactly: $expect'
@@ -82,9 +83,10 @@ Future<void> main(List<String> args) async {
   final backend = FmCliBackend();
   final availability = await backend.availability();
 
-  stdout.writeln('mode: ${mode.name}');
-  stdout.writeln('systemAvailable: ${availability.systemAvailable}');
-  stdout.writeln('pccAvailable: ${availability.pccAvailable}');
+  stdout
+    ..writeln('mode: ${mode.name}')
+    ..writeln('systemAvailable: ${availability.systemAvailable}')
+    ..writeln('pccAvailable: ${availability.pccAvailable}');
   final requestedModeAvailable = switch (mode) {
     AppleFoundationModelsMode.system => availability.systemAvailable,
     AppleFoundationModelsMode.pcc => availability.pccAvailable,
@@ -157,8 +159,9 @@ Future<void> main(List<String> args) async {
 
   stdout.writeln('providerId: ${provider.id}');
   if (streamSmoke) {
-    stdout.writeln('streamDeltas: $streamDeltas');
-    stdout.writeln('streamPartialSnapshots: $streamPartialSnapshots');
+    stdout
+      ..writeln('streamDeltas: $streamDeltas')
+      ..writeln('streamPartialSnapshots: $streamPartialSnapshots');
   }
   if (schemaFile != null) {
     stdout.writeln(
@@ -250,7 +253,7 @@ String _decode(
   };
   if (discriminatedUnionSmoke) {
     return _discriminatedSchema.decode(decoded, (object) {
-      final message = object['message'] as Map;
+      final message = object['message']! as Map;
       if (message['kind'] != 'note') {
         throw DecodeException('Expected note discriminator.', source: object);
       }
@@ -270,7 +273,7 @@ String _decode(
   }
 
   return _draftSchema.decode(decoded, (object) {
-    final author = object['author'] as Map;
+    final author = object['author']! as Map;
     if (author['name'] != 'Aria' ||
         object['count'] != 7 ||
         object['published'] != true) {
@@ -308,29 +311,30 @@ String? _optionValue(List<String> args, String name) {
 }
 
 void _printUsage() {
-  stdout.writeln('Usage: dart run bin/local_afm_smoke.dart [options] [prompt]');
-  stdout.writeln('');
-  stdout.writeln('Options:');
-  stdout.writeln(
-    '  --mode system|pcc   Apple model mode to use. Defaults to system.',
-  );
-  stdout.writeln(
-    '  --schema           Use a Seisei ObjectSchema-backed prompt.',
-  );
-  stdout.writeln(
-    '  --discriminated-union Use a schema-backed discriminated union prompt.',
-  );
-  stdout.writeln(
-    '  --explicit-null-union Use a schema-backed explicit null union prompt.',
-  );
-  stdout.writeln('  --stream           Verify streaming transport.');
-  stdout.writeln('  --expect VALUE      Exact expected response text.');
-  stdout.writeln('');
-  stdout.writeln('Examples:');
-  stdout.writeln('  dart run bin/local_afm_smoke.dart');
-  stdout.writeln('  dart run bin/local_afm_smoke.dart --schema');
-  stdout.writeln('  dart run bin/local_afm_smoke.dart --discriminated-union');
-  stdout.writeln('  dart run bin/local_afm_smoke.dart --explicit-null-union');
-  stdout.writeln('  dart run bin/local_afm_smoke.dart --stream');
-  stdout.writeln('  dart run bin/local_afm_smoke.dart --mode pcc');
+  stdout
+    ..writeln('Usage: dart run bin/local_afm_smoke.dart [options] [prompt]')
+    ..writeln()
+    ..writeln('Options:')
+    ..writeln(
+      '  --mode system|pcc   Apple model mode to use. Defaults to system.',
+    )
+    ..writeln(
+      '  --schema           Use a Seisei ObjectSchema-backed prompt.',
+    )
+    ..writeln(
+      '  --discriminated-union Use a schema-backed discriminated union prompt.',
+    )
+    ..writeln(
+      '  --explicit-null-union Use a schema-backed explicit null union prompt.',
+    )
+    ..writeln('  --stream           Verify streaming transport.')
+    ..writeln('  --expect VALUE      Exact expected response text.')
+    ..writeln()
+    ..writeln('Examples:')
+    ..writeln('  dart run bin/local_afm_smoke.dart')
+    ..writeln('  dart run bin/local_afm_smoke.dart --schema')
+    ..writeln('  dart run bin/local_afm_smoke.dart --discriminated-union')
+    ..writeln('  dart run bin/local_afm_smoke.dart --explicit-null-union')
+    ..writeln('  dart run bin/local_afm_smoke.dart --stream')
+    ..writeln('  dart run bin/local_afm_smoke.dart --mode pcc');
 }

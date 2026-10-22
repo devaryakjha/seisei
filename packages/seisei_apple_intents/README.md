@@ -9,7 +9,7 @@ This package is the smallest real native registration path that fits Seisei:
 - `SeiseiAppleIntents` only provides payload, executor, and dependency helpers
   so those intents can forward work into app-owned Seisei handlers.
 - Swift payload types include JSON-compatible method-channel conversion helpers
-  that match `seisei_flutter_intents` action and entity query calls.
+  that match `seisei_intents` action and entity query calls.
 - Apps that want generated wrappers can use the source generator to emit
   build-time Swift source for a conservative scalar, scalar-array,
   string-enum, and static string-backed AppEntity parameter subset.
@@ -42,7 +42,7 @@ This package is the smallest real native registration path that fits Seisei:
 - register intents dynamically from Dart or Flutter
 - replace app-owned `AppIntent`, `AppShortcutsProvider`, or
   `AppIntentsPackage` source
-- start, retain, or attach a Flutter engine itself; `seisei_flutter_intents`
+- start, retain, or attach a Flutter engine itself; `seisei_intents`
   provides iOS and macOS headless engine helpers for host-owned targets, while
   host apps and extensions still own runtime executor and lifecycle wiring
 - model rich platform-specific parameters beyond generated scalar arrays,
@@ -104,7 +104,7 @@ SeiseiAppIntentDependencies.configure(
 )
 ```
 
-If the host forwards into a running `seisei_flutter_intents` runtime, use the
+If the host forwards into a running `seisei_intents` runtime, use the
 one-call helper with the host-owned method-channel transport:
 
 ```swift
@@ -112,7 +112,7 @@ SeiseiFlutterIntentsDependencies.configure { method, arguments in
     // Send `method` and `arguments` over a Flutter method channel named
     // SeiseiFlutterIntentsWire.channelName.
     // Return the decoded method-channel result.
-    // The host can use seisei_flutter_intents' iOS/macOS engine host helper,
+    // The host can use seisei_intents' iOS/macOS engine host helper,
     // or another app-owned engine. It still owns startup, attachment, and
     // lifetime.
 }
@@ -123,7 +123,7 @@ handwritten action `perform()` calls and the `SeiseiAppEntityQueryExecutor` for
 host-backed entity queries. It does not create, retain, or attach a Flutter
 engine, and it does not make background execution automatic; that remains an
 explicit host policy. Use `SeiseiFlutterIntentsEngineHost` from
-`seisei_flutter_intents` when an iOS or macOS host target should own a headless
+`seisei_intents` when an iOS or macOS host target should own a headless
 Flutter engine for these calls.
 
 Generate build-time Swift source for scalar, scalar-array, string-enum, and

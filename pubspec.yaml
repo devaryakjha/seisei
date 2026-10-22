@@ -6,15 +6,16 @@ environment:
 
 workspace:
   - packages/seisei
-  - packages/seisei_schema
-  - packages/seisei_router
   - packages/seisei_test
-  - packages/seisei_ui
-  - packages/seisei_tagflow
   - packages/seisei_apple
   - packages/seisei_intents
-  - packages/seisei_flutter_intents
+  - packages/seisei_flutter
+  - packages/discontinued/seisei_schema
+  - packages/discontinued/seisei_router
+  - packages/discontinued/seisei_flutter_intents
+  - packages/discontinued/seisei_ui
+  - packages/discontinued/seisei_tagflow
   - examples/basic_cli
 
 dev_dependencies:
-  lints: ^6.0.0
+  very_good_analysis: ^10.2.0

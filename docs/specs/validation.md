@@ -113,13 +113,13 @@ with the iOS extension-safe engine artifact available.
 
 That script first uses `xcrun swiftc` with the iPhoneSimulator SDK, Flutter's
 `ios/extension_safe/Flutter.xcframework`, and Swift `-application-extension`
-mode. It emits the `seisei_flutter_intents` iOS Swift module from package
+mode. It emits the `seisei_intents` iOS Swift module from package
 source, then typechecks an `AppIntentsExtension` source file that imports the
 module and constructs `SeiseiFlutterIntentsEngineHost`.
 
 It then uses XcodeGen and `xcodebuild` to generate a temporary iOS host app
 with an embedded App Intents extension target. The extension target compiles the
-real `seisei_flutter_intents` iOS Swift source in application-extension mode,
+real `seisei_intents` iOS Swift source in application-extension mode,
 links Flutter's extension-safe iOS engine, packages
 `SeiseiSmokeHost.app/PlugIns/SeiseiSmokeExtension.appex`, and verifies that
 Xcode extracted `Metadata.appintents`.
@@ -149,14 +149,15 @@ When `--release` reaches `dart pub publish --dry-run`, the script runs every pac
 
 ```sh
 packages/seisei
-packages/seisei_schema
-packages/seisei_router
 packages/seisei_test
-packages/seisei_ui
-packages/seisei_tagflow
+packages/seisei_flutter
 packages/seisei_apple
 packages/seisei_intents
-packages/seisei_flutter_intents
+packages/discontinued/seisei_schema
+packages/discontinued/seisei_router
+packages/discontinued/seisei_flutter_intents
+packages/discontinued/seisei_ui
+packages/discontinued/seisei_tagflow
 ```
 
 The released packages are published under the verified publisher `jha.sh`.

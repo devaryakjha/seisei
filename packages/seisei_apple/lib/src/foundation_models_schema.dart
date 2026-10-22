@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:seisei_schema/seisei_schema.dart';
+import 'package:seisei/seisei.dart';
 
-import 'apple_foundation_models_provider.dart';
+import 'package:seisei_apple/src/apple_foundation_models_provider.dart';
 
 /// Encodes Seisei schemas into FoundationModels `GenerationSchema` JSON.
 ///
-/// The current mapper covers generic `seisei_schema` object fields that are
+/// The current mapper covers generic Seisei `ObjectSchema` fields that are
 /// verified against FoundationModels JSON encoding: nested objects, string
 /// enums, field-level unions, explicit null union variants, numeric ranges,
 /// string patterns, arrays, and optional fields.
@@ -59,9 +59,7 @@ final class FoundationModelsSchemaEncoder {
     _SchemaDefinitions definitions,
   ) {
     final fields = schema.fieldDefinitions;
-    for (final field in fields.keys) {
-      _checkFieldName(field);
-    }
+    fields.keys.forEach(_checkFieldName);
     final required = [
       for (final entry in fields.entries)
         if (entry.value.isRequired) entry.key,
@@ -185,7 +183,8 @@ final class FoundationModelsSchemaEncoder {
       throw ArgumentError.value(
         variant.type.name,
         'schema.fields',
-        'Union variants must describe single values. Set isArray on the union field instead.',
+        'Union variants must describe single values. '
+            'Set isArray on the union field instead.',
       );
     }
     if (variant.type == ObjectFieldType.union) {

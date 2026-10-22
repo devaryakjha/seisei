@@ -1,4 +1,4 @@
-import 'structured_patch.dart';
+import 'package:seisei/src/structured_patch.dart';
 
 /// A typed generation response.
 final class GenerationResponse<T> {

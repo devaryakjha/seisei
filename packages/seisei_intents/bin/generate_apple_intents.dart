@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:seisei_intents/seisei_intents.dart';
+import 'package:seisei_intents/codegen.dart';
 
 Future<void> main(List<String> args) async {
   final options = _parseArgs(args);

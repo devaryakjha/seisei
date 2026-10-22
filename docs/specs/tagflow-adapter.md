@@ -2,18 +2,21 @@
 
 ## Status
 
-Active, implemented as an experimental optional package.
+Active, implemented as an experimental adapter. Since `0.2.0-dev.0` it ships
+in `seisei_flutter` (which absorbed `seisei_ui` and `seisei_tagflow`) as the
+default renderer.
 
 The current local Tagflow alpha line is stable enough for a narrow compileable
-adapter package that returns `TagflowDocument` values. Core Seisei packages must
+adapter that returns `TagflowDocument` values. The core `seisei` package must
 still remain Tagflow-free, and broader UI/layout mapping is intentionally out of
 scope until Seisei has stronger renderer-neutral presentation semantics.
 
 ## Objective
 
-Provide `seisei_tagflow` as an optional adapter package that translates a
-limited `seisei_ui` block vocabulary into Tagflow runtime documents without
-adding Tagflow imports to `seisei`, `seisei_ui`, or other core packages.
+Provide `SeiseiTagflowAdapter` in `seisei_flutter` as the default adapter that
+translates a limited Seisei block vocabulary into Tagflow runtime documents
+without adding Tagflow imports to `seisei` or to the renderer-neutral block
+contracts.
 
 ## Current Tagflow Evidence
 
@@ -46,7 +49,7 @@ continues to emit a narrow `TagflowDocument` output.
 
 ## Seisei Contract Assessment
 
-No `seisei_ui` API change is required for the current adapter:
+No block contract API change is required for the current adapter:
 
 - `SeiseiBlock` already provides a stable semantic tree with JSON-compatible
   props.
@@ -60,15 +63,15 @@ No `seisei_ui` API change is required for the current adapter:
 The adapter package should add only package-local validation and mapping logic.
 If Seisei later needs renderer-neutral layout variants, authored IDs, styling,
 or dynamic patch metadata, those should be designed generically first and not as
-Tagflow-only fields on `seisei_ui`.
+Tagflow-only fields on `SeiseiBlock`.
 
 ## Implemented Package Shape
 
-`packages/seisei_tagflow` is a Flutter package with:
+`packages/seisei_flutter` is a Flutter package with:
 
-- `sdk: ">=3.9.0 <4.0.0"` to match the current Tagflow alpha line
-- a direct `tagflow: ^1.0.0-alpha.1` dependency
-- a direct `seisei_ui` dependency
+- `sdk: ">=3.9.0 <4.0.0"` to match Tagflow
+- a direct `tagflow: ^1.0.0-beta.0` dependency
+- the renderer-neutral block contracts in the same package
 - a `SeiseiTagflowAdapter` that implements
   `SeiseiBlockAdapter<TagflowDocument>`
 
@@ -101,11 +104,11 @@ invalid URI payloads, or invalid child placement.
 
 ## Current Non-Goals
 
-- Do not add `tagflow` imports to `seisei`, `seisei_ui`, or other core Seisei
-  packages.
+- Do not add `tagflow` imports to `seisei` or to the block contract files in
+  `seisei_flutter`.
 - Do not translate Seisei blocks to HTML as the primary adapter strategy.
 - Do not treat Tagflow HTML render boundaries, view options, themes, or
-  component registries as `seisei_ui` concepts.
+  component registries as block contract concepts.
 - Do not silently coerce unsupported blocks or actions into Tagflow unsupported
   nodes.
 - Do not model Seisei layout-specific primitives such as `row`, `column`,
@@ -128,8 +131,8 @@ invalid URI payloads, or invalid child placement.
 
 ## Acceptance Criteria
 
-- `seisei_tagflow` stays outside core Seisei dependency graphs unless an app
-  opts into it.
+- Tagflow stays outside the `seisei` dependency graph; apps get it by depending
+  on `seisei_flutter`.
 - The adapter compiles against the current `tagflow` alpha surface.
 - Tests prove unsupported block/action usage fails before rendering.
 - Tests prove a narrow supported block set maps to `TagflowDocument` values

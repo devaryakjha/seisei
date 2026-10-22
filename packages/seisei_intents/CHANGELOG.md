@@ -1,3 +1,15 @@
+## 0.2.0-dev.0
+
+- Merge `seisei_flutter_intents` into this package. It is now a Flutter
+  plugin for iOS and macOS, and `SeiseiFlutterIntentsRuntime` and
+  `SeiseiFlutterIntentsEngineHost` ship here with unchanged names. Native hosts
+  import the Swift module `seisei_intents` instead of `seisei_flutter_intents`;
+  the method channel name is unchanged.
+- Add `package:seisei_intents/codegen.dart`, a Flutter-free library for the
+  action contracts and App Intents source generator. The
+  `generate_apple_intents` executable uses it and still runs on the Dart VM.
+- Move to the shared Seisei package version.
+
 ## 0.1.0-dev.9
 
 - Add generated Apple App Intent support for integer, number, and boolean

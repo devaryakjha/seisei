@@ -1,3 +1,5 @@
+import 'package:meta/meta.dart';
+
 /// Operation applied by a structured generation patch.
 enum StructuredPatchOperation {
   /// Add a value at the target path.
@@ -11,6 +13,7 @@ enum StructuredPatchOperation {
 }
 
 /// Path-level update for JSON-like structured generation output.
+@immutable
 final class StructuredPatch {
   /// Creates a structured patch.
   const StructuredPatch({
@@ -177,12 +180,12 @@ bool _listEquals(List<Object> left, List<Object> right) {
 
 int _structuredHash(Object? value) {
   return switch (value) {
-    final Map map => Object.hashAll(
+    final Map<Object?, Object?> map => Object.hashAll(
       map.entries.map(
         (entry) => Object.hash(entry.key, _structuredHash(entry.value)),
       ),
     ),
-    final List list => Object.hashAll(list.map(_structuredHash)),
+    final List<Object?> list => Object.hashAll(list.map(_structuredHash)),
     _ => value.hashCode,
   };
 }

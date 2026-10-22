@@ -1,5 +1,6 @@
+import 'dart:io';
+
 import 'package:seisei/seisei.dart';
-import 'package:seisei_schema/seisei_schema.dart';
 import 'package:seisei_test/seisei_test.dart';
 
 Future<void> main() async {
@@ -24,7 +25,7 @@ Future<void> main() async {
     ),
   );
 
-  print(response.value.text);
+  stdout.writeln(response.value.text);
 }
 
 final class _Summary {

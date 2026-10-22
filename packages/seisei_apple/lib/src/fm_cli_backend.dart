@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'backend.dart';
+import 'package:seisei_apple/src/backend.dart';
 
 /// Injectable process runner used by tests.
 typedef ProcessRunner =

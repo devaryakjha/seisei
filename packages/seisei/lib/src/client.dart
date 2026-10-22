@@ -1,6 +1,6 @@
-import 'provider.dart';
-import 'request.dart';
-import 'response.dart';
+import 'package:seisei/src/provider.dart';
+import 'package:seisei/src/request.dart';
+import 'package:seisei/src/response.dart';
 
 /// Provider-backed entrypoint for typed Seisei generation.
 final class SeiseiClient {

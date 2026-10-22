@@ -76,7 +76,7 @@ final class _Draft {
   const _Draft(this.title);
 
   factory _Draft.fromJson(Object? rawValue) {
-    final object = rawValue as Map<String, Object?>;
+    final object = rawValue! as Map<String, Object?>;
 
     return _Draft(object['title']! as String);
   }

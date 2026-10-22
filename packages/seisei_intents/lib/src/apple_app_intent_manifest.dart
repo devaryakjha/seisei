@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'action.dart';
-import 'apple_app_intent_source.dart';
+import 'package:seisei_intents/src/action.dart';
+import 'package:seisei_intents/src/apple_app_intent_source.dart';
 
 /// Manifest describing generated Apple App Intent Swift sources.
 final class AppleAppIntentManifest {

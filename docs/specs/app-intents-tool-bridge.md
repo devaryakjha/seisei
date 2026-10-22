@@ -54,7 +54,7 @@ Apple's current developer material says App Intents expose app actions and data 
 
 The package depends on `seisei` only.
 
-`seisei_flutter_intents` owns the optional Flutter runtime adapter over this
+`seisei_intents` owns the optional Flutter runtime adapter over this
 contract. It registers a Dart method-channel handler for generated/native App
 Intent calls when a Flutter engine is running, including action invocation and
 host-backed entity query resolution. Its iOS and macOS native helpers can start
@@ -65,7 +65,7 @@ execution policy.
 `SeiseiAppleIntents` owns the matching Swift-side method-channel wire helpers.
 Its invocation, result, entity-query invocation, and entity-resolution types can
 convert to or from JSON-compatible dictionaries that match
-`seisei_flutter_intents` channel payloads. It also exposes closure-based
+`seisei_intents` channel payloads. It also exposes closure-based
 forwarding executors for the `invokeAction` and `resolveEntityQuery` methods,
 plus `SeiseiFlutterIntentsDependencies.configure(invokeMethod:manager:)` as a
 host convenience for registering both executors with `AppDependencyManager`.
@@ -93,7 +93,7 @@ Later native work can still:
 
 - compile generated wrappers in an app target, extension target, Swift package,
   or static library that the App Intents runtime indexes;
-- wire generated Swift `perform()` calls to `seisei_flutter_intents` from a
+- wire generated Swift `perform()` calls to `seisei_intents` from a
   host app or extension lifecycle that owns Flutter engine availability and
   includes the required Flutter assets;
 - add richer platform-specific parameters above the current scalar,
@@ -116,7 +116,7 @@ Later native work can still:
   generation tests plus Swift compile tests.
 - Host-backed string entity query generation is opt-in and covered by Dart
   source generation tests plus Swift compile tests.
-- `seisei_flutter_intents` tests cover native-to-Dart method-channel action
+- `seisei_intents` tests cover native-to-Dart method-channel action
   invocation and host-backed entity query resolution.
 - `SeiseiAppleIntents` Swift tests cover method-channel wire conversion for
   action invocations, action results, entity query invocations, and entity

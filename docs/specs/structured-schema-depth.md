@@ -2,7 +2,7 @@
 
 ## Goal
 
-Extend `seisei_schema` beyond flat scalar fields without coupling the core API to
+Extend `ObjectSchema` (formerly `seisei_schema`, now part of `seisei`) beyond flat scalar fields without coupling the core API to
 Apple-specific schema builders.
 
 This workstream adds only schema concepts that are both:
@@ -34,7 +34,7 @@ Supported generic field concepts:
 Validation rules:
 
 - required-field behavior stays unchanged
-- unknown properties are still ignored by `seisei_schema` validation
+- unknown properties are still ignored by `ObjectSchema` validation
 - nested validation errors preserve fully qualified JSON-style paths
 - array constraints apply to the container; scalar constraints apply to each
   element when `isArray` is true

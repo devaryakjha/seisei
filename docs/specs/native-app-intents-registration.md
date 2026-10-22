@@ -68,7 +68,7 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
   intents to forward execution into the registered executor;
 - method-channel wire conversions on invocation, result, entity-query
   invocation, and entity-resolution types so host-owned executors can forward
-  calls into `seisei_flutter_intents` without recreating payload keys;
+  calls into `seisei_intents` without recreating payload keys;
 - `SeiseiFlutterIntentsWire` plus closure-based action and entity-query
   executor factories for hosts that can provide a Flutter method-channel
   invocation function;
@@ -90,13 +90,13 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `seisei_intents` remains pure Dart and owns generic action contracts plus
   static Swift source generation from code or manifests. It does not import
   Apple frameworks or perform native registration.
-- `seisei_flutter_intents` is the optional Flutter runtime adapter. It handles
+- `seisei_intents` is the optional Flutter runtime adapter. It handles
   method-channel action invocation and host-backed entity query resolution when
   a host app has a running Flutter engine. Its default capabilities do not
   advertise background execution; hosts opt into
   `AppActionCapability.backgroundExecution` only when they provide the required
   app or extension lifecycle.
-- On iOS and macOS, `seisei_flutter_intents` also provides
+- On iOS and macOS, `seisei_intents` also provides
   `SeiseiFlutterIntentsEngineHost`, a headless `FlutterEngine` helper that
   starts and retains an engine and exposes an async method-channel invoker for
   app-owned App Intents forwarding. The host still provides Flutter assets and
@@ -125,7 +125,7 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - No fully managed Flutter engine lifecycle from Apple's App Intents runtime in
   arbitrary extension processes in this change. The iOS and macOS helpers start
   and retain a headless engine for host-owned targets, and
-  `seisei_flutter_intents` handles method-channel calls once the host target
+  `seisei_intents` handles method-channel calls once the host target
   includes Flutter assets and plugin registration. The host still owns target
   wiring and must opt into background execution policy explicitly.
 - `tool/ios_app_intents_extension_smoke.zsh` proves the iOS helper typechecks in
@@ -146,7 +146,7 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - Tests prove:
   - invocation and result payloads round-trip predictably;
   - invocation/result/entity-query payloads convert to and from the
-    `seisei_flutter_intents` method-channel wire format;
+    `seisei_intents` method-channel wire format;
   - closure-based forwarding executors call `invokeAction` and
     `resolveEntityQuery` with canonical payloads and decode canonical results;
   - the dependency helper accepts a host executor and a supplied
@@ -165,7 +165,7 @@ Add an optional Swift package at `packages/seisei_apple_intents` that provides:
 - `seisei_intents` tests prove Dart-side generation from
   `AppActionDefinition` data, stable rejection of unsupported parameter
   schemas, and JSON-compatible wire formats.
-- `seisei_flutter_intents` tests prove method-channel action invocation and
+- `seisei_intents` tests prove method-channel action invocation and
   host-backed entity query resolution from native-shaped calls.
 - Manifest tests prove generated Swift files can be written from a
   JSON-compatible action manifest.

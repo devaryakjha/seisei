@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart' as flutter_test;
 import 'package:seisei/seisei.dart';
 import 'package:seisei_apple/seisei_apple.dart';
-import 'package:seisei_schema/seisei_schema.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -686,8 +685,8 @@ void main() {
           2,
           1,
           '',
-          'Error: \u001b[38;2;255;107;128m'
-              'PCC inference is not available in this context.\u001b[0m',
+          'Error: \u001b[38;2;255;107;128mPCC inference is '
+              'not available in this context.\u001b[0m',
         );
       },
     );
@@ -837,10 +836,11 @@ void main() {
             'mode': 'system',
             'schemaPath': '/tmp/schema.json',
           });
-          events.success('he');
-          events.success('llo');
-          events.success({'done': true, 'value': 'hello'});
-          events.endOfStream();
+          events
+            ..success('he')
+            ..success('llo')
+            ..success({'done': true, 'value': 'hello'})
+            ..endOfStream();
         },
       ),
     );

@@ -74,20 +74,24 @@ document why validation is handled by the host application.
 
 The user's parallel Tagflow work may make Tagflow a good renderer for Seisei UI blocks. The Seisei contract should support that by keeping three layers separate:
 
-1. `seisei_ui`: generic block schema and adapter interfaces.
+1. Generic block schema and adapter interfaces (`SeiseiBlock`,
+   `SeiseiBlockSchema`, `SeiseiBlockAdapter`) in `seisei_flutter`.
 2. `tagflow`: external renderer/library owned by the Tagflow project.
-3. `seisei_tagflow`: optional adapter package that translates validated Seisei blocks into Tagflow constructs.
+3. `SeiseiTagflowAdapter`: the default adapter, also in `seisei_flutter`, that
+   translates validated Seisei blocks into Tagflow constructs.
 
 Rules:
 
-- `seisei` and `seisei_ui` must not import Tagflow.
-- Tagflow-specific names, options, and render boundaries belong in `seisei_tagflow`.
+- `seisei` must not import Tagflow or Flutter.
+- Only `seisei_tagflow_adapter.dart` in `seisei_flutter` imports Tagflow; the
+  block contracts stay renderer-neutral so other adapters can implement them.
+- Tagflow-specific names, options, and render boundaries belong in
+  `SeiseiTagflowAdapter`.
 - If Tagflow cannot render a block, the adapter reports a capability mismatch rather than degrading silently.
 - Apps can provide their own adapters without depending on Tagflow.
 
 See [Optional Tagflow Adapter SPEC](../specs/tagflow-adapter.md) for the
-current read-only Tagflow findings, Seisei contract assessment, and blockers
-before any optional `seisei_tagflow` package is added.
+Tagflow findings and Seisei contract assessment behind the adapter.
 
 ## Security and Safety
 

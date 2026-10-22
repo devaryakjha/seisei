@@ -1,5 +1,5 @@
-import 'capability.dart';
-import 'tool.dart';
+import 'package:seisei/src/capability.dart';
+import 'package:seisei/src/tool.dart';
 
 /// Decodes a raw provider value into an application value.
 typedef GenerationDecoder<T> = T Function(Object? rawValue);

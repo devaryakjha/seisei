@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-import 'backend.dart';
+import 'package:seisei_apple/src/backend.dart';
 
 /// Backend that talks to the native Flutter plugin over a method channel.
 final class MethodChannelAppleFoundationModelsBackend

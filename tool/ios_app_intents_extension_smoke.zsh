@@ -28,7 +28,7 @@ flutter_bin="$(command -v flutter)"
 flutter_root="${flutter_bin:A:h:h}"
 sdk="$(xcrun --sdk iphonesimulator --show-sdk-path)"
 flutter_framework="${flutter_root}/bin/cache/artifacts/engine/ios/extension_safe/Flutter.xcframework/ios-arm64_x86_64-simulator"
-source_file="${repo_root}/packages/seisei_flutter_intents/ios/seisei_flutter_intents/Sources/seisei_flutter_intents/SeiseiFlutterIntentsPlugin.swift"
+source_file="${repo_root}/packages/seisei_intents/ios/seisei_intents/Sources/seisei_intents/SeiseiFlutterIntentsPlugin.swift"
 
 if [[ ! -d "${flutter_framework}" ]]; then
   print -u2 "Missing Flutter extension-safe iOS framework at:"
@@ -47,22 +47,22 @@ print "iPhoneSimulator SDK: ${sdk}"
 print "Extension-safe Flutter framework: ${flutter_framework}"
 print "Xcode: $(xcodebuild -version | tr '\n' ' ')"
 
-print "> emit seisei_flutter_intents Swift module in application-extension mode"
+print "> emit seisei_intents Swift module in application-extension mode"
 xcrun swiftc \
   -emit-module \
   -parse-as-library \
-  -module-name seisei_flutter_intents \
+  -module-name seisei_intents \
   -target arm64-apple-ios17.0-simulator \
   -sdk "${sdk}" \
   -F "${flutter_framework}" \
   -application-extension \
-  -emit-module-path "${tmp}/seisei_flutter_intents.swiftmodule" \
+  -emit-module-path "${tmp}/seisei_intents.swiftmodule" \
   "${source_file}"
 
 cat >"${tmp}/ExtensionSmoke.swift" <<'SWIFT'
 import AppIntents
 import ExtensionFoundation
-import seisei_flutter_intents
+import seisei_intents
 
 @main
 struct SeiseiExtension: AppIntentsExtension {}
@@ -91,8 +91,8 @@ xcrun swiftc \
 
 print "Swift application-extension typecheck passed."
 print "> generate temporary iOS host app and App Intents extension"
-mkdir -p "${tmp}/Host" "${tmp}/Extension" "${tmp}/Sources/seisei_flutter_intents"
-cp "${source_file}" "${tmp}/Sources/seisei_flutter_intents/SeiseiFlutterIntentsPlugin.swift"
+mkdir -p "${tmp}/Host" "${tmp}/Extension" "${tmp}/Sources/seisei_intents"
+cp "${source_file}" "${tmp}/Sources/seisei_intents/SeiseiFlutterIntentsPlugin.swift"
 
 cat >"${tmp}/Host/App.swift" <<'SWIFT'
 import SwiftUI
@@ -179,7 +179,7 @@ targets:
     platform: iOS
     sources:
       - Extension
-      - Sources/seisei_flutter_intents
+      - Sources/seisei_intents
     info:
       path: Extension/Info.plist
       properties:

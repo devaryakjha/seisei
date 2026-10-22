@@ -1,4 +1,8 @@
-import 'action.dart';
+// Each string below is one line of emitted Swift. Long lines and adjacent
+// strings keep a generated line readable as a single unit.
+// ignore_for_file: lines_longer_than_80_chars, no_adjacent_strings_in_list
+
+import 'package:seisei_intents/src/action.dart';
 
 /// Shortcut metadata for generated Apple App Intent wrapper source.
 final class AppleAppShortcutDefinition {
@@ -645,8 +649,8 @@ _AppleAppIntentEnumDefinition? _parseEnumCases(
   }
 
   final titleMap = switch (propertySchema['x-seisei-app-intent-enumTitles']) {
-    final Map value => value,
-    _ => const {},
+    final Map<Object?, Object?> value => value,
+    _ => const <Object?, Object?>{},
   };
 
   final cases = <_AppleAppIntentEnumCase>[];
@@ -717,7 +721,7 @@ String _argumentsExpression(List<_AppleAppIntentParameter> parameters) {
 
 String _typeNameFromActionId(String actionId) {
   final words = actionId
-      .split(RegExp(r'[^A-Za-z0-9]+'))
+      .split(RegExp('[^A-Za-z0-9]+'))
       .where((word) => word.isNotEmpty)
       .map(_capitalizeAscii);
   final joined = words.join();
@@ -729,14 +733,14 @@ String _typeNameFromActionId(String actionId) {
 
 String _swiftTypeNameFromParameterName(String name) {
   final words = name
-      .split(RegExp(r'[^A-Za-z0-9]+'))
+      .split(RegExp('[^A-Za-z0-9]+'))
       .where((word) => word.isNotEmpty)
       .map(_capitalizeAscii)
       .join();
   if (words.isEmpty) {
     return 'GeneratedEnum';
   }
-  if (RegExp(r'^[0-9]').hasMatch(words)) {
+  if (RegExp('^[0-9]').hasMatch(words)) {
     return 'Generated$words';
   }
   return words;
@@ -744,7 +748,7 @@ String _swiftTypeNameFromParameterName(String name) {
 
 String _swiftCaseNameFromRawValue(String rawValue) {
   final words = rawValue
-      .split(RegExp(r'[^A-Za-z0-9]+'))
+      .split(RegExp('[^A-Za-z0-9]+'))
       .where((word) => word.isNotEmpty)
       .toList();
   if (words.isEmpty) {
@@ -754,7 +758,7 @@ String _swiftCaseNameFromRawValue(String rawValue) {
   final first = words.first.toLowerCase();
   final rest = words.skip(1).map(_capitalizeAscii).join();
   var name = '$first$rest';
-  if (RegExp(r'^[0-9]').hasMatch(name)) {
+  if (RegExp('^[0-9]').hasMatch(name)) {
     name = 'value${_capitalizeAscii(name)}';
   }
   if (_swiftReservedWords.contains(name)) {

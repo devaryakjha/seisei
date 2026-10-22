@@ -1,0 +1,12 @@
+name: seisei_flutter_intents
+description: "Discontinued: Flutter runtime bridge for Seisei app actions and generated App Intents now ships in seisei_intents. This release only re-exports package:seisei_intents."
+version: 0.2.0-dev.0
+repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+
+environment:
+  sdk: ">=3.9.0 <4.0.0"
+resolution: workspace
+
+dependencies:
+  seisei_intents: ^0.2.0-dev.0
