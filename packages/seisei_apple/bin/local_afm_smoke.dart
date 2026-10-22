@@ -17,17 +17,19 @@ Future<void> main(List<String> args) async {
   final mode = _modeFromArgs(args);
   final discriminatedUnionSmoke = args.contains('--discriminated-union');
   final explicitNullUnionSmoke = args.contains('--explicit-null-union');
-  final schemaSmoke = args.contains('--schema') ||
+  final schemaSmoke =
+      args.contains('--schema') ||
       discriminatedUnionSmoke ||
       explicitNullUnionSmoke;
   final streamSmoke = args.contains('--stream');
   final explicitExpect = _optionValue(args, '--expect');
-  final expect = explicitExpect ??
+  final expect =
+      explicitExpect ??
       switch ((
         mode,
         discriminatedUnionSmoke,
         explicitNullUnionSmoke,
-        schemaSmoke
+        schemaSmoke,
       )) {
         (AppleFoundationModelsMode.system, true, _, _) =>
           'seisei-discriminated-ok',
@@ -68,14 +70,14 @@ Future<void> main(List<String> args) async {
   }
   final prompt = promptParts.isEmpty
       ? schemaSmoke
-          ? discriminatedUnionSmoke
-              ? 'Return JSON with message kind exactly note and text exactly $expect'
-              : explicitNullUnionSmoke
+            ? discriminatedUnionSmoke
+                  ? 'Return JSON with message kind exactly note and text exactly $expect'
+                  : explicitNullUnionSmoke
                   ? 'Return JSON with label exactly $expect and value exactly null'
                   : 'Return JSON with title exactly $expect, count 7, published true, and author name Aria'
-          : streamSmoke && explicitExpect == null
-              ? 'Say hello in a short sentence.'
-              : 'Reply with exactly: $expect'
+            : streamSmoke && explicitExpect == null
+            ? 'Say hello in a short sentence.'
+            : 'Reply with exactly: $expect'
       : promptParts.join(' ');
   final backend = FmCliBackend();
   final availability = await backend.availability();
@@ -92,16 +94,13 @@ Future<void> main(List<String> args) async {
     stdout.writeln('availabilityReason: $reason');
   }
 
-  final provider = AppleFoundationModelsProvider(
-    backend: backend,
-    mode: mode,
-  );
+  final provider = AppleFoundationModelsProvider(backend: backend, mode: mode);
   final client = SeiseiClient(provider: provider);
   final schema = discriminatedUnionSmoke
       ? _discriminatedSchema
       : explicitNullUnionSmoke
-          ? _explicitNullSchema
-          : _draftSchema;
+      ? _explicitNullSchema
+      : _draftSchema;
   const encoder = FoundationModelsSchemaEncoder();
   final schemaDirectory = schemaSmoke
       ? await Directory.systemTemp.createTemp('seisei_afm_schema_smoke_')
@@ -119,8 +118,9 @@ Future<void> main(List<String> args) async {
         AppleFoundationModelsMode.system => PrivacyPolicy.onDeviceOnly,
         AppleFoundationModelsMode.pcc => PrivacyPolicy.cloudAllowed,
       },
-      metadata:
-          schemaFile == null ? const {} : encoder.metadataForFile(schemaFile),
+      metadata: schemaFile == null
+          ? const {}
+          : encoder.metadataForFile(schemaFile),
       decode: (rawValue) => _decode(
         rawValue,
         schemaSmoke: schemaSmoke,
@@ -165,8 +165,8 @@ Future<void> main(List<String> args) async {
       discriminatedUnionSmoke
           ? 'schema: ObjectSchema(discriminated message union)'
           : explicitNullUnionSmoke
-              ? 'schema: ObjectSchema(explicit null union)'
-              : 'schema: ObjectSchema(title,count,published,author)',
+          ? 'schema: ObjectSchema(explicit null union)'
+          : 'schema: ObjectSchema(title,count,published,author)',
     );
   }
   stdout.writeln('response: $responseValue');
@@ -193,9 +193,7 @@ const _draftSchema = ObjectSchema(
     'author': ObjectField.object(
       schema: ObjectSchema(
         name: 'Author',
-        fields: {
-          'name': ObjectField.string(),
-        },
+        fields: {'name': ObjectField.string()},
       ),
     ),
     'count': ObjectField.integer(),
@@ -254,10 +252,7 @@ String _decode(
     return _discriminatedSchema.decode(decoded, (object) {
       final message = object['message'] as Map;
       if (message['kind'] != 'note') {
-        throw DecodeException(
-          'Expected note discriminator.',
-          source: object,
-        );
+        throw DecodeException('Expected note discriminator.', source: object);
       }
       return message['text']! as String;
     });
@@ -319,8 +314,9 @@ void _printUsage() {
   stdout.writeln(
     '  --mode system|pcc   Apple model mode to use. Defaults to system.',
   );
-  stdout
-      .writeln('  --schema           Use a Seisei ObjectSchema-backed prompt.');
+  stdout.writeln(
+    '  --schema           Use a Seisei ObjectSchema-backed prompt.',
+  );
   stdout.writeln(
     '  --discriminated-union Use a schema-backed discriminated union prompt.',
   );

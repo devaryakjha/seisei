@@ -102,12 +102,10 @@ final class SeiseiRouter {
     }
 
     if (request.privacyPolicy == PrivacyPolicy.onDeviceOnly &&
-        !availability.capabilities
-            .contains(ModelCapability.onDeviceInference)) {
-      throw PrivacyPolicyRejectedException(
-        request.privacyPolicy,
-        provider.id,
-      );
+        !availability.capabilities.contains(
+          ModelCapability.onDeviceInference,
+        )) {
+      throw PrivacyPolicyRejectedException(request.privacyPolicy, provider.id);
     }
   }
 }

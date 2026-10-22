@@ -34,9 +34,9 @@ final class UnsupportedCapabilityException extends SeiseiException {
     required this.providerId,
     required this.unsupportedCapabilities,
   }) : super(
-          SeiseiErrorCode.unsupportedCapability,
-          'Provider does not support the requested capabilities.',
-        );
+         SeiseiErrorCode.unsupportedCapability,
+         'Provider does not support the requested capabilities.',
+       );
 
   /// Provider that rejected the request.
   final String providerId;
@@ -49,10 +49,10 @@ final class UnsupportedCapabilityException extends SeiseiException {
 final class PrivacyPolicyRejectedException extends SeiseiException {
   /// Creates a privacy rejection.
   const PrivacyPolicyRejectedException(this.policy, this.providerId)
-      : super(
-          SeiseiErrorCode.privacyPolicyRejected,
-          'Provider cannot satisfy the requested privacy policy.',
-        );
+    : super(
+        SeiseiErrorCode.privacyPolicyRejected,
+        'Provider cannot satisfy the requested privacy policy.',
+      );
 
   /// Rejected policy.
   final PrivacyPolicy policy;
@@ -65,5 +65,5 @@ final class PrivacyPolicyRejectedException extends SeiseiException {
 final class DecodeException extends SeiseiException {
   /// Creates a decode exception.
   const DecodeException(String message, {Object? source})
-      : super(SeiseiErrorCode.decodeFailed, message, source: source);
+    : super(SeiseiErrorCode.decodeFailed, message, source: source);
 }

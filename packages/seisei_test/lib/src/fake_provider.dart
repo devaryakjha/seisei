@@ -57,11 +57,7 @@ final class FakeProvider implements SeiseiProvider {
     _checkCapabilities(request);
 
     for (final delta in streamDeltas) {
-      yield GenerationChunk<T>(
-        providerId: id,
-        delta: delta,
-        rawValue: delta,
-      );
+      yield GenerationChunk<T>(providerId: id, delta: delta, rawValue: delta);
     }
 
     for (final partialRawValue in streamPartialRawValues) {

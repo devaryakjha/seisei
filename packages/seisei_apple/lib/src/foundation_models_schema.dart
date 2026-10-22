@@ -37,7 +37,8 @@ final class FoundationModelsSchemaEncoder {
     Directory? directory,
     String? fileName,
   }) async {
-    final targetDirectory = directory ??
+    final targetDirectory =
+        directory ??
         await Directory.systemTemp.createTemp('seisei_afm_schema_');
     final targetFile = File.fromUri(
       targetDirectory.uri.resolve(fileName ?? 'schema.json'),
@@ -73,8 +74,12 @@ final class FoundationModelsSchemaEncoder {
       'type': 'object',
       'properties': {
         for (final entry in fields.entries)
-          entry.key:
-              _encodeField(entry.key, entry.value, schema.name, definitions),
+          entry.key: _encodeField(
+            entry.key,
+            entry.value,
+            schema.name,
+            definitions,
+          ),
       },
       'x-order': orderedFields,
       'title': schema.name,
@@ -118,8 +123,8 @@ final class FoundationModelsSchemaEncoder {
     return {
       'type': 'array',
       'items': encoded,
-      if (field.minItems case final minItems?) 'minItems': minItems,
-      if (field.maxItems case final maxItems?) 'maxItems': maxItems,
+      'minItems': ?field.minItems,
+      'maxItems': ?field.maxItems,
     };
   }
 
@@ -166,9 +171,9 @@ final class FoundationModelsSchemaEncoder {
     return {
       'type': _foundationModelsType(field.type),
       if (field.enumValues.isNotEmpty) 'enum': field.enumValues,
-      if (field.minimum case final minimum?) 'minimum': minimum,
-      if (field.maximum case final maximum?) 'maximum': maximum,
-      if (field.pattern case final pattern?) 'pattern': pattern,
+      'minimum': ?field.minimum,
+      'maximum': ?field.maximum,
+      'pattern': ?field.pattern,
     };
   }
 

@@ -82,13 +82,13 @@ final class ObjectField {
     this.pattern,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.string,
-        objectSchema = null,
-        variants = const [],
-        discriminatorKey = null,
-        discriminatorVariants = const {},
-        minimum = null,
-        maximum = null;
+  }) : type = ObjectFieldType.string,
+       objectSchema = null,
+       variants = const [],
+       discriminatorKey = null,
+       discriminatorVariants = const {},
+       minimum = null,
+       maximum = null;
 
   /// Creates an integer field.
   const ObjectField.integer({
@@ -98,13 +98,13 @@ final class ObjectField {
     this.maximum,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.integer,
-        objectSchema = null,
-        variants = const [],
-        discriminatorKey = null,
-        discriminatorVariants = const {},
-        enumValues = const [],
-        pattern = null;
+  }) : type = ObjectFieldType.integer,
+       objectSchema = null,
+       variants = const [],
+       discriminatorKey = null,
+       discriminatorVariants = const {},
+       enumValues = const [],
+       pattern = null;
 
   /// Creates a floating-point number field.
   const ObjectField.number({
@@ -114,13 +114,13 @@ final class ObjectField {
     this.maximum,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.number,
-        objectSchema = null,
-        variants = const [],
-        discriminatorKey = null,
-        discriminatorVariants = const {},
-        enumValues = const [],
-        pattern = null;
+  }) : type = ObjectFieldType.number,
+       objectSchema = null,
+       variants = const [],
+       discriminatorKey = null,
+       discriminatorVariants = const {},
+       enumValues = const [],
+       pattern = null;
 
   /// Creates a boolean field.
   const ObjectField.boolean({
@@ -128,15 +128,15 @@ final class ObjectField {
     this.isArray = false,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.boolean,
-        objectSchema = null,
-        variants = const [],
-        discriminatorKey = null,
-        discriminatorVariants = const {},
-        enumValues = const [],
-        minimum = null,
-        maximum = null,
-        pattern = null;
+  }) : type = ObjectFieldType.boolean,
+       objectSchema = null,
+       variants = const [],
+       discriminatorKey = null,
+       discriminatorVariants = const {},
+       enumValues = const [],
+       minimum = null,
+       maximum = null,
+       pattern = null;
 
   /// Creates a null field.
   const ObjectField.nullValue({
@@ -144,15 +144,15 @@ final class ObjectField {
     this.isArray = false,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.nullValue,
-        objectSchema = null,
-        variants = const [],
-        discriminatorKey = null,
-        discriminatorVariants = const {},
-        enumValues = const [],
-        minimum = null,
-        maximum = null,
-        pattern = null;
+  }) : type = ObjectFieldType.nullValue,
+       objectSchema = null,
+       variants = const [],
+       discriminatorKey = null,
+       discriminatorVariants = const {},
+       enumValues = const [],
+       minimum = null,
+       maximum = null,
+       pattern = null;
 
   /// Creates a nested object field.
   const ObjectField.object({
@@ -161,15 +161,15 @@ final class ObjectField {
     this.isArray = false,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.object,
-        objectSchema = schema,
-        variants = const [],
-        discriminatorKey = null,
-        discriminatorVariants = const {},
-        enumValues = const [],
-        minimum = null,
-        maximum = null,
-        pattern = null;
+  }) : type = ObjectFieldType.object,
+       objectSchema = schema,
+       variants = const [],
+       discriminatorKey = null,
+       discriminatorVariants = const {},
+       enumValues = const [],
+       minimum = null,
+       maximum = null,
+       pattern = null;
 
   /// Creates a field-level union.
   const ObjectField.union({
@@ -178,14 +178,14 @@ final class ObjectField {
     this.isArray = false,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.union,
-        objectSchema = null,
-        discriminatorKey = null,
-        discriminatorVariants = const {},
-        enumValues = const [],
-        minimum = null,
-        maximum = null,
-        pattern = null;
+  }) : type = ObjectFieldType.union,
+       objectSchema = null,
+       discriminatorKey = null,
+       discriminatorVariants = const {},
+       enumValues = const [],
+       minimum = null,
+       maximum = null,
+       pattern = null;
 
   /// Creates a discriminated object union.
   const ObjectField.discriminatedUnion({
@@ -195,14 +195,14 @@ final class ObjectField {
     this.isArray = false,
     this.minItems,
     this.maxItems,
-  })  : type = ObjectFieldType.discriminatedUnion,
-        objectSchema = null,
-        variants = const [],
-        discriminatorVariants = variants,
-        enumValues = const [],
-        minimum = null,
-        maximum = null,
-        pattern = null;
+  }) : type = ObjectFieldType.discriminatedUnion,
+       objectSchema = null,
+       variants = const [],
+       discriminatorVariants = variants,
+       enumValues = const [],
+       minimum = null,
+       maximum = null,
+       pattern = null;
 
   /// Scalar element type.
   final ObjectFieldType type;
@@ -291,7 +291,8 @@ final class ObjectSchema implements SeiseiSchema {
     for (final field in definitions.keys) {
       final definition = definitions[field]!;
       final fieldValue = value[field];
-      final missing = !value.containsKey(field) ||
+      final missing =
+          !value.containsKey(field) ||
           (fieldValue == null && !_acceptsExplicitNull(definition));
       if (missing) {
         if (definition.isRequired) {
@@ -421,8 +422,9 @@ void _validateSingleValue(
   }
 
   if (!_matchesType(value, definition.type)) {
-    final typeName =
-        useItemType ? _scalarTypeName(definition.type) : _typeName(definition);
+    final typeName = useItemType
+        ? _scalarTypeName(definition.type)
+        : _typeName(definition);
     errors.add(
       SchemaValidationError(
         code: isRequired ? '$typeName.required' : '$typeName.expected',
@@ -574,8 +576,9 @@ bool _acceptsExplicitNull(ObjectField definition) {
     return true;
   }
   return definition.type == ObjectFieldType.union &&
-      definition.variants
-          .any((variant) => variant.type == ObjectFieldType.nullValue);
+      definition.variants.any(
+        (variant) => variant.type == ObjectFieldType.nullValue,
+      );
 }
 
 void _checkSchemaDefinition(ObjectSchema schema) {

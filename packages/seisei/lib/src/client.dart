@@ -13,16 +13,12 @@ final class SeiseiClient {
   final SeiseiProvider provider;
 
   /// Generates a typed response through the configured provider.
-  Future<GenerationResponse<T>> generate<T>(
-    GenerationRequest<T> request,
-  ) {
+  Future<GenerationResponse<T>> generate<T>(GenerationRequest<T> request) {
     return provider.generate(request);
   }
 
   /// Streams typed chunks through the configured provider.
-  Stream<GenerationChunk<T>> stream<T>(
-    GenerationRequest<T> request,
-  ) {
+  Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) {
     return provider.stream(request);
   }
 }
