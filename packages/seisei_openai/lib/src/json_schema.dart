@@ -51,6 +51,7 @@ final class OpenAiJsonSchemaEncoder {
     return {
       'type': 'object',
       'title': ?(schema.name.isEmpty ? null : schema.name),
+      'description': ?schema.description,
       'properties': {
         for (final entry in fields.entries)
           entry.key: _encodeField(entry.value),
@@ -73,13 +74,14 @@ final class OpenAiJsonSchemaEncoder {
           }
         : _encodeSingleValue(field);
     if (!strict || field.isRequired || _acceptsNull(field)) {
-      return value;
+      return {...value, 'description': ?field.description};
     }
     return {
       'anyOf': [
         value,
         {'type': 'null'},
       ],
+      'description': ?field.description,
     };
   }
 
@@ -138,6 +140,7 @@ final class OpenAiJsonSchemaEncoder {
     return _encodeObject(
       ObjectSchema(
         name: schema.name,
+        description: schema.description,
         fields: {
           ...schema.fieldDefinitions,
           discriminatorKey: ObjectField.string(

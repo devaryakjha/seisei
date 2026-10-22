@@ -5,7 +5,8 @@
   LM Studio) with a configurable base URL, API key, headers, and query
   parameters.
 - Map `ObjectSchema` to `json_schema` response formats through
-  `OpenAiJsonSchemaEncoder`, and validate replies before decoding.
+  `OpenAiJsonSchemaEncoder`, and validate replies before decoding. Schema and
+  field descriptions are forwarded as JSON Schema `description`.
 - Stream server-sent events into `GenerationChunk`s with text deltas,
   structured patches, and partial values for schema-backed requests.
 - Map `ToolDefinition`s to function tools and return `ToolCall`s through

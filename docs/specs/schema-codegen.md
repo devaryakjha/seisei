@@ -64,8 +64,9 @@ missing.
 ## Core schema change
 
 `ObjectField` and `ObjectSchema` gain an optional `description`. Validation
-ignores it. Provider encoders may forward it; the Apple encoder does not yet,
-until its FoundationModels JSON form is verified locally.
+ignores it. The OpenAI encoder forwards it as JSON Schema `description`; the
+Apple encoder does not yet, until its FoundationModels JSON form is verified
+locally.
 
 ## Out of scope
 

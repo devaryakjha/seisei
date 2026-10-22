@@ -33,6 +33,40 @@ const _schema = ObjectSchema(
 
 void main() {
   group('OpenAiJsonSchemaEncoder', () {
+    test('should forward schema and field descriptions', () {
+      const schema = ObjectSchema(
+        name: 'Described',
+        description: 'A described object.',
+        fields: {
+          'title': ObjectField.string(description: 'Headline.'),
+          'tags': ObjectField.string(
+            isArray: true,
+            isRequired: false,
+            description: 'Topic tags.',
+          ),
+        },
+      );
+
+      final encoded = const OpenAiJsonSchemaEncoder().encodeSchema(schema);
+      final properties = encoded['properties']! as Map<String, Object?>;
+
+      expect(encoded['description'], 'A described object.');
+      expect(properties['title'], {
+        'type': 'string',
+        'description': 'Headline.',
+      });
+      expect(properties['tags'], {
+        'anyOf': [
+          {
+            'type': 'array',
+            'items': {'type': 'string'},
+          },
+          {'type': 'null'},
+        ],
+        'description': 'Topic tags.',
+      });
+    });
+
     test('should encode a strict response format', () {
       final format = const OpenAiJsonSchemaEncoder().encodeResponseFormat(
         _schema,
