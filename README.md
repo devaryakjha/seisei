@@ -59,6 +59,15 @@ Future packages may include:
 
 - Additional renderer adapters beyond the default Tagflow adapter.
 
+## Examples
+
+- [`examples/chat`](examples/chat): Flutter chat app that streams answers from
+  any configured provider (offline demo, OpenAI-compatible, or Apple
+  Foundation Models) and renders them with Tagflow, plus a structured-output
+  card rendered as UI blocks and an App Intent action.
+- [`examples/basic_cli`](examples/basic_cli): offline command-line example of
+  typed structured generation.
+
 ## Development
 
 The workspace includes Flutter packages, so full validation requires a Flutter

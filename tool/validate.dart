@@ -20,6 +20,7 @@ Future<void> main(List<String> args) async {
     _Check('$root/packages/seisei_flutter', ['flutter', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
     _Check('$root/packages/seisei_intents', ['flutter', 'test']),
+    _Check('$root/examples/chat', ['flutter', 'test']),
   ];
 
   if (Platform.isMacOS) {
