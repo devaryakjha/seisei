@@ -11,6 +11,7 @@ workspace:
   - packages/seisei_intents
   - packages/seisei_flutter
   - packages/seisei_openai
+  - packages/seisei_generator
   - packages/discontinued/seisei_schema
   - packages/discontinued/seisei_router
   - packages/discontinued/seisei_flutter_intents

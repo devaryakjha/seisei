@@ -1,0 +1,16 @@
+builders:
+  seisei_schema:
+    import: "package:seisei_generator/builder.dart"
+    builder_factories: ["seiseiSchemaBuilder"]
+    build_extensions: {".dart": [".seisei.g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen:combining_builder"]
+
+targets:
+  $default:
+    builders:
+      seisei_generator:seisei_schema:
+        enabled: true
+        generate_for:
+          - test/models/**

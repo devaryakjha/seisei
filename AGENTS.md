@@ -12,6 +12,10 @@ packages for typed AI contracts in Flutter apps:
 - `packages/seisei_test`: deterministic fakes and test utilities (pure Dart)
 - `packages/seisei_openai`: OpenAI-compatible HTTP provider (pure Dart; tests
   use a local fake server, never the network)
+- `packages/seisei_generator`: `build_runner` generator for `@GenerateSchema`
+  classes (pure Dart). Its `test/models/*.g.dart` fixtures are committed; run
+  `dart run build_runner build` in that package after changing the generator
+  or the fixtures, and the golden test fails until they match
 - `packages/seisei_apple`: Apple Foundation Models provider (Flutter plugin)
 - `packages/seisei_intents`: app-action contracts, App Intent codegen, and the
   Flutter App Intents runtime bridge (Flutter plugin; `lib/codegen.dart` stays

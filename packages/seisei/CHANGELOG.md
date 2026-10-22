@@ -13,6 +13,9 @@
   including providers that fail while generating, is explainable.
 - Add `GenerationRequest.copyWith` and an optional message on
   `PrivacyPolicyRejectedException`.
+- Add `GenerateSchema`, `SchemaField`, and `SchemaVariant` annotations for
+  `seisei_generator`.
+- Add optional `description` to `ObjectField` and `ObjectSchema`.
 
 ## 0.1.0-dev.2
 

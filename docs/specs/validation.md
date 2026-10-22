@@ -150,6 +150,7 @@ When `--release` reaches `dart pub publish --dry-run`, the script runs every pac
 ```sh
 packages/seisei
 packages/seisei_test
+packages/seisei_generator
 packages/seisei_flutter
 packages/seisei_apple
 packages/seisei_intents

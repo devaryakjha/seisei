@@ -10,5 +10,6 @@ export 'src/request.dart';
 export 'src/response.dart';
 export 'src/router.dart';
 export 'src/schema.dart';
+export 'src/schema_annotations.dart';
 export 'src/structured_patch.dart';
 export 'src/tool.dart';
