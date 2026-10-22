@@ -5,6 +5,14 @@
   from `package:seisei/seisei.dart` with unchanged names.
 - Annotate `ModelCapability` and `StructuredPatch` with `@immutable`.
 - Move to the shared Seisei package version.
+- **Breaking:** `SeiseiRouter` enforces `PrivacyPolicy.onDevicePreferred`.
+  Providers without `ModelCapability.onDeviceInference` are skipped for
+  on-device-preferred requests unless the router is created with
+  `allowCloudFallback: true`, which forwards the request as `cloudAllowed`.
+- Add `SeiseiRouter.onDecision` and `RoutingDecision.code` so routing,
+  including providers that fail while generating, is explainable.
+- Add `GenerationRequest.copyWith` and an optional message on
+  `PrivacyPolicyRejectedException`.
 - Add `GenerateSchema`, `SchemaField`, and `SchemaVariant` annotations for
   `seisei_generator`.
 - Add optional `description` to `ObjectField` and `ObjectSchema`.
