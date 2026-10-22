@@ -57,11 +57,17 @@ final class UnsupportedCapabilityException extends SeiseiException {
 /// Thrown when a privacy policy prevents routing or generation.
 final class PrivacyPolicyRejectedException extends SeiseiException {
   /// Creates a privacy rejection.
-  const PrivacyPolicyRejectedException(this.policy, this.providerId)
-    : super(
-        SeiseiErrorCode.privacyPolicyRejected,
-        'Provider cannot satisfy the requested privacy policy.',
-      );
+  ///
+  /// [message] overrides the default explanation, for example to say why a
+  /// router refused to fall back to a cloud provider.
+  const PrivacyPolicyRejectedException(
+    this.policy,
+    this.providerId, {
+    String? message,
+  }) : super(
+         SeiseiErrorCode.privacyPolicyRejected,
+         message ?? 'Provider cannot satisfy the requested privacy policy.',
+       );
 
   /// Rejected policy.
   final PrivacyPolicy policy;

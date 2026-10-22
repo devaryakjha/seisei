@@ -82,8 +82,45 @@ final title = schema.decode(rawJson, (object) {
 `SeiseiRouter` tries registered `SeiseiProvider` implementations in order. It
 skips providers that are unavailable, lack a required capability, or are
 rejected by the request's privacy policy, and falls back to the next provider
-when one throws a `SeiseiException`. `SeiseiRouter.explain` reports why each
-provider was accepted or rejected.
+when one throws a `SeiseiException`.
+
+A provider counts as on-device when its availability lists
+`ModelCapability.onDeviceInference`; any other provider counts as cloud. The
+router enforces the request's `PrivacyPolicy` before calling a provider:
+
+| Policy | On-device provider | Cloud provider |
+| --- | --- | --- |
+| `onDeviceOnly` | used | never |
+| `onDevicePreferred` (default) | used | only with `allowCloudFallback: true` |
+| `cloudAllowed` | used | used |
+
+Cloud fallback is off by default, so an on-device-preferred request never
+leaves the device unless the app opts in. When it does, the router forwards
+the request to the cloud provider as `cloudAllowed`.
+
+The common route is Apple Foundation Models when available, otherwise an
+OpenAI-compatible endpoint:
+
+```dart
+final router = SeiseiRouter(
+  [
+    // package:seisei_apple
+    AppleFoundationModelsProvider(
+      backend: MethodChannelAppleFoundationModelsBackend(),
+    ),
+    // package:seisei_openai
+    OpenAiCompatibleProvider(model: 'gpt-4.1-mini', apiKey: apiKey),
+  ],
+  allowCloudFallback: true,
+  onDecision: (decision) => log('$decision'),
+);
+```
+
+`onDecision` receives every decision `generate` makes, including providers
+that were selected and then failed. `SeiseiRouter.explain` reports the same
+availability, capability, and privacy checks without generating. Each
+`RoutingDecision` carries the provider id, whether it was accepted, a reason,
+and the `SeiseiErrorCode` of a rejection.
 
 ## Scope
 
