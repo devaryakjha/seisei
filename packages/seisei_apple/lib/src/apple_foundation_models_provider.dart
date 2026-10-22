@@ -34,9 +34,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     };
 
     if (!modeAvailable) {
-      return ProviderAvailability.unavailable(
-        _unavailableReason(afm),
-      );
+      return ProviderAvailability.unavailable(_unavailableReason(afm));
     }
 
     final capabilities = {
@@ -195,7 +193,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     };
     final modeReason = mode == AppleFoundationModelsMode.pcc
         ? 'Apple Foundation Models PCC mode is unavailable in the current '
-            'Seisei backend context.'
+              'Seisei backend context.'
         : 'Apple Foundation Models $modeName mode is unavailable.';
     if (mode == AppleFoundationModelsMode.pcc &&
         (reason == null ||

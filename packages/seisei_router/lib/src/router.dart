@@ -37,7 +37,7 @@ final class SeiseiRouter {
       try {
         await _checkProvider(provider, request);
 
-        return provider.generate(request);
+        return await provider.generate(request);
       } on SeiseiException catch (error) {
         lastFailure = error;
       }
@@ -102,12 +102,10 @@ final class SeiseiRouter {
     }
 
     if (request.privacyPolicy == PrivacyPolicy.onDeviceOnly &&
-        !availability.capabilities
-            .contains(ModelCapability.onDeviceInference)) {
-      throw PrivacyPolicyRejectedException(
-        request.privacyPolicy,
-        provider.id,
-      );
+        !availability.capabilities.contains(
+          ModelCapability.onDeviceInference,
+        )) {
+      throw PrivacyPolicyRejectedException(request.privacyPolicy, provider.id);
     }
   }
 }

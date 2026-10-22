@@ -6,12 +6,9 @@ void main() {
   test('validates structured output before decoding', () {
     const schema = ObjectSchema(name: 'Draft', requiredStringFields: {'title'});
 
-    final draft = schema.decode(
-      {
-        'title': 'Hello',
-      },
-      (object) => _Draft(object['title']! as String),
-    );
+    final draft = schema.decode({
+      'title': 'Hello',
+    }, (object) => _Draft(object['title']! as String));
 
     expect(draft.title, 'Hello');
   });
@@ -116,12 +113,9 @@ void main() {
       },
     );
 
-    final contact = schema.decode(
-      {
-        'value': {'city': 'Tokyo'},
-      },
-      (object) => _UnionContact(object['value']!),
-    );
+    final contact = schema.decode({
+      'value': {'city': 'Tokyo'},
+    }, (object) => _UnionContact(object['value']!));
 
     expect(contact.value, {'city': 'Tokyo'});
   });
@@ -178,12 +172,9 @@ void main() {
       },
     );
 
-    final envelope = schema.decode(
-      {
-        'message': {'kind': 'task', 'title': 'Ship', 'done': false},
-      },
-      (object) => _UnionContact(object['message']!),
-    );
+    final envelope = schema.decode({
+      'message': {'kind': 'task', 'title': 'Ship', 'done': false},
+    }, (object) => _UnionContact(object['message']!));
 
     expect(envelope.value, {'kind': 'task', 'title': 'Ship', 'done': false});
   });
@@ -201,12 +192,14 @@ void main() {
     );
 
     expect(
-      schema.validate({
-        'count': '7',
-        'published': 'true',
-        'score': 'high',
-        'tags': ['ok', 42],
-      }).map((error) => '${error.path}: ${error.code}'),
+      schema
+          .validate({
+            'count': '7',
+            'published': 'true',
+            'score': 'high',
+            'tags': ['ok', 42],
+          })
+          .map((error) => '${error.path}: ${error.code}'),
       [
         r'$.count: integer.required',
         r'$.published: boolean.required',
@@ -241,11 +234,13 @@ void main() {
     );
 
     expect(
-      schema.validate({
-        'author': {'name': 'aria', 'score': 101},
-        'status': 'queued',
-        'tags': [],
-      }).map((error) => '${error.path}: ${error.code}'),
+      schema
+          .validate({
+            'author': {'name': 'aria', 'score': 101},
+            'status': 'queued',
+            'tags': [],
+          })
+          .map((error) => '${error.path}: ${error.code}'),
       [
         r'$.author.name: string.pattern',
         r'$.author.score: integer.maximum',
@@ -280,10 +275,12 @@ void main() {
     );
 
     expect(
-      schema.validate({
-        'value': 42,
-        'values': [1, 'bad'],
-      }).map((error) => '${error.path}: ${error.code}'),
+      schema
+          .validate({
+            'value': 42,
+            'values': [1, 'bad'],
+          })
+          .map((error) => '${error.path}: ${error.code}'),
       [r'$.value: union.any_of', r'$.values[1]: union.any_of'],
     );
   });
@@ -303,9 +300,11 @@ void main() {
     );
 
     expect(
-      schema.validate({
-        'values': [1, 'bad', null],
-      }).map((error) => '${error.path}: ${error.code}'),
+      schema
+          .validate({
+            'values': [1, 'bad', null],
+          })
+          .map((error) => '${error.path}: ${error.code}'),
       [r'$.value: union.required', r'$.values[1]: union.any_of'],
     );
   });
@@ -331,23 +330,29 @@ void main() {
     );
 
     expect(
-      schema.validate({
-        'message': {'kind': 'task'},
-      }).map((error) => '${error.path}: ${error.code}'),
+      schema
+          .validate({
+            'message': {'kind': 'task'},
+          })
+          .map((error) => '${error.path}: ${error.code}'),
       [r'$.message.title: string.required'],
     );
 
     expect(
-      schema.validate({
-        'message': {'kind': 'event', 'text': 'Hi'},
-      }).map((error) => '${error.path}: ${error.code}'),
+      schema
+          .validate({
+            'message': {'kind': 'event', 'text': 'Hi'},
+          })
+          .map((error) => '${error.path}: ${error.code}'),
       [r'$.message.kind: union.discriminator.unknown'],
     );
 
     expect(
-      schema.validate({
-        'message': {'text': 'Hi'},
-      }).map((error) => '${error.path}: ${error.code}'),
+      schema
+          .validate({
+            'message': {'text': 'Hi'},
+          })
+          .map((error) => '${error.path}: ${error.code}'),
       [r'$.message.kind: union.discriminator.required'],
     );
   });
@@ -423,10 +428,7 @@ final class _UnionContact {
 }
 
 final class _NullableUnionContact {
-  const _NullableUnionContact({
-    required this.value,
-    required this.values,
-  });
+  const _NullableUnionContact({required this.value, required this.values});
 
   final Object? value;
   final List<Object?> values;

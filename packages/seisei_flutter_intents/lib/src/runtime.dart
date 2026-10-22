@@ -13,11 +13,11 @@ final class SeiseiFlutterIntentsRuntime implements AppActionBridge {
       AppActionCapability.systemIntentDiscovery,
     },
     MethodChannel? channel,
-  })  : _actions = actions,
-        _handlers = handlers,
-        _entityQueryHandlers = entityQueryHandlers,
-        _capabilities = capabilities,
-        _channel = channel ?? defaultChannel;
+  }) : _actions = actions,
+       _handlers = handlers,
+       _entityQueryHandlers = entityQueryHandlers,
+       _capabilities = capabilities,
+       _channel = channel ?? defaultChannel;
 
   /// Default method channel used by native runtime adapters.
   static const defaultChannel = MethodChannel(
@@ -78,8 +78,8 @@ final class SeiseiFlutterIntentsRuntime implements AppActionBridge {
       'invokeAction' => _invokeActionFromNative(call.arguments),
       'resolveEntityQuery' => _resolveEntityQueryFromNative(call.arguments),
       _ => throw MissingPluginException(
-          'Unsupported Seisei Flutter Intents method: ${call.method}',
-        ),
+        'Unsupported Seisei Flutter Intents method: ${call.method}',
+      ),
     };
   }
 

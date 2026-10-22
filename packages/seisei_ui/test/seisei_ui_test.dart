@@ -81,11 +81,7 @@ void main() {
     expect(adapter.supports(schema), isTrue);
     expect(
       adapter.render(
-        const SeiseiBlock(
-          id: 'title',
-          type: 'text',
-          props: {'value': 'Hello'},
-        ),
+        const SeiseiBlock(id: 'title', type: 'text', props: {'value': 'Hello'}),
         const SeiseiBlockRenderContext(),
       ),
       'Hello',
@@ -103,10 +99,10 @@ void main() {
       actionTypes: {'submit', 'openUrl'},
     );
 
-    expect(
-      capabilities.unsupportedBy(schema),
-      ['block:image', 'action:openUrl'],
-    );
+    expect(capabilities.unsupportedBy(schema), [
+      'block:image',
+      'action:openUrl',
+    ]);
     expect(capabilities.supports(schema), isFalse);
   });
 }

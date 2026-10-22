@@ -131,10 +131,10 @@ Future<Object?> _invokeNative(
   final completer = Completer<ByteData?>();
   await TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
       .handlePlatformMessage(
-    channel.name,
-    channel.codec.encodeMethodCall(MethodCall(method, arguments)),
-    completer.complete,
-  );
+        channel.name,
+        channel.codec.encodeMethodCall(MethodCall(method, arguments)),
+        completer.complete,
+      );
   final response = await completer.future;
   return channel.codec.decodeEnvelope(response!);
 }

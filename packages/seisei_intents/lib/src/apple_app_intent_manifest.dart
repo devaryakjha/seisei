@@ -79,9 +79,7 @@ final class AppleAppIntentManifestAction {
   /// Swift type name used for output file naming.
   String get resolvedTypeName {
     return typeName ??
-        AppleAppIntentSourceGenerator.typeNameForActionId(
-          action.id,
-        );
+        AppleAppIntentSourceGenerator.typeNameForActionId(action.id);
   }
 }
 
@@ -127,8 +125,9 @@ abstract final class AppleAppIntentManifestGenerator {
         shortcut: action.shortcut,
         accessLevel: manifest.accessLevel,
       );
-      final file =
-          File('${outputDirectory.path}/${action.resolvedTypeName}.swift');
+      final file = File(
+        '${outputDirectory.path}/${action.resolvedTypeName}.swift',
+      );
       await file.writeAsString(source);
       files.add(file);
     }
@@ -149,10 +148,18 @@ AppleAppIntentManifestAction? _parseAction(
     '$path.description',
     issues,
   );
-  final typeName =
-      _readOptionalString(json, 'typeName', '$path.typeName', issues);
-  final parameters =
-      _readObject(json, 'parameters', '$path.parameters', issues);
+  final typeName = _readOptionalString(
+    json,
+    'typeName',
+    '$path.typeName',
+    issues,
+  );
+  final parameters = _readObject(
+    json,
+    'parameters',
+    '$path.parameters',
+    issues,
+  );
   final shortcut = _readShortcut(json, path, issues);
 
   if (id == null || title == null || description == null) {

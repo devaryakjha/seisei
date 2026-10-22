@@ -56,8 +56,8 @@ dart tool/validate.dart
 ```
 
 The validation command runs dependency resolution, formatting, static analysis,
-Dart package tests, Flutter plugin tests, the offline CLI example, the Flutter
-chat demo widget test, and `swift test` for `SeiseiAppleIntents`.
+Dart package tests, Flutter plugin tests, the offline CLI example, and, on
+macOS, `swift test` for `SeiseiAppleIntents`.
 
 Local Apple Foundation Models smoke checks are available on macOS 27 machines that provide `/usr/bin/fm`:
 
