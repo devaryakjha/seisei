@@ -1,0 +1,26 @@
+name: seisei_chat
+description: Flutter chat example for Seisei, with answers streamed through Tagflow.
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ">=3.9.0 <4.0.0"
+  flutter: ">=3.3.0"
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  seisei: ^0.2.0-dev.0
+  seisei_apple: ^0.2.0-dev.0
+  seisei_flutter: ^0.2.0-dev.0
+  seisei_intents: ^0.2.0-dev.0
+  seisei_openai: ^0.2.0-dev.0
+  tagflow: ^1.0.0-beta.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

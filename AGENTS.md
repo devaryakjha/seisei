@@ -23,6 +23,8 @@ packages for typed AI contracts in Flutter apps:
   `seisei_schema`, `seisei_router`, `seisei_flutter_intents`, `seisei_ui`, and
   `seisei_tagflow` packages; do not add code here
 - `examples/basic_cli`: offline CLI example
+- `examples/chat`: Flutter chat example (Tagflow streaming, structured card,
+  App Intent action); its widget tests run in `tool/validate.dart`
 
 Specs live in `docs/specs/`, architecture notes in `docs/architecture/`.
 
