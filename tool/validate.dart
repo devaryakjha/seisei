@@ -16,6 +16,7 @@ Future<void> main(List<String> args) async {
     _Check('$root/packages/seisei', ['dart', 'test']),
     _Check('$root/packages/seisei_test', ['dart', 'test']),
     _Check('$root/packages/seisei_openai', ['dart', 'test']),
+    _Check('$root/packages/seisei_generator', ['dart', 'test']),
     _Check('$root/packages/seisei_flutter', ['flutter', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
     _Check('$root/packages/seisei_intents', ['flutter', 'test']),
@@ -208,6 +209,7 @@ Future<void> main(List<String> args) async {
 const _publishedPackages = [
   'seisei',
   'seisei_test',
+  'seisei_generator',
   'seisei_flutter',
   'seisei_apple',
   'seisei_intents',

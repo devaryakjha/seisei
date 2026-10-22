@@ -2,6 +2,24 @@ import 'package:seisei/seisei.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test('keeps descriptions without changing validation', () {
+    const schema = ObjectSchema(
+      name: 'Described',
+      description: 'An object with guidance.',
+      fields: {
+        'title': ObjectField.string(description: 'Headline.'),
+      },
+    );
+
+    expect(schema.description, 'An object with guidance.');
+    expect(schema.fieldDefinitions['title']!.description, 'Headline.');
+    expect(schema.validate({'title': 'Hi'}), isEmpty);
+    expect(
+      schema.validate(<String, Object?>{}).map((error) => error.code),
+      ['string.required'],
+    );
+  });
+
   test('validates structured output before decoding', () {
     const schema = ObjectSchema(name: 'Draft', requiredStringFields: {'title'});
 

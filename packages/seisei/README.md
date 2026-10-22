@@ -77,6 +77,31 @@ final title = schema.decode(rawJson, (object) {
 });
 ```
 
+To derive the schema and decoder from an annotated class instead, use
+`@GenerateSchema()` with the `seisei_generator` package:
+
+```dart
+@GenerateSchema()
+class Draft {
+  const Draft({required this.title, this.tags});
+
+  factory Draft.fromJson(Map<String, Object?> json) => _$DraftFromJson(json);
+
+  static const ObjectSchema schema = _$DraftSchema;
+
+  /// Headline shown above the article.
+  final String title;
+
+  @SchemaField(maxItems: 3)
+  final List<String>? tags;
+}
+
+final draft = Draft.schema.decode(rawJson, Draft.fromJson);
+```
+
+`ObjectField.description` and `ObjectSchema.description` carry guidance for
+the model. Validation ignores them.
+
 ## Provider routing
 
 `SeiseiRouter` tries registered `SeiseiProvider` implementations in order. It

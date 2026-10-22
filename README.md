@@ -32,6 +32,8 @@ This workspace contains:
   responses, structured output schemas and validation, and provider routing
   with fallback, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
+- `seisei_generator`: `build_runner` generator that derives `ObjectSchema`
+  definitions and typed decoders from `@GenerateSchema` classes
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
 - `seisei_openai`: OpenAI-compatible chat completions provider (OpenAI, Azure
   OpenAI, OpenRouter, Ollama, LM Studio) with JSON-schema structured output,
@@ -60,7 +62,8 @@ Future packages may include:
 ## Development
 
 The workspace includes Flutter packages, so full validation requires a Flutter
-SDK even though `seisei`, `seisei_test`, and `seisei_openai` are pure Dart.
+SDK even though `seisei`, `seisei_test`, `seisei_openai`, and
+`seisei_generator` are pure Dart.
 
 ```sh
 dart tool/validate.dart

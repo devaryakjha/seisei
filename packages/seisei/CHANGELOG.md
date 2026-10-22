@@ -5,6 +5,9 @@
   from `package:seisei/seisei.dart` with unchanged names.
 - Annotate `ModelCapability` and `StructuredPatch` with `@immutable`.
 - Move to the shared Seisei package version.
+- Add `GenerateSchema`, `SchemaField`, and `SchemaVariant` annotations for
+  `seisei_generator`.
+- Add optional `description` to `ObjectField` and `ObjectSchema`.
 
 ## 0.1.0-dev.2
 

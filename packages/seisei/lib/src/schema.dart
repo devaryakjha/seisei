@@ -62,6 +62,7 @@ final class ObjectField {
     required this.type,
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.objectSchema,
     this.variants = const [],
     this.discriminatorKey,
@@ -78,6 +79,7 @@ final class ObjectField {
   const ObjectField.string({
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.enumValues = const [],
     this.pattern,
     this.minItems,
@@ -94,6 +96,7 @@ final class ObjectField {
   const ObjectField.integer({
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.minimum,
     this.maximum,
     this.minItems,
@@ -110,6 +113,7 @@ final class ObjectField {
   const ObjectField.number({
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.minimum,
     this.maximum,
     this.minItems,
@@ -126,6 +130,7 @@ final class ObjectField {
   const ObjectField.boolean({
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.minItems,
     this.maxItems,
   }) : type = ObjectFieldType.boolean,
@@ -142,6 +147,7 @@ final class ObjectField {
   const ObjectField.nullValue({
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.minItems,
     this.maxItems,
   }) : type = ObjectFieldType.nullValue,
@@ -159,6 +165,7 @@ final class ObjectField {
     required ObjectSchema schema,
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.minItems,
     this.maxItems,
   }) : type = ObjectFieldType.object,
@@ -176,6 +183,7 @@ final class ObjectField {
     required this.variants,
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.minItems,
     this.maxItems,
   }) : type = ObjectFieldType.union,
@@ -193,6 +201,7 @@ final class ObjectField {
     required Map<String, ObjectSchema> variants,
     this.isRequired = true,
     this.isArray = false,
+    this.description,
     this.minItems,
     this.maxItems,
   }) : type = ObjectFieldType.discriminatedUnion,
@@ -242,6 +251,11 @@ final class ObjectField {
 
   /// Maximum item count when [isArray] is true.
   final int? maxItems;
+
+  /// Optional guidance for the model about what this field holds.
+  ///
+  /// Validation ignores it; provider schema encoders may forward it.
+  final String? description;
 }
 
 /// Object schema with typed fields.
@@ -251,10 +265,16 @@ final class ObjectSchema implements SeiseiSchema {
     required this.name,
     this.requiredStringFields = const {},
     this.fields = const {},
+    this.description,
   });
 
   @override
   final String name;
+
+  /// Optional guidance for the model about what this object represents.
+  ///
+  /// Validation ignores it; provider schema encoders may forward it.
+  final String? description;
 
   /// Required string fields.
   final Set<String> requiredStringFields;
