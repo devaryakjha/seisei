@@ -1,3 +1,6 @@
+// Expected Swift lines are matched verbatim against generated source.
+// ignore_for_file: lines_longer_than_80_chars
+
 import 'dart:io';
 
 import 'package:seisei/seisei.dart';
@@ -199,7 +202,7 @@ void main() {
       action,
       typeName: 'CreateNoteIntent',
       shortcut: const AppleAppShortcutDefinition(
-        phrases: ['Create a note in \\(.applicationName)'],
+        phrases: [r'Create a note in \(.applicationName)'],
         shortTitle: 'Create Note',
         systemImageName: 'note.text',
       ),
@@ -266,7 +269,7 @@ void main() {
     );
     expect(
       source,
-      contains('phrases: ["Create a note in \\\\(.applicationName)"]'),
+      contains(r'phrases: ["Create a note in \\(.applicationName)"]'),
     );
   });
 
@@ -463,7 +466,7 @@ void main() {
       'seisei_intents_manifest_test_',
     );
     addTearDown(() async {
-      if (await directory.exists()) {
+      if (directory.existsSync()) {
         await directory.delete(recursive: true);
       }
     });
@@ -490,7 +493,7 @@ void main() {
             'required': ['status'],
           },
           'shortcut': {
-            'phrases': ['Create a note in \\(.applicationName)'],
+            'phrases': [r'Create a note in \(.applicationName)'],
             'shortTitle': 'Create Note',
             'systemImageName': 'note.text',
           },
@@ -511,7 +514,7 @@ void main() {
     expect(source, contains('actionID: "create_note"'));
     expect(source, contains('"status": .string(status.rawValue)'));
     expect(
-      await File('${directory.path}/CreateNoteIntent.swift').exists(),
+      File('${directory.path}/CreateNoteIntent.swift').existsSync(),
       isTrue,
     );
   });
@@ -525,7 +528,7 @@ void main() {
             'description': 'Create a note in the host app.',
             'parameters': {'type': 'array'},
             'shortcut': {
-              'phrases': ['Create a note in \\(.applicationName)', 42],
+              'phrases': [r'Create a note in \(.applicationName)', 42],
               'shortTitle': 'Create Note',
             },
           },

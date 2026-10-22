@@ -1,5 +1,10 @@
 # Seisei MVP Spec
 
+> **Note:** This document predates the package consolidation in `0.2.0-dev.0`.
+> `seisei_schema` and `seisei_router` now live in `seisei`, `seisei_ui` and
+> `seisei_tagflow` in `seisei_flutter`, and `seisei_flutter_intents` in
+> `seisei_intents`. See [Package consolidation](../package-consolidation.md).
+
 ## Objective
 
 Seisei is a Dart-first generative AI SDK for Flutter applications. The MVP proves the package architecture and developer contract for typed generation, provider routing, deterministic testing, Apple-native capability integration, and renderer-agnostic UI blocks.

@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   test('SeiseiClient delegates typed generation to a provider', () async {
-    final client = SeiseiClient(
+    const client = SeiseiClient(
       provider: _EchoProvider({'title': 'Client result'}),
     );
 
@@ -19,7 +19,7 @@ void main() {
   });
 
   test('GenerationRequest decodes typed values through providers', () async {
-    final provider = _EchoProvider({'title': 'Typed result'});
+    const provider = _EchoProvider({'title': 'Typed result'});
     final result = await provider.generate(
       GenerationRequest<_Draft>(
         prompt: 'Draft a title',
@@ -32,7 +32,7 @@ void main() {
   });
 
   test('provider rejects unsupported capabilities', () async {
-    final provider = _EchoProvider({'title': 'Typed result'});
+    const provider = _EchoProvider({'title': 'Typed result'});
 
     expect(
       () => provider.generate(
@@ -50,7 +50,7 @@ void main() {
   });
 
   test('SeiseiClient delegates streaming to a provider', () async {
-    final client = SeiseiClient(
+    const client = SeiseiClient(
       provider: _EchoProvider({'title': 'Stream result'}),
     );
 
@@ -68,9 +68,9 @@ void main() {
   });
 
   test('GenerationChunk carries typed partial values separately', () {
-    final chunk = GenerationChunk<_Draft>(
+    const chunk = GenerationChunk<_Draft>(
       providerId: 'echo',
-      partialValue: const _Draft('Partial result'),
+      partialValue: _Draft('Partial result'),
       rawValue: {'title': 'Partial result'},
     );
 
@@ -124,7 +124,7 @@ final class _Draft {
   const _Draft(this.title);
 
   factory _Draft.fromJson(Object? rawValue) {
-    final object = rawValue as Map<String, Object?>;
+    final object = rawValue! as Map<String, Object?>;
     final title = object['title'];
     if (title is! String) {
       throw const DecodeException('Expected title string.');

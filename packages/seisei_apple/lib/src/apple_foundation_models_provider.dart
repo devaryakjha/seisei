@@ -1,20 +1,20 @@
 import 'package:seisei/seisei.dart';
 
-import 'backend.dart';
+import 'package:seisei_apple/src/backend.dart';
 
 /// Seisei provider backed by Apple Foundation Models.
 final class AppleFoundationModelsProvider implements SeiseiProvider {
-  /// Metadata key for a provider-specific JSON schema file path.
-  ///
-  /// This keeps schema-backed AFM requests behind the Apple provider boundary
-  /// instead of adding Apple concepts to `GenerationRequest`.
-  static const schemaPathMetadataKey = 'seisei.apple.schemaPath';
-
   /// Creates an Apple provider.
   const AppleFoundationModelsProvider({
     required this.backend,
     this.mode = AppleFoundationModelsMode.system,
   });
+
+  /// Metadata key for a provider-specific JSON schema file path.
+  ///
+  /// This keeps schema-backed AFM requests behind the Apple provider boundary
+  /// instead of adding Apple concepts to `GenerationRequest`.
+  static const schemaPathMetadataKey = 'seisei.apple.schemaPath';
 
   /// Backend used by this provider.
   final AppleFoundationModelsBackend backend;
@@ -164,8 +164,8 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
   Object? _emptySnapshotFor(Object? rawValue) {
     return switch (rawValue) {
-      Map _ => const <Object?, Object?>{},
-      List _ => const <Object?>[],
+      Map<Object?, Object?> _ => const <Object?, Object?>{},
+      List<Object?> _ => const <Object?>[],
       _ => null,
     };
   }
@@ -200,7 +200,8 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
             reason.isEmpty ||
             reason.trim() == 'System model available')) {
       return '$modeReason '
-          'No verified public native FoundationModels PCC API path exists on this SDK.';
+          'No verified public native FoundationModels PCC API path exists '
+          'on this SDK.';
     }
     return switch (reason) {
       null || '' => modeReason,

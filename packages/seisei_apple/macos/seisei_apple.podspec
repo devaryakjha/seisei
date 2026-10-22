@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'seisei_apple'
-  s.version          = '0.1.0-dev.0'
+  s.version          = '0.2.0-dev.0'
   s.summary          = 'Apple Foundation Models provider and Flutter bridge for Seisei.'
   s.description      = <<-DESC
 Apple Foundation Models provider and native Flutter bridge for Seisei.

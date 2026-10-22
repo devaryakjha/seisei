@@ -1,5 +1,5 @@
-import 'action.dart';
-import 'bridge.dart';
+import 'package:seisei_intents/src/action.dart';
+import 'package:seisei_intents/src/bridge.dart';
 
 /// Fake app action bridge for unit tests and examples.
 final class FakeAppActionBridge implements AppActionBridge {

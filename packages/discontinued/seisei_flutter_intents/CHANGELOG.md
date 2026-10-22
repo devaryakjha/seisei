@@ -1,0 +1,27 @@
+## 0.2.0-dev.0
+
+- Discontinued. The Flutter method-channel runtime and native engine host plugin moved into `seisei_intents`; this release
+  only re-exports `package:seisei_intents/seisei_intents.dart`.
+
+## 0.1.0-dev.3
+
+- Add an iOS `SeiseiFlutterIntentsEngineHost` helper that starts and retains a
+  headless `FlutterEngine` and exposes an async method-channel invoker for
+  native App Intents forwarding.
+- Declare the iOS Flutter plugin platform and native podspec metadata.
+
+## 0.1.0-dev.2
+
+- Add a macOS `SeiseiFlutterIntentsEngineHost` helper that starts and retains a
+  headless `FlutterEngine` and exposes an async method-channel invoker for
+  native App Intents forwarding.
+
+## 0.1.0-dev.1
+
+- Stop advertising background execution by default; hosts must opt in through
+  `SeiseiFlutterIntentsRuntime(capabilities: ...)`.
+
+## 0.1.0-dev.0
+
+- Add a Flutter method-channel runtime for Seisei app actions and host-backed
+  entity queries.

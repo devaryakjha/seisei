@@ -6,6 +6,5 @@ environment:
 resolution: workspace
 
 dependencies:
-  seisei: ^0.1.0-dev.0
-  seisei_schema: ^0.1.0-dev.0
-  seisei_test: ^0.1.0-dev.0
+  seisei: ^0.2.0-dev.0
+  seisei_test: ^0.2.0-dev.0

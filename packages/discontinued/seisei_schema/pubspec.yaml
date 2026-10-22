@@ -1,0 +1,12 @@
+name: seisei_schema
+description: "Discontinued: Structured output schemas and validation helpers for Seisei now ships in seisei. This release only re-exports package:seisei."
+version: 0.2.0-dev.0
+repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+
+environment:
+  sdk: ">=3.9.0 <4.0.0"
+resolution: workspace
+
+dependencies:
+  seisei: ^0.2.0-dev.0

@@ -28,15 +28,23 @@ It currently focuses on:
 
 This workspace contains:
 
-- `seisei`: shared Dart API, `SeiseiClient`, provider contracts, tools, and responses
-- `seisei_schema`: structured output schemas and validation helpers
-- `seisei_router`: provider routing, fallback policies, availability checks, and privacy modes
+- `seisei`: shared Dart API, `SeiseiClient`, provider contracts, tools,
+  responses, structured output schemas and validation, and provider routing
+  with fallback, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
-- `seisei_ui`: renderer-neutral UI blocks and adapter contracts
-- `seisei_tagflow`: optional adapter from `seisei_ui` blocks into Tagflow runtime documents
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
-- `seisei_intents`: app-action contracts, tool-call mapping, fake bridges, and Apple App Intent source generation
-- `seisei_flutter_intents`: optional Flutter method-channel runtime bridge for generated App Intent action invocation and host-backed entity queries
+- `seisei_intents`: app-action contracts, tool-call mapping, fake bridges,
+  Apple App Intent source generation, and the Flutter method-channel runtime
+  bridge for App Intent action invocation and host-backed entity queries
+- `seisei_flutter`: renderer-neutral UI blocks and adapter contracts, with
+  Tagflow as the default renderer
+
+All packages share one version.
+
+`seisei_schema`, `seisei_router`, `seisei_flutter_intents`, `seisei_ui`, and
+`seisei_tagflow` were merged into the packages above. Their final releases in
+`packages/discontinued/` only re-export the new homes; see
+`docs/package-consolidation.md` for the migration table.
 
 Optional native support packages include:
 
@@ -44,12 +52,12 @@ Optional native support packages include:
 
 Future packages may include:
 
-- Additional renderer adapters beyond the current optional Tagflow adapter.
+- Additional renderer adapters beyond the default Tagflow adapter.
 
 ## Development
 
-The workspace includes Flutter plugin packages, so full validation requires a
-Flutter SDK even though most packages are pure Dart.
+The workspace includes Flutter packages, so full validation requires a Flutter
+SDK even though `seisei` and `seisei_test` are pure Dart.
 
 ```sh
 dart tool/validate.dart

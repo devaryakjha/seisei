@@ -1,4 +1,7 @@
+import 'package:meta/meta.dart';
+
 /// A model or provider capability that can be checked before generation.
+@immutable
 final class ModelCapability {
   /// Creates a capability identifier.
   const ModelCapability(this.id);

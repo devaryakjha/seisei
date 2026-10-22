@@ -1,11 +1,20 @@
-import 'capability.dart';
+import 'package:seisei/src/capability.dart';
 
 /// Stable error codes suitable for tests and diagnostics.
 enum SeiseiErrorCode {
+  /// The provider does not support a capability the request requires.
   unsupportedCapability,
+
+  /// The provider, or every provider a router tried, is unavailable.
   providerUnavailable,
+
+  /// The privacy policy rejected every candidate provider.
   privacyPolicyRejected,
+
+  /// The provider output could not be decoded into the requested type.
   decodeFailed,
+
+  /// A tool call was rejected.
   toolRejected,
 }
 

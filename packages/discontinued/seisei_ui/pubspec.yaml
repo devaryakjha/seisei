@@ -1,0 +1,12 @@
+name: seisei_ui
+description: "Discontinued: Renderer-neutral UI block contracts and adapter interfaces for Seisei now ships in seisei_flutter. This release only re-exports package:seisei_flutter."
+version: 0.2.0-dev.0
+repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+
+environment:
+  sdk: ">=3.9.0 <4.0.0"
+resolution: workspace
+
+dependencies:
+  seisei_flutter: ^0.2.0-dev.0

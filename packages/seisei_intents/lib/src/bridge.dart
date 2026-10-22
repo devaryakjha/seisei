@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'action.dart';
+import 'package:seisei_intents/src/action.dart';
 
 /// Capabilities exposed by a generic app action bridge.
 enum AppActionCapability {

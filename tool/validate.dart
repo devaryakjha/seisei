@@ -13,14 +13,10 @@ Future<void> main(List<String> args) async {
     _Check(root, ['dart', 'format', '--set-exit-if-changed', '.']),
     _Check(root, ['dart', 'analyze', '--fatal-infos']),
     _Check('$root/packages/seisei', ['dart', 'test']),
-    _Check('$root/packages/seisei_schema', ['dart', 'test']),
-    _Check('$root/packages/seisei_router', ['dart', 'test']),
     _Check('$root/packages/seisei_test', ['dart', 'test']),
-    _Check('$root/packages/seisei_ui', ['dart', 'test']),
-    _Check('$root/packages/seisei_tagflow', ['flutter', 'test']),
+    _Check('$root/packages/seisei_flutter', ['flutter', 'test']),
     _Check('$root/packages/seisei_apple', ['flutter', 'test']),
-    _Check('$root/packages/seisei_intents', ['dart', 'test']),
-    _Check('$root/packages/seisei_flutter_intents', ['flutter', 'test']),
+    _Check('$root/packages/seisei_intents', ['flutter', 'test']),
   ];
 
   if (Platform.isMacOS) {
@@ -93,7 +89,7 @@ Future<void> main(List<String> args) async {
 
   if (includeLocalPcc) {
     stdout.writeln(
-      '\nPCC validation target: Seisei\'s current Dart `FmCliBackend` '
+      "\nPCC validation target: Seisei's current Dart `FmCliBackend` "
       'subprocess context. This is a real backend smoke check, but it is not '
       'a general machine capability probe. To prove interactive PCC access, '
       'run `tool/local_pcc_interactive_smoke.zsh` from a real terminal PTY.\n'
@@ -128,7 +124,7 @@ Future<void> main(List<String> args) async {
   if (includeIosExtension) {
     stdout.writeln(
       '\niOS App Intents extension validation typechecks and packages '
-      '`seisei_flutter_intents` against Flutter\'s extension-safe iOS engine '
+      "`seisei_intents` against Flutter's extension-safe iOS engine "
       'artifact in Swift application-extension mode. It builds a temporary '
       'iOS host app with an embedded App Intents extension, but it does not '
       'launch the extension process.',
@@ -146,55 +142,13 @@ Future<void> main(List<String> args) async {
   }
 
   final releaseChecks = <_Check>[
-    _Check('$root/packages/seisei', ['flutter', 'pub', 'publish', '--dry-run']),
-    _Check('$root/packages/seisei_schema', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
-    _Check('$root/packages/seisei_router', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
-    _Check('$root/packages/seisei_test', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
-    _Check('$root/packages/seisei_ui', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
-    _Check('$root/packages/seisei_tagflow', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
-    _Check('$root/packages/seisei_apple', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
-    _Check('$root/packages/seisei_intents', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
-    _Check('$root/packages/seisei_flutter_intents', [
-      'flutter',
-      'pub',
-      'publish',
-      '--dry-run',
-    ]),
+    for (final package in _publishedPackages)
+      _Check('$root/packages/$package', [
+        'flutter',
+        'pub',
+        'publish',
+        '--dry-run',
+      ]),
   ];
 
   if (includeRelease) {
@@ -232,6 +186,21 @@ Future<void> main(List<String> args) async {
   }
 }
 
+/// Packages published from this repository, including the discontinued
+/// re-export releases.
+const _publishedPackages = [
+  'seisei',
+  'seisei_test',
+  'seisei_flutter',
+  'seisei_apple',
+  'seisei_intents',
+  'discontinued/seisei_schema',
+  'discontinued/seisei_router',
+  'discontinued/seisei_flutter_intents',
+  'discontinued/seisei_ui',
+  'discontinued/seisei_tagflow',
+];
+
 const _pccContextFailureHint =
     'PCC may still be available from a direct interactive `fm` PTY on this '
     'machine. This failure means the current Seisei/Dart subprocess context '
@@ -246,8 +215,9 @@ final class _Check {
   final String? failureHint;
 
   Future<int> run({bool failFast = true}) async {
-    stdout.writeln('\n> ${command.join(' ')}');
-    stdout.writeln('  cwd: $workingDirectory');
+    stdout
+      ..writeln('\n> ${command.join(' ')}')
+      ..writeln('  cwd: $workingDirectory');
 
     final process = await Process.start(
       command.first,

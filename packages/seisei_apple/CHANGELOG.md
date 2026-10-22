@@ -1,3 +1,8 @@
+## 0.2.0-dev.0
+
+- Depend on `seisei` only; schema types now come from `package:seisei`.
+- Move to the shared Seisei package version.
+
 ## 0.1.0-dev.10
 
 - Encode explicit `ObjectField.nullValue` union variants as FoundationModels

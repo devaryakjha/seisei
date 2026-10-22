@@ -2,6 +2,13 @@
 
 Use this checklist before tagging or publishing any Seisei package.
 
+## Package Consolidation (0.2.0-dev.0)
+
+The next publish wave moves every package to the shared version `0.2.0-dev.0`
+and ships the five-package layout described in
+[Package consolidation](package-consolidation.md). Publish in the order listed
+there, then mark the retired packages discontinued on pub.dev.
+
 ## Current Release Gate
 
 The first publish wave is complete. All publishable packages have package-root
@@ -64,11 +71,11 @@ unless the release process is deliberately changed.
       tests.
 - [x] Router fallback and privacy claims are backed by tests.
 - [x] UI blocks can be validated before rendering.
-- [x] Tagflow remains optional and is isolated in `seisei_tagflow`.
+- [x] Tagflow stays out of `seisei` and is isolated in `seisei_flutter`.
 - [x] Native App Intent helper claims are backed by Swift compile tests and
       `seisei_intents` scalar/scalar-array/string-enum/static-entity source-generation,
       invocation-helper, and manifest-generation tests.
-- [x] Flutter App Intent runtime claims are backed by `seisei_flutter_intents`
+- [x] Flutter App Intent runtime claims are backed by `seisei_intents`
       method-channel tests.
 
 ## Dry-Run Evidence

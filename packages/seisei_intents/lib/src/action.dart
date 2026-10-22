@@ -186,12 +186,6 @@ final class AppActionResult {
   /// Creates an action result.
   const AppActionResult({this.value, this.metadata = const {}});
 
-  /// JSON-compatible result value returned by the host app.
-  final Object? value;
-
-  /// Host metadata for platform or tool response adaptation.
-  final Map<String, Object?> metadata;
-
   /// Creates an action result from JSON-compatible data.
   factory AppActionResult.fromJson(Map<String, Object?> json) {
     return AppActionResult(
@@ -199,6 +193,12 @@ final class AppActionResult {
       metadata: (json['metadata'] as Map? ?? const {}).cast<String, Object?>(),
     );
   }
+
+  /// JSON-compatible result value returned by the host app.
+  final Object? value;
+
+  /// Host metadata for platform or tool response adaptation.
+  final Map<String, Object?> metadata;
 
   /// Converts this result to JSON-compatible data.
   Map<String, Object?> toJson() {

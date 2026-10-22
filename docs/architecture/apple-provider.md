@@ -69,7 +69,7 @@ The provider should map Apple availability into Seisei capabilities:
 - native method-channel bridge: plain system-model text generation and
   schema-backed generation when the request supplies a JSON-encoded
   FoundationModels schema file.
-- `FoundationModelsSchemaEncoder`: maps the generic `seisei_schema`
+- `FoundationModelsSchemaEncoder`: maps the generic `seisei`
   `ObjectSchema` contract into FoundationModels schema JSON and provider
   metadata, including nested objects, string enums, field-level `anyOf`
   unions, numeric ranges, string patterns, arrays, and optional fields.

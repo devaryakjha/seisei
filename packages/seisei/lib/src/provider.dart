@@ -1,6 +1,6 @@
-import 'capability.dart';
-import 'request.dart';
-import 'response.dart';
+import 'package:seisei/src/capability.dart';
+import 'package:seisei/src/request.dart';
+import 'package:seisei/src/response.dart';
 
 /// A typed generation provider.
 abstract interface class SeiseiProvider {
