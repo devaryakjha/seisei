@@ -1,0 +1,22 @@
+name: seisei_openai
+description: OpenAI-compatible chat completions provider for Seisei. Works with OpenAI, Azure OpenAI, OpenRouter, Ollama, and LM Studio.
+version: 0.2.0-dev.0
+repository: https://github.com/devaryakjha/seisei
+issue_tracker: https://github.com/devaryakjha/seisei/issues
+topics:
+  - ai
+  - dart
+  - openai
+  - llm
+  - structured-output
+
+environment:
+  sdk: ">=3.9.0 <4.0.0"
+resolution: workspace
+
+dependencies:
+  http: ^1.2.0
+  seisei: ^0.2.0-dev.0
+
+dev_dependencies:
+  test: ^1.26.0

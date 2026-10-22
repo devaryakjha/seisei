@@ -33,6 +33,9 @@ This workspace contains:
   with fallback, availability checks, and privacy modes
 - `seisei_test`: deterministic mocks, fake streams, fixtures, and test utilities
 - `seisei_apple`: Apple Foundation Models provider boundary with an `fm` CLI backend for local development probes and an iOS/macOS Flutter bridge
+- `seisei_openai`: OpenAI-compatible chat completions provider (OpenAI, Azure
+  OpenAI, OpenRouter, Ollama, LM Studio) with JSON-schema structured output,
+  SSE streaming, and tool calls
 - `seisei_intents`: app-action contracts, tool-call mapping, fake bridges,
   Apple App Intent source generation, and the Flutter method-channel runtime
   bridge for App Intent action invocation and host-backed entity queries
@@ -57,7 +60,7 @@ Future packages may include:
 ## Development
 
 The workspace includes Flutter packages, so full validation requires a Flutter
-SDK even though `seisei` and `seisei_test` are pure Dart.
+SDK even though `seisei`, `seisei_test`, and `seisei_openai` are pure Dart.
 
 ```sh
 dart tool/validate.dart

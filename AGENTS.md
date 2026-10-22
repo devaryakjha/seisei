@@ -10,6 +10,8 @@ packages for typed AI contracts in Flutter apps:
 - `packages/seisei`: core API, `SeiseiClient`, provider contracts, tools,
   structured output schemas, provider routing (pure Dart)
 - `packages/seisei_test`: deterministic fakes and test utilities (pure Dart)
+- `packages/seisei_openai`: OpenAI-compatible HTTP provider (pure Dart; tests
+  use a local fake server, never the network)
 - `packages/seisei_apple`: Apple Foundation Models provider (Flutter plugin)
 - `packages/seisei_intents`: app-action contracts, App Intent codegen, and the
   Flutter App Intents runtime bridge (Flutter plugin; `lib/codegen.dart` stays
@@ -44,7 +46,8 @@ dart tool/validate.dart
 It runs `flutter pub get`, `dart format --set-exit-if-changed .`,
 `dart analyze --fatal-infos`, every package's tests, the CLI example, and on
 macOS `swift test` for `SeiseiAppleIntents`. Apple-only smoke flags
-(`--local-afm`, `--local-pcc`, ...) are local checks, not CI gates.
+(`--local-afm`, `--local-pcc`, ...) and `--local-ollama` are local checks, not
+CI gates.
 
 ## Working agreements
 
