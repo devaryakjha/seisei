@@ -64,6 +64,6 @@ final class PrivacyPolicyRejectedException extends SeiseiException {
 /// Thrown when raw provider data cannot decode into the requested type.
 final class DecodeException extends SeiseiException {
   /// Creates a decode exception.
-  const DecodeException(String message, {Object? source})
-    : super(SeiseiErrorCode.decodeFailed, message, source: source);
+  const DecodeException(String message, {super.source})
+    : super(SeiseiErrorCode.decodeFailed, message);
 }

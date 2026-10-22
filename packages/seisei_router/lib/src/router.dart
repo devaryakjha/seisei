@@ -37,7 +37,7 @@ final class SeiseiRouter {
       try {
         await _checkProvider(provider, request);
 
-        return provider.generate(request);
+        return await provider.generate(request);
       } on SeiseiException catch (error) {
         lastFailure = error;
       }
