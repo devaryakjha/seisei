@@ -22,12 +22,3 @@ workspace:
 
 dev_dependencies:
   very_good_analysis: ^10.2.0
-
-# TagflowMarkdownStream (devaryakjha/tagflow#94) is on tagflow main but not
-# published yet. Remove this override once a tagflow release ships it.
-dependency_overrides:
-  tagflow:
-    git:
-      url: https://github.com/devaryakjha/tagflow.git
-      ref: ee31e5631d114d51999fbce009d89b3551dfa178
-      path: packages/tagflow

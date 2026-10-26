@@ -62,6 +62,5 @@ The widget tests use the demo provider and run in CI through
 
 ## Tagflow version
 
-`TagflowMarkdownStream` is on Tagflow `main` but not yet on pub.dev, so the
-workspace root `pubspec.yaml` overrides `tagflow` with a pinned git
-dependency. Drop the override once a Tagflow release includes it.
+The example needs `tagflow` `1.0.0-beta.1` or later, the first release with
+`TagflowMarkdownStream` and `TagflowMarkdownStreamView`.
