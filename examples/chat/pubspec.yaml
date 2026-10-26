@@ -16,7 +16,7 @@ dependencies:
   seisei_flutter: ^0.2.0-dev.0
   seisei_intents: ^0.2.0-dev.0
   seisei_openai: ^0.2.0-dev.0
-  tagflow: ^1.0.0-beta.0
+  tagflow: ^1.0.0-beta.1
 
 dev_dependencies:
   flutter_test:
