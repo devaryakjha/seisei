@@ -50,8 +50,14 @@ dart tool/validate.dart
 ```
 
 It runs `flutter pub get`, `dart format --set-exit-if-changed .`,
-`dart analyze --fatal-infos`, every package's tests, the CLI example, and on
-macOS `swift test` for `SeiseiAppleIntents`. Apple-only smoke flags
+`dart analyze --fatal-infos`, `tool/check_readme_snippets.dart` (which
+compiles every README Dart block marked `<!-- readme-snippet: check -->`),
+every package's tests, the CLI example, and on macOS `swift test` for
+`SeiseiAppleIntents` and the `seisei_apple` bridge core.
+
+The SDK floor is Dart 3.9 and Flutter 3.35. The `minimum-sdk` CI job
+analyzes and tests the published packages on Flutter 3.35.0; raise the
+pubspec bounds and that job together. Apple-only smoke flags
 (`--local-afm`, `--local-pcc`, ...) and `--local-ollama` are local checks, not
 CI gates.
 

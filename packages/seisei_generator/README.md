@@ -4,7 +4,7 @@
 typed decoders from annotated Dart classes, so structured output does not
 need hand-written schema trees.
 
-## Setup
+## Getting started
 
 ```yaml
 dependencies:

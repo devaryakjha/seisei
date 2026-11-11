@@ -24,6 +24,25 @@ It currently focuses on:
 - App Intents and tool-call bridges
 - renderer-neutral UI block contracts
 
+## Getting started
+
+Pick the provider you want and follow its package README; each one starts
+with a "Getting started" section that ends in a working request:
+
+- [`seisei`](packages/seisei/README.md): a typed, schema-checked reply from
+  a local model in one file.
+- [`seisei_openai`](packages/seisei_openai/README.md): OpenAI and any
+  compatible server, including Ollama and LM Studio.
+- [`seisei_apple`](packages/seisei_apple/README.md): Apple Foundation Models
+  in a Flutter app on iOS and macOS.
+- [`seisei_flutter`](packages/seisei_flutter/README.md): structured output
+  rendered as Flutter widgets through Tagflow.
+- [`seisei_test`](packages/seisei_test/README.md): scripted providers for
+  tests.
+
+For everything together in one app (streaming Markdown, structured cards and
+an app action), run the [chat example](examples/chat/README.md).
+
 ## Current Packages
 
 This workspace contains:

@@ -5,6 +5,63 @@ provider routing for Dart and Flutter apps.
 
 This package defines the core Seisei API: requests, responses, streamed chunks, provider availability, capabilities, privacy policy, tool descriptors, and structured error types.
 
+## Getting started
+
+Add `seisei` and a provider. This one runs against
+[Ollama](https://ollama.com) on your machine, so no API key is needed
+(`ollama pull llama3.2` first):
+
+```sh
+dart pub add seisei:^0.3.0-dev.0 seisei_openai:^0.3.0-dev.0
+```
+
+<!-- readme-snippet: check -->
+```dart
+import 'package:seisei/seisei.dart';
+import 'package:seisei_openai/seisei_openai.dart';
+
+final class City {
+  const City(this.name, this.country);
+
+  factory City.fromJson(Map<String, Object?> json) =>
+      City(json['name']! as String, json['country']! as String);
+
+  static const schema = ObjectSchema(
+    name: 'City',
+    fields: {'name': ObjectField.string(), 'country': ObjectField.string()},
+  );
+
+  final String name;
+  final String country;
+}
+
+Future<void> main() async {
+  final client = SeiseiClient(
+    provider: OpenAiCompatibleProvider(
+      model: 'llama3.2',
+      baseUrl: Uri.parse('http://localhost:11434/v1'),
+      runsOnDevice: true,
+    ),
+  );
+
+  final response = await client.generate(
+    GenerationRequest<City>.structured(
+      prompt: 'Name the largest city in Japan.',
+      schema: City.schema,
+      fromJson: City.fromJson,
+    ),
+  );
+  print('${response.value.name}, ${response.value.country}');
+}
+```
+
+The reply is checked against `City.schema` before `fromJson` runs, so a
+malformed answer fails with a `DecodeException` instead of reaching your
+code. Swap the provider for OpenAI, Apple Foundation Models or a
+`SeiseiRouter` without touching the request. `seisei_generator` can write
+the schema and `fromJson` for you.
+
+
 ## Requests
 
 A `GenerationRequest` is provider-neutral: the same request runs on the

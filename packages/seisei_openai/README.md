@@ -6,6 +6,44 @@ Azure OpenAI, OpenRouter, Ollama, LM Studio, and any other server that
 implements `POST /chat/completions`. It is pure Dart, so it works on Android,
 web, Windows, Linux, and Apple platforms alike.
 
+## Getting started
+
+```sh
+dart pub add seisei:^0.3.0-dev.0 seisei_openai:^0.3.0-dev.0
+```
+
+The quickest server to try is a local one. With
+[Ollama](https://ollama.com) running and `ollama pull llama3.2` done:
+
+<!-- readme-snippet: check -->
+```dart
+import 'package:seisei/seisei.dart';
+import 'package:seisei_openai/seisei_openai.dart';
+
+Future<void> main() async {
+  final client = SeiseiClient(
+    provider: OpenAiCompatibleProvider(
+      model: 'llama3.2',
+      baseUrl: Uri.parse('http://localhost:11434/v1'),
+      // The server is on this machine, so on-device requests may use it.
+      runsOnDevice: true,
+    ),
+  );
+
+  await for (final chunk in client.stream(
+    GenerationRequest<String>(
+      prompt: 'Write a haiku about typed data.',
+      decode: (raw) => raw! as String,
+    ),
+  )) {
+    if (chunk.delta case final delta?) print(delta);
+  }
+}
+```
+
+For a hosted model, see the next section: keep the API key on a server.
+
+
 ## Usage
 
 ```dart

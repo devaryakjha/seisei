@@ -15,6 +15,7 @@ Future<void> main(List<String> args) async {
     _Check(root, ['flutter', 'pub', 'get']),
     _Check(root, ['dart', 'format', '--set-exit-if-changed', '.']),
     _Check(root, ['dart', 'analyze', '--fatal-infos']),
+    _Check(root, ['dart', 'run', 'tool/check_readme_snippets.dart']),
     _Check('$root/packages/seisei', ['dart', 'test']),
     _Check('$root/packages/seisei_test', ['dart', 'test']),
     _Check('$root/packages/seisei_openai', ['dart', 'test']),
