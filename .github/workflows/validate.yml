@@ -8,6 +8,7 @@ on:
 
 jobs:
   dart:
+    name: Dart and Flutter (Ubuntu)
     runs-on: ubuntu-latest
 
     steps:
@@ -21,3 +22,23 @@ jobs:
 
       - name: Validate
         run: dart tool/validate.dart
+
+  apple:
+    name: Swift and Apple plugins (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+
+      # Runs everything the Ubuntu job runs, plus `swift build` and
+      # `swift test` for seisei_apple_intents, and iOS and macOS builds of the
+      # chat example to compile the seisei_apple and seisei_intents plugins.
+      # --require-swift makes the run fail if the Swift steps are skipped.
+      - name: Validate with Swift and plugin builds
+        run: dart tool/validate.dart --require-swift --build-plugins

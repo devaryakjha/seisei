@@ -7,6 +7,8 @@ Future<void> main(List<String> args) async {
   final includeNativePccSdk = args.contains('--native-pcc-sdk');
   final includeRelease = args.contains('--release');
   final includeLocalOllama = args.contains('--local-ollama');
+  final requireSwift = args.contains('--require-swift');
+  final buildPlugins = args.contains('--build-plugins');
   final root = Directory.current.path;
 
   final checks = <_Check>[
@@ -24,14 +26,41 @@ Future<void> main(List<String> args) async {
   ];
 
   if (Platform.isMacOS) {
-    checks.add(
+    checks.addAll([
+      _Check('$root/packages/seisei_apple_intents', ['swift', 'build']),
       _Check('$root/packages/seisei_apple_intents', ['swift', 'test']),
+    ]);
+  } else if (requireSwift) {
+    stderr.writeln(
+      '--require-swift was passed, but the Swift steps only run on macOS '
+      '(this is ${Platform.operatingSystem}).',
     );
+    exit(1);
   } else {
     stdout.writeln(
       'Skipping SeiseiAppleIntents Swift tests on '
       '${Platform.operatingSystem}; AppIntents is Apple-platform only.',
     );
+  }
+
+  if (buildPlugins) {
+    if (!Platform.isMacOS) {
+      stderr.writeln('--build-plugins needs macOS to build iOS and macOS.');
+      exit(1);
+    }
+    // The chat example depends on seisei_apple and seisei_intents, so these
+    // builds compile both plugins' native code for iOS and macOS.
+    checks.addAll([
+      _Check('$root/examples/chat', [
+        'flutter',
+        'build',
+        'ios',
+        '--simulator',
+        '--debug',
+        '--no-codesign',
+      ]),
+      _Check('$root/examples/chat', ['flutter', 'build', 'macos', '--debug']),
+    ]);
   }
 
   checks.add(
@@ -160,67 +189,18 @@ Future<void> main(List<String> args) async {
     );
   }
 
-  final releaseChecks = <_Check>[
-    for (final package in _publishedPackages)
-      _Check('$root/packages/$package', [
-        'flutter',
-        'pub',
-        'publish',
-        '--dry-run',
-      ]),
-  ];
-
   if (includeRelease) {
     stdout.writeln(
-      '\nRelease validation will run every package dry-run before failing.',
+      '\nRelease validation dry-runs every package in publish order '
+      '(see tool/publish.dart).',
     );
+    checks.add(_Check(root, ['dart', 'tool/publish.dart', '--dry-run']));
   }
 
   for (final check in checks) {
     await check.run();
   }
-
-  if (includeRelease) {
-    final failures = <_CheckFailure>[];
-    for (final check in releaseChecks) {
-      final exitCode = await check.run(failFast: false);
-      if (exitCode != 0) {
-        failures.add(_CheckFailure(check, exitCode));
-      }
-    }
-
-    if (failures.isNotEmpty) {
-      stderr.writeln(
-        '\nRelease validation failed for ${failures.length} package(s):',
-      );
-      for (final failure in failures) {
-        stderr.writeln(
-          '- ${failure.check.workingDirectory}: '
-          '${failure.check.command.join(' ')} '
-          '(exit ${failure.exitCode})',
-        );
-      }
-      exit(failures.first.exitCode);
-    }
-  }
 }
-
-/// Packages published from this repository, including the discontinued
-/// re-export releases.
-const _publishedPackages = [
-  'seisei',
-  'seisei_test',
-  'seisei_generator',
-  'seisei_flutter',
-  'seisei_apple',
-  'seisei_intents',
-  'seisei_openai',
-  'discontinued/seisei_schema',
-  'discontinued/seisei_router',
-  'discontinued/seisei_flutter_intents',
-  'discontinued/seisei_ui',
-  'discontinued/seisei_tagflow',
-];
 
 const _pccContextFailureHint =
     'PCC may still be available from a direct interactive `fm` PTY on this '
@@ -262,11 +242,4 @@ final class _Check {
 
     return exitCode;
   }
-}
-
-final class _CheckFailure {
-  const _CheckFailure(this.check, this.exitCode);
-
-  final _Check check;
-  final int exitCode;
 }

@@ -1,0 +1,37 @@
+name: Publish
+
+# One tag publishes the whole lockstep version: push `v<version>` after the
+# version bump is merged. See docs/releasing.md.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: Publish to pub.dev
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+
+      - name: Set up pub.dev OIDC
+        uses: dart-lang/setup-dart@v1
+
+      - name: Validate, including every publish dry run
+        run: dart tool/validate.dart --release
+
+      - name: Publish in dependency order
+        run: dart tool/publish.dart --tag "${GITHUB_REF_NAME}"
