@@ -2,3 +2,4 @@
 library;
 
 export 'src/fake_provider.dart';
+export 'src/scripted_provider.dart';

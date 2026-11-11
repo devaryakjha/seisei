@@ -1,3 +1,21 @@
+## 0.3.0-dev.0
+
+`0.2.0-dev.0` was never published, so this is the first release with the
+changes listed under it too.
+
+- Honour `GenerationRequest.schema`: the provider writes the
+  FoundationModels schema file, deletes it afterwards, and validates the
+  reply against the schema before decoding.
+  ([#23](https://github.com/devaryakjha/seisei/issues/23))
+- Send `instructions`, system messages, `temperature` and the output limit
+  to the session (the native bridge maps them to `LanguageModelSession`
+  instructions and `GenerationOptions`). Multi-turn conversations, stop
+  sequences, seeds and tools are not supported and are rejected as
+  unsupported capabilities. ([#24](https://github.com/devaryakjha/seisei/issues/24))
+- Deprecate `AppleFoundationModelsProvider.schemaPathMetadataKey` and
+  `FoundationModelsSchemaEncoder.metadataForFile`. They still work in this
+  release and are removed in `0.4.0`.
+
 ## 0.2.0-dev.0
 
 - Depend on `seisei` only; schema types now come from `package:seisei`.

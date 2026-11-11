@@ -33,18 +33,27 @@ The provider serves only `PrivacyPolicy.cloudAllowed`. `onDeviceOnly` and
 leave the device. This matches Apple PCC mode: a request reaches a cloud model
 only when the app opted in for that request.
 
-## Request metadata
+## Request mapping
 
-Provider options travel in `GenerationRequest.metadata`, keeping OpenAI
-concepts out of the core request type:
+Since `0.3.0-dev.0` the request is provider-neutral (see
+[portable-requests.md](portable-requests.md)):
 
-| Key | Value |
+| Request field | Chat completions body |
 | --- | --- |
-| `seisei.openai.responseSchema` | `ObjectSchema` for the response format |
-| `seisei.openai.systemPrompt` | `String` system message |
-| `seisei.openai.requestOptions` | `Map<String, Object?>` merged into the body first, so Seisei's own fields win |
+| `instructions` | a leading `system` message |
+| `messages` | `messages`; assistant tool calls become `tool_calls`, tool results become `tool` messages |
+| `schema` | `response_format` (`json_schema`) |
+| `options.temperature` | `temperature` |
+| `options.maxOutputTokens` | `max_tokens` |
+| `options.stopSequences` | `stop` |
+| `options.seed` | `seed` |
+| `tools` | `tools` (function tools) |
 
-`OpenAiCompatibleProvider.requestMetadata(...)` builds this map.
+`seisei.openai.requestOptions` in `GenerationRequest.metadata` is still
+merged into the body first, for fields Seisei has no typed option for. The
+`seisei.openai.responseSchema` and `seisei.openai.systemPrompt` keys are
+deprecated, read only when the typed field is unset, and removed in
+`0.4.0`.
 
 ## Structured output
 

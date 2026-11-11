@@ -1,6 +1,6 @@
 name: seisei_generator
 description: build_runner generator that derives Seisei ObjectSchema definitions and typed decoders from annotated Dart classes.
-version: 0.2.0-dev.0
+version: 0.3.0-dev.0
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:
@@ -16,7 +16,7 @@ resolution: workspace
 dependencies:
   analyzer: ^10.0.0
   build: ^4.0.0
-  seisei: ^0.2.0-dev.0
+  seisei: ^0.3.0-dev.0
   source_gen: ^4.2.0
 
 dev_dependencies:

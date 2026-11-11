@@ -1,4 +1,5 @@
 import 'package:seisei/src/capability.dart';
+import 'package:seisei/src/tool.dart';
 
 /// Stable error codes suitable for tests and diagnostics.
 enum SeiseiErrorCode {
@@ -14,8 +15,12 @@ enum SeiseiErrorCode {
   /// The provider output could not be decoded into the requested type.
   decodeFailed,
 
-  /// A tool call was rejected.
+  /// A tool call was rejected by the app's approval callback.
   toolRejected,
+
+  /// `SeiseiClient.runTools` reached its step limit while the model was
+  /// still calling tools.
+  toolStepLimitExceeded,
 }
 
 /// Base exception for Seisei failures.
@@ -81,4 +86,18 @@ final class DecodeException extends SeiseiException {
   /// Creates a decode exception.
   const DecodeException(String message, {super.source})
     : super(SeiseiErrorCode.decodeFailed, message);
+}
+
+/// Thrown when the app's approval callback rejects a tool call.
+final class ToolRejectedException extends SeiseiException {
+  /// Creates a rejection of [call].
+  ToolRejectedException(this.call)
+    : super(
+        SeiseiErrorCode.toolRejected,
+        'Tool call "${call.name}" was rejected.',
+        source: call,
+      );
+
+  /// The rejected call.
+  final ToolCall call;
 }

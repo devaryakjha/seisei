@@ -21,6 +21,18 @@ final class ModelCapability {
   /// Model can accept image segments.
   static const imageInput = ModelCapability('image_input');
 
+  /// Conversations with earlier assistant turns or tool results.
+  ///
+  /// `GenerationRequest.requiredCapabilities` adds it when the request's
+  /// messages hold more than a single user turn.
+  static const multiTurn = ModelCapability('multi_turn');
+
+  /// `GenerationOptions.stopSequences`.
+  static const stopSequences = ModelCapability('stop_sequences');
+
+  /// `GenerationOptions.seed`.
+  static const seed = ModelCapability('seed');
+
   /// Stable identifier.
   final String id;
 

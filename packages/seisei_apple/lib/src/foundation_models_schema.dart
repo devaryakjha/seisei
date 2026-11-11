@@ -48,6 +48,10 @@ final class FoundationModelsSchemaEncoder {
   }
 
   /// Metadata for passing [schemaFile] through [AppleFoundationModelsProvider].
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated(
+    'Set GenerationRequest.schema instead. Removed in seisei_apple 0.4.0.',
+  )
   Map<String, Object?> metadataForFile(File schemaFile) {
     return {
       AppleFoundationModelsProvider.schemaPathMetadataKey: schemaFile.path,

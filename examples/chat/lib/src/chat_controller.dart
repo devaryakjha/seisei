@@ -3,7 +3,6 @@ import 'package:seisei/seisei.dart';
 import 'package:seisei_chat/src/task_card.dart';
 import 'package:seisei_flutter/seisei_flutter.dart';
 import 'package:seisei_intents/seisei_intents.dart';
-import 'package:seisei_openai/seisei_openai.dart';
 import 'package:tagflow/tagflow.dart';
 
 /// One entry in the chat transcript.
@@ -126,9 +125,7 @@ final class ChatController extends ChangeNotifier {
           'summary, up to five steps, and an estimate in minutes. '
           'Request: $prompt',
       privacyPolicy: privacyPolicy,
-      metadata: OpenAiCompatibleProvider.requestMetadata(
-        responseSchema: TaskCard.schema,
-      ),
+      schema: TaskCard.schema,
       decode: (rawValue) => TaskCard.schema.decode(rawValue, TaskCard.fromJson),
     );
     try {

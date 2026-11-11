@@ -9,4 +9,4 @@ environment:
 resolution: workspace
 
 dependencies:
-  seisei_intents: ^0.2.0-dev.0
+  seisei_intents: ^0.3.0-dev.0

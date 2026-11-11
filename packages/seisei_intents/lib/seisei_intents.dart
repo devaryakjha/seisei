@@ -8,3 +8,4 @@ export 'src/apple_app_intent_source.dart';
 export 'src/bridge.dart';
 export 'src/fake_bridge.dart';
 export 'src/runtime.dart';
+export 'src/tools.dart';

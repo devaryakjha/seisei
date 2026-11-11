@@ -1,8 +1,19 @@
+import 'dart:io';
+
 import 'package:seisei/seisei.dart';
 
 import 'package:seisei_apple/src/backend.dart';
+import 'package:seisei_apple/src/foundation_models_schema.dart';
 
 /// Seisei provider backed by Apple Foundation Models.
+///
+/// The provider maps a request's [GenerationRequest.schema],
+/// [GenerationRequest.instructions], system messages, temperature and output
+/// limit to the Foundation Models session. It serves single-turn requests
+/// only: a conversation with earlier replies or tool results, stop
+/// sequences, a seed or tools need capabilities it does not report, so a
+/// router skips it and a direct call fails with
+/// [SeiseiErrorCode.unsupportedCapability].
 final class AppleFoundationModelsProvider implements SeiseiProvider {
   /// Creates an Apple provider.
   const AppleFoundationModelsProvider({
@@ -11,9 +22,11 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   });
 
   /// Metadata key for a provider-specific JSON schema file path.
-  ///
-  /// This keeps schema-backed AFM requests behind the Apple provider boundary
-  /// instead of adding Apple concepts to `GenerationRequest`.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated(
+    'Set GenerationRequest.schema instead; the provider writes the schema '
+    'file itself. Removed in seisei_apple 0.4.0.',
+  )
   static const schemaPathMetadataKey = 'seisei.apple.schemaPath';
 
   /// Backend used by this provider.
@@ -52,33 +65,39 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     GenerationRequest<T> request,
   ) async {
     await _check(request);
-    final rawValue = await backend.respond(
-      AppleFoundationModelsRequest(
-        prompt: request.prompt,
-        mode: mode,
-        schemaPath: _schemaPath(request),
-      ),
-    );
-
-    return GenerationResponse<T>(
-      value: request.decode(rawValue),
-      providerId: id,
-      rawValue: rawValue,
-    );
+    final schema = await _SchemaFile.open(request);
+    try {
+      final rawValue = await backend.respond(
+        _backendRequest(request, schemaPath: schema.path),
+      );
+      return GenerationResponse<T>(
+        value: _decode(request, rawValue),
+        providerId: id,
+        rawValue: rawValue,
+      );
+    } finally {
+      await schema.close();
+    }
   }
 
   @override
   Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
     await _check(request, additionalCapabilities: {ModelCapability.streaming});
-    final schemaPath = _schemaPath(request);
+    final schema = await _SchemaFile.open(request);
+    try {
+      yield* _stream(request, schema.path);
+    } finally {
+      await schema.close();
+    }
+  }
+
+  Stream<GenerationChunk<T>> _stream<T>(
+    GenerationRequest<T> request,
+    String? schemaPath,
+  ) async* {
     Object? previousStructuredSnapshot;
     await for (final rawValue in backend.stream(
-      AppleFoundationModelsRequest(
-        prompt: request.prompt,
-        mode: mode,
-        schemaPath: schemaPath,
-        stream: true,
-      ),
+      _backendRequest(request, schemaPath: schemaPath, stream: true),
     )) {
       final done = _isDone(rawValue);
       final structuredPatches = _structuredPatches(
@@ -90,9 +109,14 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       yield GenerationChunk<T>(
         providerId: id,
         delta: rawValue is String && !done ? rawValue : null,
-        partialValue: _partialValue(request, rawValue, done: done),
+        partialValue: _partialValue(
+          request,
+          rawValue,
+          done: done,
+          structured: schemaPath != null,
+        ),
         structuredPatches: structuredPatches,
-        value: done ? request.decode(_doneValue(rawValue)) : null,
+        value: done ? _decode(request, _doneValue(rawValue)) : null,
         rawValue: rawValue,
         isDone: done,
       );
@@ -115,7 +139,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     }
 
     final requiredCapabilities = {
-      ...request.capabilities,
+      ...request.requiredCapabilities,
       ...additionalCapabilities,
     };
     final unsupported = requiredCapabilities.difference(available.capabilities);
@@ -137,8 +161,40 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     }
   }
 
-  String? _schemaPath<T>(GenerationRequest<T> request) {
-    return request.metadata[schemaPathMetadataKey] as String?;
+  AppleFoundationModelsRequest _backendRequest<T>(
+    GenerationRequest<T> request, {
+    required String? schemaPath,
+    bool stream = false,
+  }) {
+    final instructions = [
+      ?request.instructions,
+      for (final message in request.messages)
+        if (message.role == GenerationRole.system) ?message.text,
+    ];
+    return AppleFoundationModelsRequest(
+      prompt: request.prompt,
+      mode: mode,
+      schemaPath: schemaPath,
+      instructions: instructions.isEmpty ? null : instructions.join('\n\n'),
+      temperature: request.options.temperature,
+      maximumResponseTokens: request.options.maxOutputTokens,
+      stream: stream,
+    );
+  }
+
+  /// Validates a structured reply against the request schema, then decodes.
+  T _decode<T>(GenerationRequest<T> request, Object? rawValue) {
+    final schema = request.schema;
+    if (schema != null) {
+      final errors = schema.validate(rawValue);
+      if (errors.isNotEmpty) {
+        throw DecodeException(
+          errors.map((error) => '${error.path}: ${error.code}').join(', '),
+          source: rawValue,
+        );
+      }
+    }
+    return request.decode(rawValue);
   }
 
   bool _isDone(Object? rawValue) {
@@ -174,8 +230,9 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     GenerationRequest<T> request,
     Object? rawValue, {
     required bool done,
+    required bool structured,
   }) {
-    if (done || rawValue is String || _schemaPath(request) == null) {
+    if (done || rawValue is String || !structured) {
       return null;
     }
     try {
@@ -207,5 +264,41 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       null || '' => modeReason,
       _ => '$modeReason $reason',
     };
+  }
+}
+
+/// The schema file for one request: written from [GenerationRequest.schema]
+/// and deleted afterwards, or the deprecated metadata path, left alone.
+final class _SchemaFile {
+  const _SchemaFile(this.path, this._directory);
+
+  static Future<_SchemaFile> open<T>(GenerationRequest<T> request) async {
+    final schema = request.schema;
+    if (schema == null) {
+      final legacyPath =
+          // ignore: deprecated_member_use_from_same_package, one-release fallback.
+          request.metadata[AppleFoundationModelsProvider.schemaPathMetadataKey]
+              as String?;
+      return _SchemaFile(legacyPath, null);
+    }
+    final directory = await Directory.systemTemp.createTemp(
+      'seisei_afm_schema_',
+    );
+    final file = await const FoundationModelsSchemaEncoder().writeObjectFile(
+      schema,
+      directory: directory,
+    );
+    return _SchemaFile(file.path, directory);
+  }
+
+  final String? path;
+  final Directory? _directory;
+
+  Future<void> close() async {
+    try {
+      await _directory?.delete(recursive: true);
+    } on FileSystemException {
+      // The OS cleans the temp directory eventually.
+    }
   }
 }

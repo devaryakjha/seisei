@@ -175,6 +175,7 @@ void main() {
       GenerationRequest<String>(
         prompt: 'Reply as JSON.',
         metadata: {
+          // ignore: deprecated_member_use_from_same_package, fallback test.
           AppleFoundationModelsProvider.schemaPathMetadataKey:
               '/tmp/seisei_schema.json',
         },
@@ -183,6 +184,106 @@ void main() {
     );
 
     expect(backend.requests.single.schemaPath, '/tmp/seisei_schema.json');
+  });
+
+  test('should write the request schema to a file and delete it', () async {
+    final backend = _FakeAppleBackend(
+      availabilityResult: const AppleFoundationModelsAvailability(
+        systemAvailable: true,
+        pccAvailable: false,
+      ),
+      respondValue: const {'title': 'Hi'},
+    );
+    final provider = AppleFoundationModelsProvider(backend: backend);
+
+    final response = await provider.generate(
+      GenerationRequest<String>(
+        prompt: 'Reply as JSON.',
+        schema: _titleSchema,
+        decode: (rawValue) => (rawValue! as Map)['title']! as String,
+      ),
+    );
+
+    expect(response.value, 'Hi');
+    final path = backend.requests.single.schemaPath!;
+    expect(backend.schemaFiles.single, contains('"title"'));
+    expect(File(path).existsSync(), isFalse);
+  });
+
+  test('should validate the reply against the request schema', () async {
+    final provider = AppleFoundationModelsProvider(
+      backend: _FakeAppleBackend(
+        availabilityResult: const AppleFoundationModelsAvailability(
+          systemAvailable: true,
+          pccAvailable: false,
+        ),
+        respondValue: const {'title': 3},
+      ),
+    );
+
+    await expectLater(
+      provider.generate(
+        GenerationRequest<Object?>(
+          prompt: 'Reply as JSON.',
+          schema: _titleSchema,
+          decode: (rawValue) => rawValue,
+        ),
+      ),
+      throwsA(isA<DecodeException>()),
+    );
+  });
+
+  test('should forward instructions and sampling options', () async {
+    final backend = _FakeAppleBackend(
+      availabilityResult: const AppleFoundationModelsAvailability(
+        systemAvailable: true,
+        pccAvailable: false,
+      ),
+    );
+    final provider = AppleFoundationModelsProvider(backend: backend);
+
+    await provider.generate(
+      GenerationRequest<String>.conversation(
+        messages: const [
+          GenerationMessage.system('Use metric units.'),
+          GenerationMessage.user('Weather?'),
+        ],
+        instructions: 'Be brief.',
+        options: const GenerationOptions(temperature: 0.3, maxOutputTokens: 64),
+        decode: (rawValue) => rawValue! as String,
+      ),
+    );
+
+    final request = backend.requests.single;
+    expect(request.prompt, 'Weather?');
+    expect(request.instructions, 'Be brief.\n\nUse metric units.');
+    expect(request.temperature, 0.3);
+    expect(request.maximumResponseTokens, 64);
+  });
+
+  test('should reject multi-turn requests it cannot serve', () async {
+    final backend = _FakeAppleBackend(
+      availabilityResult: const AppleFoundationModelsAvailability(
+        systemAvailable: true,
+        pccAvailable: false,
+      ),
+    );
+    final provider = AppleFoundationModelsProvider(backend: backend);
+
+    await expectLater(
+      provider.generate(
+        GenerationRequest<String>.conversation(
+          messages: const [
+            GenerationMessage.user('Hi'),
+            GenerationMessage.assistant(text: 'Hello'),
+            GenerationMessage.user('Again'),
+          ],
+          decode: (rawValue) => rawValue! as String,
+        ),
+      ),
+      throwsA(isA<UnsupportedCapabilityException>()),
+    );
+    expect(backend.requests, isEmpty);
   });
 
   test('encodes Seisei object schemas as FoundationModels JSON', () {
@@ -494,7 +595,9 @@ void main() {
 
     expect(file.path, endsWith('/draft.json'));
     expect(await file.readAsString(), contains('"title": "Draft"'));
+    // ignore: deprecated_member_use_from_same_package, kept until 0.4.0.
     expect(encoder.metadataForFile(file), {
+      // ignore: deprecated_member_use_from_same_package, kept until 0.4.0.
       AppleFoundationModelsProvider.schemaPathMetadataKey: file.path,
     });
   });
@@ -535,10 +638,7 @@ void main() {
           .stream(
             GenerationRequest<String>(
               prompt: 'Reply as JSON.',
-              metadata: {
-                AppleFoundationModelsProvider.schemaPathMetadataKey:
-                    '/tmp/schema.json',
-              },
+              schema: _titleSchema,
               decode: (rawValue) => (rawValue! as Map)['title']! as String,
             ),
           )
@@ -591,10 +691,7 @@ void main() {
         .stream(
           GenerationRequest<String>(
             prompt: 'Reply as JSON.',
-            metadata: {
-              AppleFoundationModelsProvider.schemaPathMetadataKey:
-                  '/tmp/schema.json',
-            },
+            schema: _titleSchema,
             decode: (rawValue) => (rawValue! as Map)['title']! as String,
           ),
         )
@@ -909,11 +1006,25 @@ final class _FakeAppleBackend implements AppleFoundationModelsBackend {
   _FakeAppleBackend({
     required this.availabilityResult,
     this.streamValues = const [],
+    this.respondValue = 'ok',
   });
 
   final AppleFoundationModelsAvailability availabilityResult;
   final List<Object?> streamValues;
+  final Object? respondValue;
   final List<AppleFoundationModelsRequest> requests = [];
+
+  /// Schema file contents seen while each request ran.
+  final List<String?> schemaFiles = [];
+
+  void _record(AppleFoundationModelsRequest request) {
+    requests.add(request);
+    final path = request.schemaPath;
+    final file = path == null ? null : File(path);
+    schemaFiles.add(
+      file != null && file.existsSync() ? file.readAsStringSync() : null,
+    );
+  }
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
@@ -922,15 +1033,24 @@ final class _FakeAppleBackend implements AppleFoundationModelsBackend {
 
   @override
   Future<Object?> respond(AppleFoundationModelsRequest request) async {
-    requests.add(request);
-    return 'ok';
+    _record(request);
+    return respondValue;
   }
 
   @override
   Stream<Object?> stream(AppleFoundationModelsRequest request) async* {
-    requests.add(request);
+    _record(request);
     for (final value in streamValues) {
       yield value;
     }
   }
 }
+
+const _titleSchema = ObjectSchema(
+  name: 'Titled',
+  fields: {
+    'title': ObjectField.string(),
+    'count': ObjectField.integer(isRequired: false),
+    'body': ObjectField.string(isRequired: false),
+  },
+);

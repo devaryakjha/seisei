@@ -120,9 +120,7 @@ Future<void> main(List<String> args) async {
         AppleFoundationModelsMode.system => PrivacyPolicy.onDeviceOnly,
         AppleFoundationModelsMode.pcc => PrivacyPolicy.cloudAllowed,
       },
-      metadata: schemaFile == null
-          ? const {}
-          : encoder.metadataForFile(schemaFile),
+      schema: schemaFile == null ? null : schema,
       decode: (rawValue) => _decode(
         rawValue,
         schemaSmoke: schemaSmoke,

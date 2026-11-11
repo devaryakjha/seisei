@@ -25,8 +25,8 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   /// added to every request URL, for example Azure's `api-version`.
   ///
   /// [capabilities] lists what the configured model supports. It defaults to
-  /// structured generation, streaming, and tool calling; remove any the model
-  /// or server lacks so routing can skip this provider.
+  /// [defaultCapabilities]; remove any the model or server lacks so routing
+  /// can skip this provider.
   /// [ModelCapability.onDeviceInference] is always removed.
   OpenAiCompatibleProvider({
     required this.model,
@@ -55,24 +55,39 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     ModelCapability.structuredGeneration,
     ModelCapability.streaming,
     ModelCapability.toolCalling,
+    ModelCapability.multiTurn,
+    ModelCapability.stopSequences,
+    ModelCapability.seed,
   });
 
   /// Metadata key for an [ObjectSchema] that constrains the response.
-  ///
-  /// The schema is sent as a `json_schema` response format, and the reply is
-  /// parsed as JSON and validated against it before
-  /// [GenerationRequest.decode] runs. Without it the decoder receives the
-  /// reply text. See [requestMetadata].
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated(
+    'Set GenerationRequest.schema instead. Removed in seisei_openai 0.4.0.',
+  )
   static const responseSchemaMetadataKey = 'seisei.openai.responseSchema';
 
   /// Metadata key for a system message sent before the prompt.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated(
+    'Set GenerationRequest.instructions instead. '
+    'Removed in seisei_openai 0.4.0.',
+  )
   static const systemPromptMetadataKey = 'seisei.openai.systemPrompt';
 
-  /// Metadata key for extra request body fields, such as `temperature` or
-  /// `max_tokens`. They are merged into the body before Seisei's own fields.
+  /// Metadata key for extra request body fields that Seisei has no typed
+  /// option for. They are merged into the body before Seisei's own fields.
+  ///
+  /// Use [GenerationRequest.options] for temperature, the output limit, stop
+  /// sequences and the seed.
   static const requestOptionsMetadataKey = 'seisei.openai.requestOptions';
 
   /// [GenerationResponse.metadata] key for the requested [ToolCall]s.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated(
+    'Read GenerationResponse.toolCalls instead. '
+    'Removed in seisei_openai 0.4.0.',
+  )
   static const toolCallsMetadataKey = 'seisei.openai.toolCalls';
 
   /// [GenerationResponse.metadata] key for the finish reason.
@@ -82,13 +97,23 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   static const usageMetadataKey = 'seisei.openai.usage';
 
   /// Builds [GenerationRequest.metadata] for this provider.
+  ///
+  /// [responseSchema] and [systemPrompt] are deprecated: set
+  /// [GenerationRequest.schema] and [GenerationRequest.instructions] so the
+  /// request works with every provider.
   static Map<String, Object?> requestMetadata({
+    // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+    @Deprecated('Set GenerationRequest.schema instead.')
     ObjectSchema? responseSchema,
+    // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+    @Deprecated('Set GenerationRequest.instructions instead.')
     String? systemPrompt,
     Map<String, Object?>? requestOptions,
   }) {
     return {
+      // ignore: deprecated_member_use_from_same_package, kept for one release.
       responseSchemaMetadataKey: ?responseSchema,
+      // ignore: deprecated_member_use_from_same_package, kept for one release.
       systemPromptMetadataKey: ?systemPrompt,
       requestOptionsMetadataKey: ?requestOptions,
     };
@@ -180,15 +205,26 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     }
 
     final completion = _parseCompletion(_decodeJson(response.body));
+    final metadata = {
+      // ignore: deprecated_member_use_from_same_package, kept for one release.
+      toolCallsMetadataKey: completion.toolCalls,
+      finishReasonMetadataKey: ?completion.finishReason,
+      if (completion.usage.isNotEmpty) usageMetadataKey: completion.usage,
+    };
+    if (_onlyCallsTools(completion)) {
+      return GenerationResponse<T>.toolCalls(
+        toolCalls: completion.toolCalls,
+        providerId: id,
+        rawValue: completion,
+        metadata: metadata,
+      );
+    }
     return GenerationResponse<T>(
       value: _decodeValue(request, completion),
+      toolCalls: completion.toolCalls,
       providerId: id,
       rawValue: completion,
-      metadata: {
-        toolCallsMetadataKey: completion.toolCalls,
-        finishReasonMetadataKey: ?completion.finishReason,
-        if (completion.usage.isNotEmpty) usageMetadataKey: completion.usage,
-      },
+      metadata: metadata,
     );
   }
 
@@ -283,7 +319,10 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     );
     yield GenerationChunk<T>(
       providerId: id,
-      value: _decodeValue(request, completion),
+      value: _onlyCallsTools(completion)
+          ? null
+          : _decodeValue(request, completion),
+      toolCalls: completion.toolCalls,
       rawValue: completion,
       isDone: true,
     );
@@ -302,9 +341,8 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     }
 
     final required = {
-      ...request.capabilities,
+      ...request.requiredCapabilities,
       ...additionalCapabilities,
-      if (request.tools.isNotEmpty) ModelCapability.toolCalling,
     };
     final unsupported = required.difference(available.capabilities);
     if (unsupported.isNotEmpty) {
@@ -334,16 +372,24 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     required bool stream,
   }) {
     final schema = _responseSchema(request);
-    final systemPrompt = request.metadata[systemPromptMetadataKey] as String?;
-    final options =
+    final instructions =
+        request.instructions ??
+        // ignore: deprecated_member_use_from_same_package, one-release fallback.
+        request.metadata[systemPromptMetadataKey] as String?;
+    final extra =
         request.metadata[requestOptionsMetadataKey] as Map<String, Object?>?;
+    final options = request.options;
     return {
-      ...?options,
+      ...?extra,
       'model': model,
       'messages': [
-        if (systemPrompt != null) {'role': 'system', 'content': systemPrompt},
-        {'role': 'user', 'content': request.prompt},
+        if (instructions != null) {'role': 'system', 'content': instructions},
+        for (final message in request.messages) _message(message),
       ],
+      'temperature': ?options.temperature,
+      'max_tokens': ?options.maxOutputTokens,
+      if (options.stopSequences.isNotEmpty) 'stop': options.stopSequences,
+      'seed': ?options.seed,
       if (schema != null)
         'response_format': OpenAiJsonSchemaEncoder(
           strict: strictSchemas,
@@ -370,7 +416,41 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   }
 
   ObjectSchema? _responseSchema<T>(GenerationRequest<T> request) {
-    return request.metadata[responseSchemaMetadataKey] as ObjectSchema?;
+    return request.schema ??
+        // ignore: deprecated_member_use_from_same_package, one-release fallback.
+        request.metadata[responseSchemaMetadataKey] as ObjectSchema?;
+  }
+
+  Map<String, Object?> _message(GenerationMessage message) {
+    return switch (message.role) {
+      GenerationRole.system => {'role': 'system', 'content': message.text},
+      GenerationRole.user => {'role': 'user', 'content': message.text},
+      GenerationRole.assistant => {
+        'role': 'assistant',
+        'content': message.text,
+        if (message.toolCalls.isNotEmpty)
+          'tool_calls': [
+            for (final call in message.toolCalls)
+              {
+                'id': call.id,
+                'type': 'function',
+                'function': {
+                  'name': call.name,
+                  'arguments': jsonEncode(call.arguments),
+                },
+              },
+          ],
+      },
+      GenerationRole.tool => {
+        'role': 'tool',
+        'tool_call_id': message.toolResult!.callId,
+        'content': message.toolResult!.contentText,
+      },
+    };
+  }
+
+  bool _onlyCallsTools(OpenAiCompletion completion) {
+    return completion.content == null && completion.toolCalls.isNotEmpty;
   }
 
   /// Decodes the final reply.
@@ -381,8 +461,7 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   T _decodeValue<T>(GenerationRequest<T> request, OpenAiCompletion completion) {
     final content = completion.content;
     final schema = _responseSchema(request);
-    if (schema == null ||
-        (content == null && completion.toolCalls.isNotEmpty)) {
+    if (schema == null) {
       return request.decode(content);
     }
 

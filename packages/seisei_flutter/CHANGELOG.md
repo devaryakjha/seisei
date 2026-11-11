@@ -1,3 +1,10 @@
+## 0.3.0-dev.0
+
+`0.2.0-dev.0` was never published, so this is the first release with the
+changes listed under it too.
+
+- Move to the shared Seisei package version.
+
 ## 0.2.0-dev.0
 
 - Initial release. Merges `seisei_ui` (block, schema, validation, and adapter

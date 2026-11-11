@@ -66,13 +66,16 @@ final request = GenerationRequest<Map<String, Object?>>(
   prompt: 'Describe the largest city in Japan.',
   decode: (raw) => Map<String, Object?>.from(raw! as Map),
   privacyPolicy: PrivacyPolicy.cloudAllowed,
-  metadata: OpenAiCompatibleProvider.requestMetadata(
-    responseSchema: citySchema,
-    systemPrompt: 'Answer with facts only.',
-    requestOptions: {'temperature': 0},
-  ),
+  schema: citySchema,
+  instructions: 'Answer with facts only.',
+  options: const GenerationOptions(temperature: 0),
 );
 ```
+
+The schema, instructions, conversation and options are provider-neutral, so
+the same request also runs on the Apple provider. Body fields that Seisei has
+no typed option for can still be passed with
+`OpenAiCompatibleProvider.requestMetadata(requestOptions: {...})`.
 
 In strict mode every field is listed as required and optional fields accept
 `null`. Seisei validation treats a `null` optional field as absent.
@@ -87,10 +90,12 @@ last chunk has `isDone` set and the decoded `value`.
 ## Tool calls
 
 `GenerationRequest.tools` are sent as function tools. Requested calls come
-back as `ToolCall`s on `OpenAiCompletion.toolCalls`, which is the
-`rawValue` of a response and of the terminal stream chunk. Responses also
-expose them under `OpenAiCompatibleProvider.toolCallsMetadataKey`. When the
-model only calls tools, the decoder receives `null`.
+back on `GenerationResponse.toolCalls` and on the terminal stream chunk's
+`toolCalls`, with streamed argument deltas already joined. When the model
+only calls tools, `hasValue` is `false` and the decoder does not run.
+
+Send results back as `GenerationMessage.toolResult(...)` messages, or let
+`SeiseiClient.runTools` run the whole loop with your handlers.
 
 ## Local smoke check
 

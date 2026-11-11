@@ -11,16 +11,17 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  seisei: ^0.2.0-dev.0
-  seisei_apple: ^0.2.0-dev.0
-  seisei_flutter: ^0.2.0-dev.0
-  seisei_intents: ^0.2.0-dev.0
-  seisei_openai: ^0.2.0-dev.0
+  seisei: ^0.3.0-dev.0
+  seisei_apple: ^0.3.0-dev.0
+  seisei_flutter: ^0.3.0-dev.0
+  seisei_intents: ^0.3.0-dev.0
+  seisei_openai: ^0.3.0-dev.0
   tagflow: ^1.0.0-beta.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  http: ^1.2.0
 
 flutter:
   uses-material-design: true

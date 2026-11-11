@@ -5,6 +5,61 @@ provider routing for Dart and Flutter apps.
 
 This package defines the core Seisei API: requests, responses, streamed chunks, provider availability, capabilities, privacy policy, tool descriptors, and structured error types.
 
+## Requests
+
+A `GenerationRequest` is provider-neutral: the same request runs on the
+OpenAI-compatible and Apple providers, and a `SeiseiRouter` can move it between
+them.
+
+```dart
+final client = SeiseiClient(provider: router);
+
+final response = await client.generate(
+  GenerationRequest<Draft>.structured(
+    prompt: 'Draft a post about Tagflow.',
+    instructions: 'Keep the title under six words.',
+    schema: Draft.schema,
+    fromJson: Draft.fromJson,
+    options: const GenerationOptions(temperature: 0.2),
+  ),
+);
+```
+
+Use `GenerationRequest.conversation(messages: [...])` for several turns.
+`requiredCapabilities` lists what a provider needs to serve the request; a
+provider that cannot honour part of it fails with `unsupportedCapability`
+instead of ignoring it.
+
+## Tools
+
+Declare `tools` on the request. A reply that only calls tools has
+`hasValue == false` and its calls in `toolCalls`. `SeiseiClient.runTools`
+runs the loop for you:
+
+```dart
+final answer = await client.runTools(
+  GenerationRequest<String>(
+    prompt: 'What is the weather in Pune?',
+    decode: (raw) => raw! as String,
+    privacyPolicy: PrivacyPolicy.cloudAllowed,
+    tools: const [
+      ToolDefinition(name: 'weather', description: 'Current weather.'),
+    ],
+  ),
+  handlers: {'weather': (call) => weatherFor(call.arguments['city'])},
+  approve: (call) => call.name == 'weather',
+  maxSteps: 4,
+);
+```
+
+## Routing
+
+`SeiseiRouter` is a `SeiseiProvider`, so it can be passed to `SeiseiClient`.
+It tries providers in order, applies the request's `PrivacyPolicy`, and for
+`stream` falls back only until the first chunk is emitted.
+
+## Streaming
+
 Streamed chunks distinguish complete output from structured snapshots:
 
 - `GenerationChunk.value` is the terminal decoded value.

@@ -64,11 +64,16 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
     streamTask?.cancel()
     streamTask = Task {
       do {
-        let session = LanguageModelSession(model: .default)
+        let session = self.makeSession(arguments)
+        let options = self.generationOptions(arguments)
         if let schemaPath = arguments["schemaPath"] as? String {
           let schema = try self.schema(at: schemaPath)
           var latestValue: Any?
-          let stream = session.streamResponse(to: prompt, schema: schema)
+          let stream = session.streamResponse(
+            to: prompt,
+            schema: schema,
+            options: options
+          )
           for try await partial in stream {
             if Task.isCancelled {
               return
@@ -90,7 +95,7 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         }
 
         var previousContent = ""
-        let stream = session.streamResponse(to: prompt)
+        let stream = session.streamResponse(to: prompt, options: options)
         for try await partial in stream {
           if Task.isCancelled {
             return
@@ -190,17 +195,22 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
 
     Task {
       do {
-        let session = LanguageModelSession(model: .default)
+        let session = self.makeSession(arguments)
+        let options = self.generationOptions(arguments)
         if let schemaPath = arguments["schemaPath"] as? String {
-          let schema = try schema(at: schemaPath)
-          let response = try await session.respond(to: prompt, schema: schema)
+          let schema = try self.schema(at: schemaPath)
+          let response = try await session.respond(
+            to: prompt,
+            schema: schema,
+            options: options
+          )
           await MainActor.run {
             result(flutterValue(from: response.content))
           }
           return
         }
 
-        let response = try await session.respond(to: prompt)
+        let response = try await session.respond(to: prompt, options: options)
         await MainActor.run {
           result(response.content)
         }
@@ -214,6 +224,25 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         }
       }
     }
+  }
+
+  /// A session with the request's system instructions, if any.
+  @available(iOS 26.0, *)
+  private func makeSession(_ arguments: [String: Any]) -> LanguageModelSession {
+    if let instructions = arguments["instructions"] as? String {
+      return LanguageModelSession(model: .default, instructions: instructions)
+    }
+    return LanguageModelSession(model: .default)
+  }
+
+  /// Sampling options from the request; unset values keep the defaults.
+  @available(iOS 26.0, *)
+  private func generationOptions(_ arguments: [String: Any]) -> GenerationOptions {
+    return GenerationOptions(
+      temperature: (arguments["temperature"] as? NSNumber)?.doubleValue,
+      maximumResponseTokens: (arguments["maximumResponseTokens"] as? NSNumber)?
+        .intValue
+    )
   }
 
   @available(iOS 26.0, *)

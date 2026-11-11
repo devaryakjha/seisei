@@ -7,6 +7,10 @@ typedef ProcessRunner =
     Future<ProcessResult> Function(String executable, List<String> arguments);
 
 /// Backend that talks to the local `/usr/bin/fm` CLI.
+///
+/// The CLI has no flags for instructions or sampling options. Instructions
+/// are sent as a paragraph before the prompt, and temperature and the output
+/// limit are not applied; use the method channel backend in apps.
 final class FmCliBackend implements AppleFoundationModelsBackend {
   /// Creates an `fm` CLI backend.
   FmCliBackend({this.executable = '/usr/bin/fm', ProcessRunner? processRunner})
@@ -80,7 +84,11 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
         '--schema',
         schemaPath,
       ],
-      request.prompt,
+      // The CLI has no instructions flag, so they lead the prompt.
+      if (request.instructions case final instructions?)
+        '$instructions\n\n${request.prompt}'
+      else
+        request.prompt,
     ];
   }
 

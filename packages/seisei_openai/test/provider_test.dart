@@ -19,9 +19,11 @@ GenerationRequest<String> _textRequest({
   PrivacyPolicy privacyPolicy = PrivacyPolicy.cloudAllowed,
   Map<String, Object?> metadata = const {},
   List<ToolDefinition> tools = const [],
+  String? instructions,
 }) {
   return GenerationRequest<String>(
     prompt: 'Say hi',
+    instructions: instructions,
     decode: (raw) => raw as String? ?? '',
     privacyPolicy: privacyPolicy,
     metadata: metadata,
@@ -34,9 +36,7 @@ GenerationRequest<Map<String, Object?>> _draftRequest() {
     prompt: 'Draft a post',
     decode: (raw) => Map<String, Object?>.from(raw! as Map),
     privacyPolicy: PrivacyPolicy.cloudAllowed,
-    metadata: OpenAiCompatibleProvider.requestMetadata(
-      responseSchema: _draftSchema,
-    ),
+    schema: _draftSchema,
   );
 }
 
@@ -77,6 +77,9 @@ void main() {
         ModelCapability.structuredGeneration,
         ModelCapability.streaming,
         ModelCapability.toolCalling,
+        ModelCapability.multiTurn,
+        ModelCapability.stopSequences,
+        ModelCapability.seed,
       });
       expect(customAvailability.capabilities, {
         ModelCapability.structuredGeneration,
@@ -140,8 +143,8 @@ void main() {
 
       await custom.generate(
         _textRequest(
+          instructions: 'Be brief.',
           metadata: OpenAiCompatibleProvider.requestMetadata(
-            systemPrompt: 'Be brief.',
             requestOptions: {'temperature': 0, 'model': 'ignored'},
           ),
         ),
@@ -297,13 +300,102 @@ void main() {
           },
         },
       ]);
-      expect(response.value, '');
-      final calls =
-          response.metadata[OpenAiCompatibleProvider.toolCallsMetadataKey]!
-              as List<ToolCall>;
+      expect(response.hasValue, isFalse);
+      final calls = response.toolCalls;
+      // ignore: deprecated_member_use_from_same_package, kept until 0.4.0.
+      const toolCallsKey = OpenAiCompatibleProvider.toolCallsMetadataKey;
+      expect(response.metadata[toolCallsKey], calls);
       expect(calls.single.id, 'call_1');
       expect(calls.single.name, 'lookup_weather');
       expect(calls.single.arguments, {'city': 'Pune'});
+    });
+
+    test('should send the conversation and typed options', () async {
+      server.enqueue(JsonReply(completionBody(content: 'Done.')));
+
+      await provider.generate(
+        GenerationRequest<String>.conversation(
+          messages: const [
+            GenerationMessage.user('Weather?'),
+            GenerationMessage.assistant(
+              toolCalls: [
+                ToolCall(
+                  id: 'call_1',
+                  name: 'lookup_weather',
+                  arguments: {'city': 'Pune'},
+                ),
+              ],
+            ),
+            GenerationMessage.toolResult(
+              ToolResult(
+                callId: 'call_1',
+                name: 'lookup_weather',
+                content: {'sky': 'sun'},
+              ),
+            ),
+          ],
+          decode: (raw) => raw! as String,
+          instructions: 'Be brief.',
+          privacyPolicy: PrivacyPolicy.cloudAllowed,
+          options: const GenerationOptions(
+            temperature: 0.2,
+            maxOutputTokens: 100,
+            stopSequences: ['END'],
+            seed: 7,
+          ),
+        ),
+      );
+
+      final body = server.requests.single.body;
+      expect(body['messages'], [
+        {'role': 'system', 'content': 'Be brief.'},
+        {'role': 'user', 'content': 'Weather?'},
+        {
+          'role': 'assistant',
+          'content': null,
+          'tool_calls': [
+            {
+              'id': 'call_1',
+              'type': 'function',
+              'function': {
+                'name': 'lookup_weather',
+                'arguments': '{"city":"Pune"}',
+              },
+            },
+          ],
+        },
+        {'role': 'tool', 'tool_call_id': 'call_1', 'content': '{"sky":"sun"}'},
+      ]);
+      expect(body['temperature'], 0.2);
+      expect(body['max_tokens'], 100);
+      expect(body['stop'], ['END']);
+      expect(body['seed'], 7);
+    });
+
+    test('should still read the deprecated metadata keys', () async {
+      server.enqueue(JsonReply(completionBody(content: '{"title":"T"}')));
+
+      final response = await provider.generate(
+        GenerationRequest<Map<String, Object?>>(
+          prompt: 'Draft',
+          decode: (raw) => Map<String, Object?>.from(raw! as Map),
+          privacyPolicy: PrivacyPolicy.cloudAllowed,
+          metadata: OpenAiCompatibleProvider.requestMetadata(
+            // ignore: deprecated_member_use_from_same_package, fallback test.
+            responseSchema: _draftSchema,
+            // ignore: deprecated_member_use_from_same_package, fallback test.
+            systemPrompt: 'Old',
+          ),
+        ),
+      );
+
+      final body = server.requests.single.body;
+      expect((body['messages']! as List).first, {
+        'role': 'system',
+        'content': 'Old',
+      });
+      expect(body['response_format'], isNotNull);
+      expect(response.value, {'title': 'T'});
     });
 
     test('should reject tools when tool calling is not supported', () async {
@@ -516,6 +608,14 @@ void main() {
 
       final chunks = await provider.stream(_textRequest()).toList();
 
+      expect(chunks.last.toolCalls, [
+        const ToolCall(
+          id: 'call_1',
+          name: 'lookup_weather',
+          arguments: {'city': 'Pune'},
+        ),
+      ]);
+      expect(chunks.last.value, isNull);
       final completion = chunks.last.rawValue! as OpenAiCompletion;
       expect(completion.finishReason, 'tool_calls');
       expect(completion.content, isNull);

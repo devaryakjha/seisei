@@ -26,6 +26,9 @@ final class AppleFoundationModelsRequest {
     required this.prompt,
     required this.mode,
     this.schemaPath,
+    this.instructions,
+    this.temperature,
+    this.maximumResponseTokens,
     this.stream = false,
   });
 
@@ -37,6 +40,15 @@ final class AppleFoundationModelsRequest {
 
   /// Optional JSON schema path.
   final String? schemaPath;
+
+  /// System instructions for the session.
+  final String? instructions;
+
+  /// Sampling temperature.
+  final double? temperature;
+
+  /// Most tokens the model may generate.
+  final int? maximumResponseTokens;
 
   /// Whether streaming is requested.
   final bool stream;

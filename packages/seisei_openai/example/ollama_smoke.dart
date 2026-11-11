@@ -44,9 +44,7 @@ Future<void> main() async {
       prompt: 'Describe the largest city in Japan.',
       decode: (raw) => Map<String, Object?>.from(raw! as Map),
       privacyPolicy: PrivacyPolicy.cloudAllowed,
-      metadata: OpenAiCompatibleProvider.requestMetadata(
-        responseSchema: _citySchema,
-      ),
+      schema: _citySchema,
     );
     final city = await client.generate(structured);
     stdout.writeln('structured: ${city.value}');
