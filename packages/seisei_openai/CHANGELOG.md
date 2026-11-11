@@ -32,6 +32,12 @@ changes listed under it too.
   Studio on loopback. The provider then reports `onDeviceInference` and
   serves `onDeviceOnly` and `onDevicePreferred` requests; it asserts that
   the base URL is a loopback address. ([#29](https://github.com/devaryakjha/seisei/issues/29))
+- Add `headersProvider`, called before each request, for short-lived tokens
+  from your backend, and `OpenAiRetryPolicy` (`retry:`) for rate limits and
+  transient server errors. Streams request token usage
+  (`stream_options.include_usage`; turn off with `streamUsage: false`). The
+  README now shows a backend proxy instead of a key compiled into the app.
+  ([#32](https://github.com/devaryakjha/seisei/issues/32))
 
 ## 0.2.0-dev.0
 

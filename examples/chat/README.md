@@ -47,6 +47,10 @@ flutter run \
 flutter run --dart-define=SEISEI_PROVIDER=apple
 ```
 
+`--dart-define` values are compiled into the app, so the key is only safe on
+your own machine for local development. Never build a release this way; see
+the `seisei_openai` README for the backend proxy pattern.
+
 The app ships iOS, Android, macOS and web runners. The Apple provider and the
 App Intent bridge need an Apple platform; the demo and OpenAI-compatible
 providers run everywhere.
