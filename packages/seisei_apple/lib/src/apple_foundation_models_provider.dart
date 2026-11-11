@@ -15,7 +15,8 @@ import 'package:seisei_apple/src/foundation_models_schema.dart';
 /// only: a conversation with earlier replies or tool results, stop
 /// sequences, a seed or tools need capabilities it does not report, so a
 /// router skips it and a direct call fails with
-/// [SeiseiErrorCode.unsupportedCapability].
+/// [SeiseiErrorCode.unsupportedCapability]. For a multi-turn conversation,
+/// [openSession] keeps the native transcript between requests.
 final class AppleFoundationModelsProvider implements SeiseiProvider {
   /// Creates an Apple provider.
   const AppleFoundationModelsProvider({
@@ -26,8 +27,8 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   /// Metadata key for a provider-specific JSON schema file path.
   // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
   @Deprecated(
-    'Set GenerationRequest.schema instead; the provider writes the schema '
-    'file itself. Removed in seisei_apple 0.4.0.',
+    'Set GenerationRequest.schema instead; the provider passes the schema '
+    'itself. Removed in seisei_apple 0.4.0.',
   )
   static const schemaPathMetadataKey = 'seisei.apple.schemaPath';
 
@@ -43,35 +44,54 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   @override
   Future<ProviderAvailability> availability() async {
     final afm = await backend.availability();
-    final modeAvailable = switch (mode) {
-      AppleFoundationModelsMode.system => afm.systemAvailable,
-      AppleFoundationModelsMode.pcc => afm.pccAvailable,
-    };
-
-    if (!modeAvailable) {
+    if (!afm.systemAvailable) {
       return ProviderAvailability.unavailable(_unavailableReason(afm));
     }
 
-    final capabilities = {
-      ModelCapability.structuredGeneration,
-      if (mode == AppleFoundationModelsMode.system) ModelCapability.streaming,
-      if (mode == AppleFoundationModelsMode.system)
+    return ProviderAvailability.available(
+      capabilities: {
+        ModelCapability.structuredGeneration,
+        ModelCapability.streaming,
         ModelCapability.onDeviceInference,
-    };
-
-    return ProviderAvailability.available(capabilities: capabilities);
+      },
+    );
   }
 
   @override
   Future<GenerationResponse<T>> generate<T>(
     GenerationRequest<T> request,
-  ) async {
+  ) => _generate(request, sessionId: null);
+
+  @override
+  Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) =>
+      _streamChunks(request, sessionId: null);
+
+  /// Opens a session that keeps the conversation between requests.
+  ///
+  /// Each request through the session continues the same native
+  /// FoundationModels transcript, so the model sees the earlier prompts and
+  /// replies. The session keeps the instructions of its first request.
+  /// Requests on one session must not overlap.
+  /// [AppleFoundationModelsSession.close] frees the native session. Without a
+  /// session, every request starts from an empty transcript.
+  ///
+  /// The `fm` CLI backend has no sessions; requests through a session on it
+  /// fail with [SeiseiErrorCode.unsupportedCapability].
+  AppleFoundationModelsSession openSession() {
+    return AppleFoundationModelsSession._(this, 'seisei-${_nextSessionId++}');
+  }
+
+  static int _nextSessionId = 0;
+
+  Future<GenerationResponse<T>> _generate<T>(
+    GenerationRequest<T> request, {
+    required String? sessionId,
+  }) async {
     await _check(request);
     final abort = GenerationAbort(
       timeout: request.timeout,
       cancellation: request.cancellation,
     );
-    final schema = await _SchemaFile.open(request);
     try {
       abort.throwIfAborted();
       final Object? rawValue;
@@ -80,7 +100,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
           backend.respond(
             _backendRequest(
               request,
-              schemaPath: schema.path,
+              sessionId: sessionId,
               abortTrigger: abort.trigger,
             ),
           ),
@@ -96,7 +116,6 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       );
     } finally {
       abort.close();
-      await schema.close();
     }
   }
 
@@ -114,11 +133,19 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
         message ?? code,
       ),
       ProcessException(:final message) => ('', message),
+      UnsupportedError(:final message) => ('', message ?? '$error'),
       _ => ('', '$error'),
     };
     final text = '$code $message';
     bool has(List<String> needles) => needles.any(text.contains);
     final description = 'Apple Foundation Models failed: $message';
+    if (error is UnsupportedError) {
+      return SeiseiException(
+        SeiseiErrorCode.unsupportedCapability,
+        description,
+        source: error,
+      );
+    }
     if (has(['rate_limited', 'rateLimited', 'concurrentRequests'])) {
       return RateLimitedException(description, source: error);
     }
@@ -134,39 +161,39 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     return SeiseiException(seiseiCode, description, source: error);
   }
 
-  @override
-  Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
+  Stream<GenerationChunk<T>> _streamChunks<T>(
+    GenerationRequest<T> request, {
+    required String? sessionId,
+  }) async* {
     await _check(request, additionalCapabilities: {ModelCapability.streaming});
     final abort = GenerationAbort(
       timeout: request.timeout,
       cancellation: request.cancellation,
     );
-    final schema = await _SchemaFile.open(request);
     try {
       abort.throwIfAborted();
-      yield* _stream(request, schema.path, abort);
+      yield* _stream(request, sessionId, abort);
     } finally {
       abort.close();
-      await schema.close();
     }
   }
 
   Stream<GenerationChunk<T>> _stream<T>(
     GenerationRequest<T> request,
-    String? schemaPath,
+    String? sessionId,
     GenerationAbort abort,
   ) async* {
     Object? previousStructuredSnapshot;
+    final backendRequest = _backendRequest(
+      request,
+      sessionId: sessionId,
+      stream: true,
+      abortTrigger: abort.trigger,
+    );
+    final structured = backendRequest.isStructured;
     final Stream<Object?> source;
     try {
-      source = backend.stream(
-        _backendRequest(
-          request,
-          schemaPath: schemaPath,
-          stream: true,
-          abortTrigger: abort.trigger,
-        ),
-      );
+      source = backend.stream(backendRequest);
     } on Object catch (error) {
       throw _seiseiError(error, abort);
     }
@@ -177,7 +204,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
         final done = _isDone(rawValue);
         final structuredPatches = _structuredPatches(
           rawValue,
-          schemaPath: schemaPath,
+          structured: structured,
           previous: previousStructuredSnapshot,
           done: done,
         );
@@ -188,7 +215,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
             request,
             rawValue,
             done: done,
-            structured: schemaPath != null,
+            structured: structured,
           ),
           structuredPatches: structuredPatches,
           value: done ? _decode(request, _doneValue(rawValue)) : null,
@@ -196,7 +223,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
           rawValue: rawValue,
           isDone: done,
         );
-        if (!done && schemaPath != null && rawValue is! String) {
+        if (!done && structured && rawValue is! String) {
           previousStructuredSnapshot = rawValue;
         }
       }
@@ -246,19 +273,15 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
         !available.capabilities.contains(ModelCapability.onDeviceInference)) {
       throw PrivacyPolicyRejectedException(request.privacyPolicy, id);
     }
-
-    if (mode == AppleFoundationModelsMode.pcc &&
-        request.privacyPolicy != PrivacyPolicy.cloudAllowed) {
-      throw PrivacyPolicyRejectedException(request.privacyPolicy, id);
-    }
   }
 
   AppleFoundationModelsRequest _backendRequest<T>(
     GenerationRequest<T> request, {
-    required String? schemaPath,
+    required String? sessionId,
     bool stream = false,
     Future<void>? abortTrigger,
   }) {
+    final schema = request.schema;
     final instructions = [
       ?request.instructions,
       for (final message in request.messages)
@@ -267,12 +290,21 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     return AppleFoundationModelsRequest(
       prompt: request.prompt,
       mode: mode,
-      schemaPath: schemaPath,
+      schema: schema == null
+          ? null
+          : const FoundationModelsSchemaEncoder().encodeObject(schema),
+      schemaPath: schema == null
+          ? request.metadata[
+                // ignore: deprecated_member_use_from_same_package, one-release fallback.
+                AppleFoundationModelsProvider.schemaPathMetadataKey]
+                as String?
+          : null,
       instructions: instructions.isEmpty ? null : instructions.join('\n\n'),
       temperature: request.options.temperature,
       maximumResponseTokens: request.options.maxOutputTokens,
       stream: stream,
       abortTrigger: abortTrigger,
+      sessionId: sessionId,
     );
   }
 
@@ -310,11 +342,11 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
 
   List<StructuredPatch> _structuredPatches(
     Object? rawValue, {
-    required String? schemaPath,
+    required bool structured,
     required Object? previous,
     required bool done,
   }) {
-    if (done || schemaPath == null || rawValue is String) {
+    if (done || !structured || rawValue is String) {
       return const [];
     }
     final baseline = previous ?? _emptySnapshotFor(rawValue);
@@ -346,62 +378,59 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   }
 
   String _unavailableReason(AppleFoundationModelsAvailability availability) {
-    final reason = availability.reason;
-    final modeName = switch (mode) {
-      AppleFoundationModelsMode.system => 'system',
-      AppleFoundationModelsMode.pcc => 'PCC',
-    };
-    final modeReason = mode == AppleFoundationModelsMode.pcc
-        ? 'Apple Foundation Models PCC mode is unavailable in the current '
-              'Seisei backend context.'
-        : 'Apple Foundation Models $modeName mode is unavailable.';
-    if (mode == AppleFoundationModelsMode.pcc &&
-        (reason == null ||
-            reason.isEmpty ||
-            reason.trim() == 'System model available')) {
-      return '$modeReason '
-          'No verified public native FoundationModels PCC API path exists '
-          'on this SDK.';
-    }
-    return switch (reason) {
+    const modeReason = 'Apple Foundation Models system mode is unavailable.';
+    return switch (availability.reason) {
       null || '' => modeReason,
-      _ => '$modeReason $reason',
+      final reason => '$modeReason $reason',
     };
   }
 }
 
-/// The schema file for one request: written from [GenerationRequest.schema]
-/// and deleted afterwards, or the deprecated metadata path, left alone.
-final class _SchemaFile {
-  const _SchemaFile(this.path, this._directory);
+/// A conversation with Apple Foundation Models that keeps its transcript
+/// between requests. Open one with
+/// [AppleFoundationModelsProvider.openSession].
+///
+/// Use it as a [SeiseiProvider]: each [generate] or [stream] call continues
+/// the same native session. Call [close] when the conversation ends.
+final class AppleFoundationModelsSession implements SeiseiProvider {
+  AppleFoundationModelsSession._(this.provider, this.sessionId);
 
-  static Future<_SchemaFile> open<T>(GenerationRequest<T> request) async {
-    final schema = request.schema;
-    if (schema == null) {
-      final legacyPath =
-          // ignore: deprecated_member_use_from_same_package, one-release fallback.
-          request.metadata[AppleFoundationModelsProvider.schemaPathMetadataKey]
-              as String?;
-      return _SchemaFile(legacyPath, null);
-    }
-    final directory = await Directory.systemTemp.createTemp(
-      'seisei_afm_schema_',
-    );
-    final file = await const FoundationModelsSchemaEncoder().writeObjectFile(
-      schema,
-      directory: directory,
-    );
-    return _SchemaFile(file.path, directory);
+  /// The provider this session runs on.
+  final AppleFoundationModelsProvider provider;
+
+  /// The native session's id.
+  final String sessionId;
+
+  var _closed = false;
+
+  @override
+  String get id => provider.id;
+
+  @override
+  Future<ProviderAvailability> availability() => provider.availability();
+
+  @override
+  Future<GenerationResponse<T>> generate<T>(GenerationRequest<T> request) {
+    _checkOpen();
+    return provider._generate(request, sessionId: sessionId);
   }
 
-  final String? path;
-  final Directory? _directory;
+  @override
+  Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) {
+    _checkOpen();
+    return provider._streamChunks(request, sessionId: sessionId);
+  }
 
+  /// Frees the native session. Requests after this throw a [StateError].
   Future<void> close() async {
-    try {
-      await _directory?.delete(recursive: true);
-    } on FileSystemException {
-      // The OS cleans the temp directory eventually.
+    if (_closed) return;
+    _closed = true;
+    await provider.backend.closeSession(sessionId);
+  }
+
+  void _checkOpen() {
+    if (_closed) {
+      throw StateError('This Apple Foundation Models session is closed.');
     }
   }
 }

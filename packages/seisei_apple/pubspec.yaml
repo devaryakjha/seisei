@@ -31,5 +31,7 @@ flutter:
     platforms:
       ios:
         pluginClass: SeiseiApplePlugin
+        sharedDarwinSource: true
       macos:
         pluginClass: SeiseiApplePlugin
+        sharedDarwinSource: true

@@ -28,79 +28,29 @@ dart run bin/local_afm_smoke.dart --stream
 That command uses `FmCliBackend`, `AppleFoundationModelsProvider`, and
 `SeiseiClient` to send the prompt through the local system model. A passing run
 prints `providerId: apple_system` and `response: seisei-ok`. The `--schema`
-variant also writes a temporary `ObjectSchema` FoundationModels schema file and
-expects `response: seisei-schema-ok`. The `--stream` variant verifies that
+variant sends an `ObjectSchema` (the CLI backend writes it to a temporary
+FoundationModels schema file for `fm --schema`) and expects
+`response: seisei-schema-ok`. The `--stream` variant verifies that
 real streaming chunks arrive and that Seisei emits a terminal value. For
 schema-backed streams, safe intermediate structured snapshots are also decoded
 into `GenerationChunk.partialValue` while raw snapshots remain available in
 `GenerationChunk.rawValue`; changed structured paths are exposed through
 `GenerationChunk.structuredPatches`.
 
-To verify direct PCC CLI access on the machine, run this from an interactive
-terminal, or use the repository shell smoke:
+### Private Cloud Compute
 
-```sh
-tool/local_pcc_interactive_smoke.zsh
-```
+`AppleFoundationModelsMode` has only `system`. Private Cloud Compute is left
+out of the Dart API until the native bridge can reach it: the public
+FoundationModels SDK has no PCC model type to compile against, and the `fm`
+CLI reaches PCC only from an interactive terminal.
 
-That script requires an inherited terminal PTY and runs these direct `fm`
-commands:
-
-```sh
-fm available --model pcc
-fm respond --model pcc --no-stream 'Reply with exactly: seisei-pcc-ok'
-```
-
-Those commands must be run in the same launch context you want to validate. On
-this macOS 27 machine, PCC is context-sensitive:
-
-```sh
-/usr/bin/fm available --model pcc
-```
-
-Run non-interactively, it exits nonzero with:
-
-```text
-Error: PCC inference is not available in this context.
-```
-
-Run in an interactive PTY, it reports:
-
-```text
-PCC model available
-```
-
-The same split applies to direct generation:
-
-```sh
-/usr/bin/fm respond --model pcc 'Reply with exactly: seisei-pcc-ok'
-```
-
-Run non-interactively, it fails with `PCC inference is not available in this
-context`. Run in an interactive PTY, it can return `seisei-pcc-ok`.
-
-To verify PCC from the current Seisei Dart backend path, run:
-
-```sh
-dart run bin/local_afm_smoke.dart --mode pcc
-```
-
-That path currently uses `FmCliBackend`, which calls `fm` with captured
-subprocess output. On this machine that makes PCC report unavailable even when
-the direct interactive CLI probe succeeds. Treat that result as a validation of
-the current Seisei execution context, not as proof that PCC is generally
-unavailable on the machine.
-
-From the repository root, `dart tool/validate.dart --local-afm` checks only the
-system-model path. Use `tool/local_pcc_interactive_smoke.zsh` when you want a
-direct interactive PCC machine/account probe. Use
-`tool/local_afm_pcc_context_matrix.zsh` when you want one direct-terminal
-diagnostic that proves direct system AFM, direct PCC, Seisei system-model
-backend access, and the current Seisei PCC backend boundary. Use
-`dart tool/validate.dart --local-pcc` when you want PCC to be a required smoke
-test for Seisei's current captured subprocess backend path.
-Use `tool/foundation_models_pcc_sdk_audit.zsh` when you want to verify that the
-local public FoundationModels SDK still has no compileable native PCC model API.
+The repository keeps machine probes for when that changes.
+`tool/local_pcc_interactive_smoke.zsh` checks direct `fm --model pcc` access
+from a real terminal PTY, `tool/local_afm_pcc_context_matrix.zsh` checks
+direct system and PCC access alongside the Seisei system-model smoke,
+`dart tool/validate.dart --local-pcc` runs the `fm` PCC probes from a Dart
+subprocess, and `tool/foundation_models_pcc_sdk_audit.zsh` checks whether the
+local SDK has gained a public PCC model API.
 
 For a minimal Flutter host, create an app and point `seisei_apple` at this
 workspace with a path dependency:
@@ -129,8 +79,8 @@ final response = await backend.respond(
 ```
 
 For schema-backed generation, set the request's `schema`. The provider
-encodes it as a FoundationModels schema file, deletes the file afterwards,
-and validates the reply against the schema before decoding:
+encodes it as a FoundationModels schema, sends it to the native bridge with
+the request, and validates the reply against the schema before decoding:
 
 ```dart
 const schema = ObjectSchema(
@@ -168,13 +118,56 @@ final response = await SeiseiClient(provider: provider).generate(
 ```
 
 The native bridge is intentionally narrow. It checks system-model availability
-and sends single-turn system-model prompts through
-`FoundationModels.LanguageModelSession`, with the request's instructions,
-temperature and output limit. It sends schema-backed requests with the schema
-file the provider writes, and it streams system-model text through a Flutter
-event channel. Conversations with earlier turns, stop sequences, seeds and
+and sends system-model prompts through `FoundationModels.LanguageModelSession`,
+with the request's instructions, temperature, output limit and schema. Streams
+share one Flutter event channel and are told apart by request id, so several
+widgets can stream at once and cancelling one leaves the others running.
+Conversations with earlier turns in `messages`, stop sequences, seeds and
 tools are rejected as unsupported capabilities, so a `SeiseiRouter` moves
 those requests to another provider.
+
+### Multi-turn sessions
+
+Each request runs in a fresh session unless you opt in to keeping one.
+`openSession()` returns a provider whose requests continue the same native
+transcript, so the model sees the earlier prompts and replies:
+
+```dart
+final provider = AppleFoundationModelsProvider(
+  backend: MethodChannelAppleFoundationModelsBackend(),
+);
+final chat = provider.openSession();
+try {
+  await chat.generate(
+    GenerationRequest<String>(
+      prompt: 'My name is Ada.',
+      instructions: 'Answer in one sentence.',
+      decode: (rawValue) => rawValue! as String,
+    ),
+  );
+  final reply = await chat.generate(
+    GenerationRequest<String>(
+      prompt: 'What is my name?',
+      decode: (rawValue) => rawValue! as String,
+    ),
+  );
+  print(reply.value);
+} finally {
+  await chat.close();
+}
+```
+
+The session keeps the instructions of its first request, and its requests
+must not overlap. `FmCliBackend` has no sessions, so a session on it fails
+with `unsupportedCapability`.
+
+### Native source and tests
+
+The iOS and macOS plugin share one Swift source in `darwin/`. Bridge logic
+that needs neither Flutter nor FoundationModels (argument parsing, error
+codes, stream events, request and session bookkeeping) lives in the
+`SeiseiAppleCore` target, which `swift test` checks in
+`darwin/seisei_apple`.
 Schema-backed streams preserve raw intermediate structured snapshots and decode
 safe partial snapshots into `GenerationChunk.partialValue`. They also derive
 path-level `GenerationChunk.structuredPatches` from consecutive structured
@@ -182,16 +175,11 @@ snapshots when the backend emits snapshot objects.
 `FoundationModelsSchemaEncoder` covers verified generic `ObjectSchema` features:
 nested objects, string enums, field-level `anyOf` unions, discriminated object
 unions, explicit null union variants, numeric ranges, string patterns, arrays,
-and optional fields. PCC is not implemented in the
-native bridge yet. On the current
-Xcode 26.5 SDK, the public
-Swift `FoundationModels` interface exposes `SystemLanguageModel` and
-`LanguageModelSession(model: SystemLanguageModel)`, but no public PCC model
-type that Seisei can compile against.
+and optional fields.
 
 If you want the typed Seisei client layer, add a direct `seisei` dependency in
 the host app and build `AppleFoundationModelsProvider` on top of the native
-backend. Keep the request in system mode and avoid PCC settings.
+backend.
 `AppleFoundationModelsProvider.schemaPathMetadataKey` and
 `FoundationModelsSchemaEncoder.metadataForFile` are deprecated and removed in
 `0.4.0`; set `GenerationRequest.schema` instead.

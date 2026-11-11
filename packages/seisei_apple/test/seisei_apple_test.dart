@@ -12,7 +12,6 @@ void main() {
       backend: _FakeAppleBackend(
         availabilityResult: const AppleFoundationModelsAvailability(
           systemAvailable: true,
-          pccAvailable: false,
         ),
       ),
     );
@@ -27,146 +26,10 @@ void main() {
     expect(availability.capabilities, contains(ModelCapability.streaming));
   });
 
-  test('pcc mode is availability gated', () async {
-    final provider = AppleFoundationModelsProvider(
-      mode: AppleFoundationModelsMode.pcc,
-      backend: _FakeAppleBackend(
-        availabilityResult: const AppleFoundationModelsAvailability(
-          systemAvailable: true,
-          pccAvailable: false,
-          reason: 'PCC unavailable.',
-        ),
-      ),
-    );
-
-    expect((await provider.availability()).isAvailable, isFalse);
-  });
-
-  test(
-    'pcc mode rewrites unhelpful system-only availability reasons',
-    () async {
-      final provider = AppleFoundationModelsProvider(
-        mode: AppleFoundationModelsMode.pcc,
-        backend: _FakeAppleBackend(
-          availabilityResult: const AppleFoundationModelsAvailability(
-            systemAvailable: true,
-            pccAvailable: false,
-            reason: 'System model available',
-          ),
-        ),
-      );
-
-      final availability = await provider.availability();
-
-      expect(availability.isAvailable, isFalse);
-      expect(
-        availability.reason,
-        contains(
-          'PCC mode is unavailable in the current Seisei backend context',
-        ),
-      );
-      expect(
-        availability.reason,
-        contains('No verified public native FoundationModels PCC API path'),
-      );
-    },
-  );
-
-  test(
-    'pcc mode explains the native API gap when no reason is supplied',
-    () async {
-      final provider = AppleFoundationModelsProvider(
-        mode: AppleFoundationModelsMode.pcc,
-        backend: _FakeAppleBackend(
-          availabilityResult: const AppleFoundationModelsAvailability(
-            systemAvailable: true,
-            pccAvailable: false,
-          ),
-        ),
-      );
-
-      final availability = await provider.availability();
-
-      expect(availability.isAvailable, isFalse);
-      expect(
-        availability.reason,
-        contains('No verified public native FoundationModels PCC API path'),
-      );
-    },
-  );
-
-  test('privacy rejects pcc for on-device-only requests', () async {
-    final provider = AppleFoundationModelsProvider(
-      mode: AppleFoundationModelsMode.pcc,
-      backend: _FakeAppleBackend(
-        availabilityResult: const AppleFoundationModelsAvailability(
-          systemAvailable: true,
-          pccAvailable: true,
-        ),
-      ),
-    );
-
-    expect(
-      () => provider.generate(
-        GenerationRequest<String>(
-          prompt: 'Hello',
-          privacyPolicy: PrivacyPolicy.onDeviceOnly,
-          decode: (rawValue) => rawValue! as String,
-        ),
-      ),
-      throwsA(isA<PrivacyPolicyRejectedException>()),
-    );
-  });
-
-  test('privacy rejects pcc for on-device-preferred requests', () async {
-    final provider = AppleFoundationModelsProvider(
-      mode: AppleFoundationModelsMode.pcc,
-      backend: _FakeAppleBackend(
-        availabilityResult: const AppleFoundationModelsAvailability(
-          systemAvailable: true,
-          pccAvailable: true,
-        ),
-      ),
-    );
-
-    expect(
-      () => provider.generate(
-        GenerationRequest<String>(
-          prompt: 'Hello',
-          decode: (rawValue) => rawValue! as String,
-        ),
-      ),
-      throwsA(isA<PrivacyPolicyRejectedException>()),
-    );
-  });
-
-  test('pcc generation is allowed when cloud policy is explicit', () async {
-    final provider = AppleFoundationModelsProvider(
-      mode: AppleFoundationModelsMode.pcc,
-      backend: _FakeAppleBackend(
-        availabilityResult: const AppleFoundationModelsAvailability(
-          systemAvailable: true,
-          pccAvailable: true,
-        ),
-      ),
-    );
-
-    final response = await provider.generate(
-      GenerationRequest<String>(
-        prompt: 'Hello',
-        privacyPolicy: PrivacyPolicy.cloudAllowed,
-        decode: (rawValue) => rawValue! as String,
-      ),
-    );
-
-    expect(response.value, 'ok');
-  });
-
   test('forwards schema path metadata for schema-backed generation', () async {
     final backend = _FakeAppleBackend(
       availabilityResult: const AppleFoundationModelsAvailability(
         systemAvailable: true,
-        pccAvailable: false,
       ),
     );
     final provider = AppleFoundationModelsProvider(backend: backend);
@@ -186,11 +49,10 @@ void main() {
     expect(backend.requests.single.schemaPath, '/tmp/seisei_schema.json');
   });
 
-  test('should write the request schema to a file and delete it', () async {
+  test('should pass the request schema to the backend', () async {
     final backend = _FakeAppleBackend(
       availabilityResult: const AppleFoundationModelsAvailability(
         systemAvailable: true,
-        pccAvailable: false,
       ),
       respondValue: const {'title': 'Hi'},
     );
@@ -205,9 +67,13 @@ void main() {
     );
 
     expect(response.value, 'Hi');
-    final path = backend.requests.single.schemaPath!;
-    expect(backend.schemaFiles.single, contains('"title"'));
-    expect(File(path).existsSync(), isFalse);
+    final request = backend.requests.single;
+    expect(
+      request.schema,
+      const FoundationModelsSchemaEncoder().encodeObject(_titleSchema),
+    );
+    expect(request.schemaPath, isNull);
+    expect(request.isStructured, isTrue);
   });
 
   test('should validate the reply against the request schema', () async {
@@ -215,7 +81,6 @@ void main() {
       backend: _FakeAppleBackend(
         availabilityResult: const AppleFoundationModelsAvailability(
           systemAvailable: true,
-          pccAvailable: false,
         ),
         respondValue: const {'title': 3},
       ),
@@ -237,7 +102,6 @@ void main() {
     final backend = _FakeAppleBackend(
       availabilityResult: const AppleFoundationModelsAvailability(
         systemAvailable: true,
-        pccAvailable: false,
       ),
     );
     final provider = AppleFoundationModelsProvider(backend: backend);
@@ -265,7 +129,6 @@ void main() {
     final backend = _FakeAppleBackend(
       availabilityResult: const AppleFoundationModelsAvailability(
         systemAvailable: true,
-        pccAvailable: false,
       ),
     );
     final provider = AppleFoundationModelsProvider(backend: backend);
@@ -621,7 +484,6 @@ void main() {
         backend: _FakeAppleBackend(
           availabilityResult: const AppleFoundationModelsAvailability(
             systemAvailable: true,
-            pccAvailable: false,
           ),
           streamValues: const [
             {'title': 'He'},
@@ -674,7 +536,6 @@ void main() {
       backend: _FakeAppleBackend(
         availabilityResult: const AppleFoundationModelsAvailability(
           systemAvailable: true,
-          pccAvailable: false,
         ),
         streamValues: const [
           {'body': 'missing title'},
@@ -720,7 +581,6 @@ void main() {
       backend: _FakeAppleBackend(
         availabilityResult: const AppleFoundationModelsAvailability(
           systemAvailable: true,
-          pccAvailable: false,
         ),
         streamValues: const [
           'hel',
@@ -744,62 +604,41 @@ void main() {
     expect(chunks.last.isDone, isTrue);
   });
 
-  test('pcc stream remains availability gated', () async {
-    final provider = AppleFoundationModelsProvider(
-      mode: AppleFoundationModelsMode.pcc,
-      backend: _FakeAppleBackend(
-        availabilityResult: const AppleFoundationModelsAvailability(
-          systemAvailable: true,
-          pccAvailable: false,
-          reason: 'PCC unavailable.',
-        ),
-      ),
-    );
-
-    expect(
-      () => provider
-          .stream(
-            GenerationRequest<String>(
-              prompt: 'Hello',
-              decode: (rawValue) => rawValue! as String,
-            ),
-          )
-          .toList(),
-      throwsA(isA<SeiseiException>()),
-    );
-  });
-
-  test('fm backend probes system and pcc availability separately', () async {
+  test('fm backend probes system model availability', () async {
     final calls = <List<String>>[];
     final backend = FmCliBackend(
       executable: 'fm',
       processRunner: (executable, arguments) async {
         calls.add(arguments);
-        if (arguments.last == 'system') {
-          return ProcessResult(1, 0, 'System model available', '');
-        }
-        return ProcessResult(
-          2,
-          1,
-          '',
-          'Error: \u001b[38;2;255;107;128mPCC inference is '
-              'not available in this context.\u001b[0m',
-        );
+        return ProcessResult(1, 0, 'System model available', '');
       },
     );
 
     final availability = await backend.availability();
 
     expect(availability.systemAvailable, isTrue);
-    expect(availability.pccAvailable, isFalse);
+    expect(availability.reason, isNull);
     expect(calls, [
       ['available', '--model', 'system'],
-      ['available', '--model', 'pcc'],
     ]);
-    expect(
-      availability.reason,
-      'Error: PCC inference is not available in this context.',
+  });
+
+  test('fm backend reports why the system model is unavailable', () async {
+    final backend = FmCliBackend(
+      executable: 'fm',
+      processRunner: (_, _) async => ProcessResult(
+        2,
+        1,
+        '',
+        'Error: \u001b[38;2;255;107;128mApple Intelligence is '
+            'not enabled.\u001b[0m',
+      ),
     );
+
+    final availability = await backend.availability();
+
+    expect(availability.systemAvailable, isFalse);
+    expect(availability.reason, 'Error: Apple Intelligence is not enabled.');
   });
 
   test('fm backend builds schema response arguments', () async {
@@ -815,7 +654,7 @@ void main() {
     final response = await backend.respond(
       const AppleFoundationModelsRequest(
         prompt: 'Reply with exactly: seisei-ok',
-        mode: AppleFoundationModelsMode.pcc,
+        mode: AppleFoundationModelsMode.system,
         schemaPath: '/tmp/schema.json',
       ),
     );
@@ -824,13 +663,37 @@ void main() {
     expect(calls.single, [
       'respond',
       '--no-stream',
-      '--model',
-      'pcc',
       '--schema',
       '/tmp/schema.json',
       'Reply with exactly: seisei-ok',
     ]);
   });
+
+  test(
+    'fm backend writes the request schema to a file and deletes it',
+    () async {
+      String? schemaPath;
+      String? schemaJson;
+      final backend = FmCliBackend(
+        processRunner: (_, arguments) async {
+          schemaPath = arguments[arguments.indexOf('--schema') + 1];
+          schemaJson = File(schemaPath!).readAsStringSync();
+          return ProcessResult(2, 0, '{}', '');
+        },
+      );
+
+      await backend.respond(
+        const AppleFoundationModelsRequest(
+          prompt: 'Reply as JSON.',
+          mode: AppleFoundationModelsMode.system,
+          schema: {'title': 'Titled'},
+        ),
+      );
+
+      expect(schemaJson, '{"title":"Titled"}');
+      expect(File(schemaPath!).existsSync(), isFalse);
+    },
+  );
 
   test('method channel backend maps native availability', () async {
     const channel = MethodChannel('test.seisei/availability');
@@ -839,7 +702,7 @@ void main() {
       call,
     ) async {
       expect(call.method, 'availability');
-      return {'systemAvailable': true, 'pccAvailable': false, 'reason': null};
+      return {'systemAvailable': true, 'reason': null};
     });
     addTearDown(() {
       binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
@@ -849,7 +712,6 @@ void main() {
     final availability = await backend.availability();
 
     expect(availability.systemAvailable, isTrue);
-    expect(availability.pccAvailable, isFalse);
     expect(availability.reason, isNull);
   });
 
@@ -925,66 +787,201 @@ void main() {
     },
   );
 
-  test('method channel backend streams native events', () async {
+  group('method channel backend streams', () {
     const channel = MethodChannel('test.seisei/stream-method');
     const streamChannel = EventChannel('test.seisei/stream-events');
-    final binding = flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
-    binding.defaultBinaryMessenger.setMockStreamHandler(
-      streamChannel,
-      flutter_test.MockStreamHandler.inline(
-        onListen: (arguments, events) {
-          expect(arguments, {
-            'prompt': 'Hello',
-            'mode': 'system',
-            'schemaPath': '/tmp/schema.json',
-          });
-          events
-            ..success('he')
-            ..success('llo')
-            ..success({'done': true, 'value': 'hello'})
-            ..endOfStream();
-        },
-      ),
-    );
-    addTearDown(() {
-      binding.defaultBinaryMessenger.setMockStreamHandler(streamChannel, null);
-    });
+    late List<MethodCall> calls;
+    late flutter_test.MockStreamHandlerEventSink events;
+    var listens = 0;
+    var cancels = 0;
 
-    final backend = MethodChannelAppleFoundationModelsBackend(
-      channel: channel,
-      streamChannel: streamChannel,
-    );
-    final chunks = await backend
-        .stream(
-          const AppleFoundationModelsRequest(
-            prompt: 'Hello',
-            mode: AppleFoundationModelsMode.system,
-            schemaPath: '/tmp/schema.json',
+    /// Answers `startStream` with [onStart], which sends the stream's events.
+    void install(
+      void Function(int requestId, Map<Object?, Object?> arguments) onStart,
+    ) {
+      calls = [];
+      listens = 0;
+      cancels = 0;
+      final binding =
+          flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+      binding.defaultBinaryMessenger
+        ..setMockStreamHandler(
+          streamChannel,
+          flutter_test.MockStreamHandler.inline(
+            onListen: (_, sink) {
+              listens++;
+              events = sink;
+            },
+            onCancel: (_) => cancels++,
           ),
         )
-        .toList();
+        ..setMockMethodCallHandler(channel, (call) async {
+          calls.add(call);
+          if (call.method == 'startStream') {
+            final arguments = call.arguments as Map<Object?, Object?>;
+            onStart(arguments['requestId']! as int, arguments);
+          }
+          return null;
+        });
+      addTearDown(() {
+        binding.defaultBinaryMessenger
+          ..setMockStreamHandler(streamChannel, null)
+          ..setMockMethodCallHandler(channel, null);
+      });
+    }
 
-    expect(chunks, [
-      'he',
-      'llo',
-      {'done': true, 'value': 'hello'},
-    ]);
+    MethodChannelAppleFoundationModelsBackend backend() {
+      return MethodChannelAppleFoundationModelsBackend(
+        channel: channel,
+        streamChannel: streamChannel,
+      );
+    }
+
+    const request = AppleFoundationModelsRequest(
+      prompt: 'Hello',
+      mode: AppleFoundationModelsMode.system,
+      schema: {'type': 'object'},
+    );
+
+    test('should send chunks and a done event for its request id', () async {
+      install((requestId, arguments) {
+        expect(arguments, {
+          'requestId': requestId,
+          'prompt': 'Hello',
+          'mode': 'system',
+          'schema': '{"type":"object"}',
+        });
+        events
+          ..success({'requestId': requestId, 'type': 'chunk', 'value': 'he'})
+          // Events for other streams are ignored.
+          ..success({'requestId': 99, 'type': 'chunk', 'value': 'x'})
+          ..success({'requestId': requestId, 'type': 'chunk', 'value': 'llo'})
+          ..success({'requestId': requestId, 'type': 'done', 'value': 'hello'});
+      });
+
+      final chunks = await backend().stream(request).toList();
+
+      expect(chunks, [
+        'he',
+        'llo',
+        {'done': true, 'value': 'hello'},
+      ]);
+      expect(cancels, 1, reason: 'the shared channel closes when idle');
+    });
+
+    test('should run two streams at once on one channel', () async {
+      final started = <int>[];
+      install((requestId, _) => started.add(requestId));
+      final bridge = backend();
+
+      final first = bridge.stream(request).toList();
+      final second = bridge.stream(request).toList();
+      await pumpEventQueue();
+      expect(started, [0, 1]);
+      expect(listens, 1);
+
+      events
+        ..success({'requestId': 1, 'type': 'chunk', 'value': 'b'})
+        ..success({'requestId': 0, 'type': 'chunk', 'value': 'a'})
+        ..success({'requestId': 1, 'type': 'done', 'value': 'b'})
+        ..success({'requestId': 0, 'type': 'done', 'value': 'a'});
+
+      expect(await first, [
+        'a',
+        {'done': true, 'value': 'a'},
+      ]);
+      expect(await second, [
+        'b',
+        {'done': true, 'value': 'b'},
+      ]);
+    });
+
+    test('should cancel one stream and leave the other running', () async {
+      install((_, _) {});
+      final bridge = backend();
+
+      final first = bridge.stream(request).listen((_) {});
+      final second = bridge.stream(request).toList();
+      await pumpEventQueue();
+
+      await first.cancel();
+      expect(
+        calls.where((call) => call.method == 'cancel').map((c) => c.arguments),
+        [
+          {'requestId': 0},
+        ],
+      );
+      expect(cancels, 0, reason: 'the other stream still listens');
+
+      events.success({'requestId': 1, 'type': 'done', 'value': 'b'});
+      expect(await second, [
+        {'done': true, 'value': 'b'},
+      ]);
+    });
+
+    test('should surface a native error as a PlatformException', () async {
+      install((requestId, _) {
+        events.success({
+          'requestId': requestId,
+          'type': 'error',
+          'code': 'rate_limited',
+          'message': 'rateLimited',
+        });
+      });
+
+      await expectLater(
+        backend().stream(request).toList(),
+        throwsA(
+          isA<PlatformException>().having(
+            (e) => e.code,
+            'code',
+            'rate_limited',
+          ),
+        ),
+      );
+    });
   });
 
-  test('method channel backend rejects unsupported native bridge paths', () {
+  test(
+    'method channel backend sends session ids and closes sessions',
+    () async {
+      const channel = MethodChannel('test.seisei/sessions');
+      final calls = <MethodCall>[];
+      final binding =
+          flutter_test.TestWidgetsFlutterBinding.ensureInitialized();
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+        call,
+      ) async {
+        calls.add(call);
+        return 'ok';
+      });
+      addTearDown(() {
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, null);
+      });
+
+      final backend = MethodChannelAppleFoundationModelsBackend(
+        channel: channel,
+      );
+      await backend.respond(
+        const AppleFoundationModelsRequest(
+          prompt: 'Hi',
+          mode: AppleFoundationModelsMode.system,
+          sessionId: 'chat',
+        ),
+      );
+      await backend.closeSession('chat');
+
+      expect(calls.first.arguments, containsPair('sessionId', 'chat'));
+      expect(calls.last.method, 'closeSession');
+      expect(calls.last.arguments, {'sessionId': 'chat'});
+    },
+  );
+
+  test('method channel backend rejects respond for a stream request', () {
     final backend = MethodChannelAppleFoundationModelsBackend(
       channel: const MethodChannel('test.seisei/rejects'),
     );
 
-    expect(
-      () => backend.respond(
-        const AppleFoundationModelsRequest(
-          prompt: 'Hello',
-          mode: AppleFoundationModelsMode.pcc,
-        ),
-      ),
-      throwsUnsupportedError,
-    );
     expect(
       () => backend.respond(
         const AppleFoundationModelsRequest(
@@ -995,16 +992,78 @@ void main() {
       ),
       throwsUnsupportedError,
     );
-    expect(
-      () => backend.stream(
-        const AppleFoundationModelsRequest(
-          prompt: 'Hello',
-          mode: AppleFoundationModelsMode.pcc,
-        ),
-      ),
-      throwsUnsupportedError,
-    );
   });
+
+  group('sessions', () {
+    test('should send one session id with every request', () async {
+      final backend = _FakeAppleBackend(availabilityResult: _available);
+      final provider = AppleFoundationModelsProvider(backend: backend);
+      final session = provider.openSession();
+
+      await session.generate(_textRequest('Hi'));
+      await session.stream(_textRequest('Again')).drain<void>();
+      await provider.generate(_textRequest('Alone'));
+
+      expect(backend.requests.map((r) => r.sessionId), [
+        session.sessionId,
+        session.sessionId,
+        null,
+      ]);
+      expect(session.id, provider.id);
+    });
+
+    test('should give each session its own id', () {
+      final provider = AppleFoundationModelsProvider(
+        backend: _FakeAppleBackend(availabilityResult: _available),
+      );
+      expect(
+        provider.openSession().sessionId,
+        isNot(provider.openSession().sessionId),
+      );
+    });
+
+    test('should close the native session once', () async {
+      final backend = _FakeAppleBackend(availabilityResult: _available);
+      final session = AppleFoundationModelsProvider(
+        backend: backend,
+      ).openSession();
+
+      await session.close();
+      await session.close();
+
+      expect(backend.closedSessions, [session.sessionId]);
+      expect(() => session.generate(_textRequest('Hi')), throwsStateError);
+    });
+
+    test('should fail on the fm CLI backend', () async {
+      final provider = AppleFoundationModelsProvider(
+        backend: FmCliBackend(
+          processRunner: (_, _) async =>
+              ProcessResult(1, 0, 'System model available', ''),
+        ),
+      );
+
+      await expectLater(
+        provider.openSession().generate(_textRequest('Hi')),
+        throwsA(
+          isA<SeiseiException>().having(
+            (e) => e.code,
+            'code',
+            SeiseiErrorCode.unsupportedCapability,
+          ),
+        ),
+      );
+    });
+  });
+}
+
+const _available = AppleFoundationModelsAvailability(systemAvailable: true);
+
+GenerationRequest<String> _textRequest(String prompt) {
+  return GenerationRequest<String>(
+    prompt: prompt,
+    decode: (rawValue) => '$rawValue',
+  );
 }
 
 final class _FakeAppleBackend implements AppleFoundationModelsBackend {
@@ -1019,16 +1078,8 @@ final class _FakeAppleBackend implements AppleFoundationModelsBackend {
   final Object? respondValue;
   final List<AppleFoundationModelsRequest> requests = [];
 
-  /// Schema file contents seen while each request ran.
-  final List<String?> schemaFiles = [];
-
   void _record(AppleFoundationModelsRequest request) {
     requests.add(request);
-    final path = request.schemaPath;
-    final file = path == null ? null : File(path);
-    schemaFiles.add(
-      file != null && file.existsSync() ? file.readAsStringSync() : null,
-    );
   }
 
   @override
@@ -1048,6 +1099,13 @@ final class _FakeAppleBackend implements AppleFoundationModelsBackend {
     for (final value in streamValues) {
       yield value;
     }
+  }
+
+  final List<String> closedSessions = [];
+
+  @override
+  Future<void> closeSession(String sessionId) async {
+    closedSessions.add(sessionId);
   }
 }
 

@@ -36,10 +36,14 @@ the launch context used for validation.
 
 `seisei_apple` should expose Apple Foundation Models through the generic `SeiseiProvider` contract. It must not define the core request, response, schema, routing, or UI-block architecture.
 
-The package should support two Apple-backed execution modes:
+The package supports one Apple-backed execution mode:
 
 - `system`: on-device Apple Foundation Model.
-- `pcc`: Apple Foundation Model on Private Cloud Compute, only when availability checks pass.
+
+A `pcc` mode (Apple Foundation Model on Private Cloud Compute) was removed
+from the Dart API in `0.3.0-dev.0` (seisei #31). It comes back, gated on
+availability and `PrivacyPolicy.cloudAllowed`, once the native bridge can
+reach PCC through a public FoundationModels API.
 
 The local `fm` CLI is useful for development probes and smoke tests, but it is not the production bridge for Flutter apps.
 
@@ -47,24 +51,26 @@ The current native bridge is a compileable Flutter plugin scaffold for iOS and m
 
 - Dart backend: `MethodChannelAppleFoundationModelsBackend`.
 - Channel: `dev.jha.seisei/seisei_apple`.
-- Native methods: `availability` and `respond`.
+- Native methods: `availability`, `respond`, `startStream`, `cancel` and
+  `closeSession`. Stream events arrive on the shared event channel
+  `dev.jha.seisei/seisei_apple/stream`, each tagged with its request id.
+- Source: one Swift tree in `darwin/` for both platforms
+  (`sharedDarwinSource`). `SeiseiAppleCore` holds the logic `swift test`
+  covers without Flutter or FoundationModels.
 - Swift API used: `SystemLanguageModel.default.availability`,
   `LanguageModelSession(model: .default).respond(to:)`, and
   `LanguageModelSession(model: .default).respond(to:schema:)` for
   FoundationModels schemas. Streaming uses `streamResponse(to:)` and
   `streamResponse(to:schema:)` behind a Flutter event channel.
 - Availability guard: FoundationModels requires iOS/macOS `26.0` or newer.
-- Native method-channel PCC availability is reported as false because no
-  compileable public native PCC API path has been verified. Direct `fm` PCC
-  availability is tracked separately because it is launch-context sensitive on
-  this machine.
+- Schemas travel over the channel as FoundationModels JSON. Requests with a
+  session id reuse one `LanguageModelSession` until `closeSession`.
 
 ## Capability Mapping
 
 The provider should map Apple availability into Seisei capabilities:
 
 - `system` available: structured generation, text generation, local inference, privacy-compatible on-device execution.
-- `pcc` available: structured generation and larger-context cloud execution, subject to user privacy policy.
 - `fm respond --schema`: structured output support for local CLI probes.
 - native method-channel bridge: plain system-model text generation and
   schema-backed generation when the request supplies a JSON-encoded
@@ -83,8 +89,9 @@ The router should be able to reject Apple modes before request execution:
 
 - `PrivacyPolicy.onDeviceOnly` can use `system` only.
 - `PrivacyPolicy.onDevicePreferred` should prefer `system` and may fall back only when the app policy allows it.
-- Cloud-allowed requests may use `pcc` only when availability checks pass.
-- PCC unavailability must be represented as an availability result, not as a late generic generation failure.
+- When PCC returns, cloud-allowed requests may use `pcc` only when
+  availability checks pass, and PCC unavailability must be an availability
+  result, not a late generic generation failure.
 
 ## Development Milestones
 

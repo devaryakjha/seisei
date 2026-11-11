@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:seisei/seisei.dart';
 import 'package:seisei_apple/src/apple_foundation_models_provider.dart';
-import 'package:seisei_apple/src/backend.dart';
 import 'package:seisei_apple/src/fm_cli_backend.dart';
 import 'package:seisei_apple/src/foundation_models_schema.dart';
 
@@ -13,7 +12,6 @@ Future<void> main(List<String> args) async {
     return;
   }
 
-  final mode = _modeFromArgs(args);
   final discriminatedUnionSmoke = args.contains('--discriminated-union');
   final explicitNullUnionSmoke = args.contains('--explicit-null-union');
   final schemaSmoke =
@@ -24,29 +22,16 @@ Future<void> main(List<String> args) async {
   final explicitExpect = _optionValue(args, '--expect');
   final expect =
       explicitExpect ??
-      switch ((
-        mode,
-        discriminatedUnionSmoke,
-        explicitNullUnionSmoke,
-        schemaSmoke,
-      )) {
-        (AppleFoundationModelsMode.system, true, _, _) =>
-          'seisei-discriminated-ok',
-        (AppleFoundationModelsMode.pcc, true, _, _) =>
-          'seisei-pcc-discriminated-ok',
-        (AppleFoundationModelsMode.system, false, true, _) => 'seisei-null-ok',
-        (AppleFoundationModelsMode.pcc, false, true, _) => 'seisei-pcc-null-ok',
-        (AppleFoundationModelsMode.system, false, false, true) =>
-          'seisei-schema-ok',
-        (AppleFoundationModelsMode.system, false, false, false) => 'seisei-ok',
-        (AppleFoundationModelsMode.pcc, false, false, true) =>
-          'seisei-pcc-schema-ok',
-        (AppleFoundationModelsMode.pcc, false, false, false) => 'seisei-pcc-ok',
+      switch ((discriminatedUnionSmoke, explicitNullUnionSmoke, schemaSmoke)) {
+        (true, _, _) => 'seisei-discriminated-ok',
+        (false, true, _) => 'seisei-null-ok',
+        (false, false, true) => 'seisei-schema-ok',
+        (false, false, false) => 'seisei-ok',
       };
   final promptParts = <String>[];
   for (var index = 0; index < args.length; index += 1) {
     final arg = args[index];
-    if (arg == '--mode' || arg == '--expect') {
+    if (arg == '--expect') {
       index += 1;
       continue;
     }
@@ -62,7 +47,7 @@ Future<void> main(List<String> args) async {
     if (arg == '--stream') {
       continue;
     }
-    if (arg.startsWith('--mode=') || arg.startsWith('--expect=')) {
+    if (arg.startsWith('--expect=')) {
       continue;
     }
     promptParts.add(arg);
@@ -84,19 +69,14 @@ Future<void> main(List<String> args) async {
   final availability = await backend.availability();
 
   stdout
-    ..writeln('mode: ${mode.name}')
-    ..writeln('systemAvailable: ${availability.systemAvailable}')
-    ..writeln('pccAvailable: ${availability.pccAvailable}');
-  final requestedModeAvailable = switch (mode) {
-    AppleFoundationModelsMode.system => availability.systemAvailable,
-    AppleFoundationModelsMode.pcc => availability.pccAvailable,
-  };
+    ..writeln('mode: system')
+    ..writeln('systemAvailable: ${availability.systemAvailable}');
   final reason = availability.reason;
-  if (!requestedModeAvailable && reason != null) {
+  if (!availability.systemAvailable && reason != null) {
     stdout.writeln('availabilityReason: $reason');
   }
 
-  final provider = AppleFoundationModelsProvider(backend: backend, mode: mode);
+  final provider = AppleFoundationModelsProvider(backend: backend);
   final client = SeiseiClient(provider: provider);
   final schema = discriminatedUnionSmoke
       ? _discriminatedSchema
@@ -116,10 +96,7 @@ Future<void> main(List<String> args) async {
   try {
     final request = GenerationRequest<String>(
       prompt: prompt,
-      privacyPolicy: switch (mode) {
-        AppleFoundationModelsMode.system => PrivacyPolicy.onDeviceOnly,
-        AppleFoundationModelsMode.pcc => PrivacyPolicy.cloudAllowed,
-      },
+      privacyPolicy: PrivacyPolicy.onDeviceOnly,
       schema: schemaFile == null ? null : schema,
       decode: (rawValue) => _decode(
         rawValue,
@@ -285,15 +262,6 @@ String _decode(
   });
 }
 
-AppleFoundationModelsMode _modeFromArgs(List<String> args) {
-  final value = _optionValue(args, '--mode') ?? 'system';
-  return switch (value) {
-    'system' => AppleFoundationModelsMode.system,
-    'pcc' => AppleFoundationModelsMode.pcc,
-    _ => throw ArgumentError.value(value, '--mode', 'Use system or pcc.'),
-  };
-}
-
 String? _optionValue(List<String> args, String name) {
   for (var index = 0; index < args.length; index += 1) {
     final arg = args[index];
@@ -314,9 +282,6 @@ void _printUsage() {
     ..writeln()
     ..writeln('Options:')
     ..writeln(
-      '  --mode system|pcc   Apple model mode to use. Defaults to system.',
-    )
-    ..writeln(
       '  --schema           Use a Seisei ObjectSchema-backed prompt.',
     )
     ..writeln(
@@ -333,6 +298,5 @@ void _printUsage() {
     ..writeln('  dart run bin/local_afm_smoke.dart --schema')
     ..writeln('  dart run bin/local_afm_smoke.dart --discriminated-union')
     ..writeln('  dart run bin/local_afm_smoke.dart --explicit-null-union')
-    ..writeln('  dart run bin/local_afm_smoke.dart --stream')
-    ..writeln('  dart run bin/local_afm_smoke.dart --mode pcc');
+    ..writeln('  dart run bin/local_afm_smoke.dart --stream');
 }
