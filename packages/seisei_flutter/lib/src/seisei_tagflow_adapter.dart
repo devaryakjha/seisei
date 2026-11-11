@@ -18,10 +18,22 @@ final class SeiseiTagflowRenderException implements Exception {
 }
 
 /// Default adapter from Seisei UI blocks into Tagflow documents.
+///
+/// Block trees usually come from model output, so link and image URLs go
+/// through [policy] the same way the first-party Tagflow adapters apply it. A
+/// rejected link keeps its children as plain content. A rejected image is
+/// dropped, or kept as an unsupported placeholder when the policy uses
+/// [TagflowUnsupportedBehavior.preservePlaceholder].
 final class SeiseiTagflowAdapter
     implements SeiseiBlockAdapter<TagflowDocument> {
-  /// Creates a Tagflow adapter.
-  const SeiseiTagflowAdapter();
+  /// Creates a Tagflow adapter that applies [policy] to block URLs.
+  const SeiseiTagflowAdapter({this.policy = TagflowContentPolicy.defaults});
+
+  /// Content policy applied to link and image URLs.
+  final TagflowContentPolicy policy;
+
+  /// Metadata key carrying the reason a URL was rejected by [policy].
+  static const String policyDecisionReasonKey = 'policyDecisionReason';
 
   /// Context metadata key for overriding the rendered document ID.
   static const String documentIdMetadataKey = 'tagflowDocumentId';
@@ -148,10 +160,8 @@ final class SeiseiTagflowAdapter
     final document = TagflowDocument(
       id: _documentId(block, context),
       children: switch (block.type) {
-        'root' || 'document' => [
-          for (final child in block.children) _nodeFromBlock(child),
-        ],
-        _ => [_nodeFromBlock(block)],
+        'root' || 'document' => _childrenFrom(block),
+        _ => [?_nodeFromBlock(block)],
       },
     );
     return document;
@@ -279,7 +289,7 @@ final class SeiseiTagflowAdapter
     }
   }
 
-  TagflowDocumentNode _nodeFromBlock(SeiseiBlock block) {
+  TagflowDocumentNode? _nodeFromBlock(SeiseiBlock block) {
     return switch (block.type) {
       'container' => TagflowDocumentNode.container(
         id: block.id,
@@ -298,11 +308,7 @@ final class SeiseiTagflowAdapter
         id: block.id,
         text: block.props['value']! as String,
       ),
-      'link' => TagflowDocumentNode.link(
-        id: block.id,
-        url: Uri.parse(block.props['url']! as String),
-        children: _childrenFrom(block),
-      ),
+      'link' => _link(block),
       'list' => TagflowDocumentNode.list(
         id: block.id,
         ordered: (block.props['ordered'] as bool?) ?? false,
@@ -326,13 +332,7 @@ final class SeiseiTagflowAdapter
         id: block.id,
         text: block.props['value']! as String,
       ),
-      'image' => TagflowDocumentNode.image(
-        id: block.id,
-        url: Uri.parse(block.props['url']! as String),
-        alt: block.props['alt'] as String?,
-        width: _toDouble(block.props['width']),
-        height: _toDouble(block.props['height']),
-      ),
+      'image' => _image(block),
       'horizontalRule' => TagflowDocumentNode.horizontalRule(id: block.id),
       'root' || 'document' => TagflowDocumentNode.container(
         id: block.id,
@@ -345,7 +345,60 @@ final class SeiseiTagflowAdapter
   }
 
   List<TagflowDocumentNode> _childrenFrom(SeiseiBlock block) {
-    return [for (final child in block.children) _nodeFromBlock(child)];
+    return [
+      for (final child in block.children) ?_nodeFromBlock(child),
+    ];
+  }
+
+  TagflowDocumentNode _link(SeiseiBlock block) {
+    final decision = policy.decideUrl(
+      block.props['url']! as String,
+      resourceType: TagflowResourceType.link,
+    );
+    if (!decision.isAllowed) {
+      return TagflowDocumentNode.container(
+        id: block.id,
+        children: _childrenFrom(block),
+        metadata: _rejectedMetadata(decision),
+      );
+    }
+
+    return TagflowDocumentNode.link(
+      id: block.id,
+      url: decision.uri!,
+      children: _childrenFrom(block),
+    );
+  }
+
+  TagflowDocumentNode? _image(SeiseiBlock block) {
+    final decision = policy.decideUrl(
+      block.props['url']! as String,
+      resourceType: TagflowResourceType.image,
+    );
+    if (!decision.isAllowed) {
+      if (policy.unsupportedBehavior == TagflowUnsupportedBehavior.drop) {
+        return null;
+      }
+      return TagflowDocumentNode.unsupported(
+        id: block.id,
+        unsupportedReason: 'Seisei image block was rejected by policy.',
+        metadata: _rejectedMetadata(decision),
+      );
+    }
+
+    return TagflowDocumentNode.image(
+      id: block.id,
+      url: decision.uri!,
+      alt: block.props['alt'] as String?,
+      width: _toDouble(block.props['width']),
+      height: _toDouble(block.props['height']),
+    );
+  }
+
+  TagflowMetadata _rejectedMetadata(TagflowUrlPolicyDecision decision) {
+    return TagflowMetadata({
+      policyDecisionReasonKey: decision.reason?.name ?? 'malformedUrl',
+    });
   }
 
   String _documentId(SeiseiBlock block, SeiseiBlockRenderContext context) {
