@@ -38,7 +38,7 @@ final class DemoProvider implements SeiseiProvider {
       'steps': [
         'Stream the answer through TagflowMarkdownStream',
         'Validate structured output against an ObjectSchema',
-        'Render the result as Seisei UI blocks',
+        'Render the result as Tagflow native blocks',
       ],
       'minutes': 45,
     };
@@ -83,7 +83,7 @@ await for (final chunk in client.stream(request)) {
 }
 ```
 
-> Ask for a task card to see structured output rendered as UI blocks.
+> Ask for a task card to see structured output rendered as native blocks.
 ''';
   }
 

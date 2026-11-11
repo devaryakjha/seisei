@@ -5,7 +5,7 @@ them with Tagflow as they arrive.
 
 | Streaming | Finished answer | Structured card |
 | --- | --- | --- |
-| ![Answer streaming in](doc/screenshots/streaming.png) | ![Finished Markdown answer](doc/screenshots/answer.png) | ![Task card rendered from UI blocks](doc/screenshots/card.png) |
+| ![Answer streaming in](doc/screenshots/streaming.png) | ![Finished Markdown answer](doc/screenshots/answer.png) | ![Task card rendered from native blocks](doc/screenshots/card.png) |
 
 It shows three things:
 
@@ -13,9 +13,10 @@ It shows three things:
   `GenerationRequest<String>` through `SeiseiClient.stream` and feeds every
   `chunk.delta` into a `TagflowMarkdownStream`. `TagflowMarkdownStreamView`
   renders it, and finished blocks keep their widgets while the tail grows.
-- **Structured output as UI blocks.** The card button asks for a `TaskCard`
-  validated by an `ObjectSchema`, converts it to `SeiseiBlock`s and renders
-  them through `SeiseiTagflowAdapter`.
+- **Structured output as native blocks.** The card button asks for a
+  `TaskCard` validated by an `ObjectSchema`, converts it to Tagflow native
+  block JSON and renders it through `SeiseiNativeBlocks.toDocument`, which
+  applies Tagflow's content policy.
 - **An app action.** "Add task" invokes the `add_task` `AppActionDefinition`
   through `SeiseiFlutterIntentsRuntime`. On Apple platforms the same
   definition can be turned into an App Intent with the `generate_apple_intents`

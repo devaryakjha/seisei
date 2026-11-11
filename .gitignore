@@ -4,3 +4,6 @@ build/
 .build/
 pubspec.lock
 .flutter-plugins-dependencies
+
+# Local dependency overrides, such as a path to a Tagflow checkout.
+/pubspec_overrides.yaml

@@ -1,5 +1,4 @@
 import 'package:seisei/seisei.dart';
-import 'package:seisei_flutter/seisei_flutter.dart';
 import 'package:seisei_intents/seisei_intents.dart';
 
 /// A task the model suggests, returned as structured output.
@@ -55,53 +54,47 @@ final class TaskCard {
     };
   }
 
-  /// Converts the card into Seisei UI blocks under [id].
+  /// Converts the card into Tagflow native blocks with ids under [id].
   ///
-  /// The blocks are validated and rendered by `SeiseiTagflowAdapter`.
-  SeiseiBlock toBlock(String id) {
-    SeiseiBlock text(String suffix, String value) {
-      return SeiseiBlock(
-        id: '$id-$suffix',
-        type: 'text',
-        props: {'value': value},
-      );
+  /// `SeiseiNativeBlocks.toDocument` adapts them under the content policy.
+  Map<String, Object?> toBlocks(String id) {
+    Map<String, Object?> text(String suffix, String value) {
+      return {'id': '$id-$suffix', 'kind': 'text', 'text': value};
     }
 
-    return SeiseiBlock(
-      id: id,
-      type: 'root',
-      children: [
-        SeiseiBlock(
-          id: '$id-title',
-          type: 'heading',
-          props: const {'level': 3},
-          children: [text('title-text', title)],
-        ),
-        SeiseiBlock(
-          id: '$id-summary',
-          type: 'paragraph',
-          children: [text('summary-text', summary)],
-        ),
-        SeiseiBlock(
-          id: '$id-steps',
-          type: 'list',
-          props: const {'ordered': true},
-          children: [
+    return {
+      'blocks': [
+        {
+          'id': '$id-title',
+          'kind': 'heading',
+          'attributes': {'level': 3},
+          'children': [text('title-text', title)],
+        },
+        {
+          'id': '$id-summary',
+          'kind': 'paragraph',
+          'children': [text('summary-text', summary)],
+        },
+        {
+          'id': '$id-steps',
+          'kind': 'list',
+          'attributes': {'ordered': true},
+          'children': [
             for (final (index, step) in steps.indexed)
-              SeiseiBlock(
-                id: '$id-step-$index',
-                type: 'listItem',
-                children: [text('step-$index-text', step)],
-              ),
+              {
+                'id': '$id-step-$index',
+                'kind': 'listItem',
+                'children': [text('step-$index-text', step)],
+              },
           ],
-        ),
-        SeiseiBlock(
-          id: '$id-estimate',
-          type: 'paragraph',
-          children: [text('estimate-text', 'About $minutes minutes')],
-        ),
+        },
+        {
+          'id': '$id-estimate',
+          'kind': 'paragraph',
+          'children': [text('estimate-text', 'About $minutes minutes')],
+        },
       ],
-    );
+    };
   }
 }
 

@@ -22,7 +22,7 @@ It currently focuses on:
 - deterministic test doubles
 - Apple Foundation Models integration
 - App Intents and tool-call bridges
-- renderer-neutral UI block contracts
+- rich content output rendered through Tagflow native blocks
 
 ## Getting started
 
@@ -60,8 +60,8 @@ This workspace contains:
 - `seisei_intents`: app-action contracts, tool-call mapping, fake bridges,
   Apple App Intent source generation, and the Flutter method-channel runtime
   bridge for App Intent action invocation and host-backed entity queries
-- `seisei_flutter`: renderer-neutral UI blocks and adapter contracts, with
-  Tagflow as the default renderer
+- `seisei_flutter`: structured model output as Flutter widgets through
+  Tagflow native blocks, with streaming patches
 
 All packages share one version.
 
@@ -83,7 +83,7 @@ Future packages may include:
 - [`examples/chat`](examples/chat): Flutter chat app that streams answers from
   any configured provider (offline demo, OpenAI-compatible, or Apple
   Foundation Models) and renders them with Tagflow, plus a structured-output
-  card rendered as UI blocks and an App Intent action.
+  card rendered as native blocks and an App Intent action.
 - [`examples/basic_cli`](examples/basic_cli): offline command-line example of
   typed structured generation.
 

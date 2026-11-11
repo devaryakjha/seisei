@@ -210,7 +210,7 @@ class _EmptyState extends StatelessWidget {
         padding: const EdgeInsets.all(32),
         child: Text(
           'Send a prompt to stream a Markdown answer, or tap the card '
-          'button for structured output rendered as UI blocks.',
+          'button for structured output rendered as native blocks.',
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodyLarge,
         ),

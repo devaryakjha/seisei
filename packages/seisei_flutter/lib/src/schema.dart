@@ -1,8 +1,16 @@
 import 'package:seisei_flutter/src/block.dart';
 
 /// Schema for allowed UI blocks.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiBlockSchema {
   /// Creates a block schema.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiBlockSchema({
     required this.blockTypes,
     this.actionTypes = const {},
@@ -90,8 +98,16 @@ final class SeiseiBlockSchema {
 }
 
 /// Stable UI block validation error.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiBlockValidationError {
   /// Creates a validation error.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiBlockValidationError({
     required this.code,
     required this.path,

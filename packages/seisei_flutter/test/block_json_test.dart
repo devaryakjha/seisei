@@ -1,3 +1,6 @@
+// These tests cover the deprecated SeiseiBlock shim until 0.4.0.
+// ignore_for_file: deprecated_member_use_from_same_package
+
 import 'package:seisei_flutter/seisei_flutter.dart';
 import 'package:test/test.dart';
 
