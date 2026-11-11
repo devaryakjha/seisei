@@ -7,6 +7,12 @@ changes listed under it too.
   calls, errors before or after the first streamed chunk, and a record of
   every request.
 - `FakeProvider` checks `GenerationRequest.requiredCapabilities`.
+- Add `testProviderErrorConformance`, shared timeout and cancellation
+  tests for provider packages, and the `isSeiseiError` and
+  `throwsSeiseiError` matchers. `package:test` is now a regular dependency.
+  ([#27](https://github.com/devaryakjha/seisei/issues/27), [#28](https://github.com/devaryakjha/seisei/issues/28))
+- `ScriptedReply.hang()`, and `ScriptedProvider` honours `timeout` and
+  `cancellation`.
 
 ## 0.2.0-dev.0
 

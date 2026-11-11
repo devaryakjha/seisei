@@ -43,6 +43,12 @@ in a `SeiseiRouter` created with `allowCloudFallback: true`.
 | OpenRouter | `baseUrl: Uri.parse('https://openrouter.ai/api/v1')`, `apiKey` |
 | Azure OpenAI | `baseUrl` set to `https://{resource}.openai.azure.com/openai/deployments/{deployment}`, `headers: {'api-key': key}`, `queryParameters: {'api-version': '2024-10-21'}` |
 
+Requests count as leaving the device, so by default the provider only serves
+`PrivacyPolicy.cloudAllowed`. For a server on the same device, such as
+Ollama or LM Studio on `localhost`, pass `runsOnDevice: true`: the provider
+then reports `onDeviceInference` and serves on-device requests. It asserts
+that the base URL is a loopback address.
+
 Remove capabilities the model lacks with `capabilities:` so `SeiseiRouter`
 skips the provider for those requests. Set `strictSchemas: false` for servers
 that reject OpenAI strict mode.

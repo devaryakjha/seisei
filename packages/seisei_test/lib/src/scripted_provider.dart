@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:seisei/seisei.dart';
 
 /// One scripted reply of a [ScriptedProvider].
@@ -8,13 +10,15 @@ final class ScriptedReply {
   /// final chunk.
   const ScriptedReply.value(this.rawValue, {this.deltas = const []})
     : toolCalls = const [],
-      error = null;
+      error = null,
+      hangs = false;
 
   /// A reply in which the model only calls tools.
   const ScriptedReply.toolCalls(this.toolCalls)
     : rawValue = null,
       deltas = const [],
-      error = null;
+      error = null,
+      hangs = false;
 
   /// A reply that fails with [error].
   ///
@@ -24,7 +28,18 @@ final class ScriptedReply {
     SeiseiException this.error, {
     this.deltas = const [],
   }) : rawValue = null,
-       toolCalls = const [];
+       toolCalls = const [],
+       hangs = false;
+
+  /// A reply that never arrives, until the request's timeout or
+  /// cancellation ends it.
+  ///
+  /// When streamed, [deltas] are emitted first.
+  const ScriptedReply.hang({this.deltas = const []})
+    : rawValue = null,
+      toolCalls = const [],
+      error = null,
+      hangs = true;
 
   /// Raw value passed to the request's decoder.
   final Object? rawValue;
@@ -37,13 +52,18 @@ final class ScriptedReply {
 
   /// Failure to throw.
   final SeiseiException? error;
+
+  /// Whether the reply never arrives.
+  final bool hangs;
 }
 
 /// Provider that answers each request with the next [ScriptedReply] and
 /// records every request it receives.
 ///
 /// Use it to test multi-step flows such as `SeiseiClient.runTools` and
-/// router fallback while streaming.
+/// router fallback while streaming. It honours
+/// [GenerationRequest.timeout] and [GenerationRequest.cancellation] like a
+/// real provider, so [ScriptedReply.hang] can test both.
 final class ScriptedProvider implements SeiseiProvider {
   /// Creates a provider that replies with [replies] in order.
   ScriptedProvider({
@@ -89,6 +109,7 @@ final class ScriptedProvider implements SeiseiProvider {
   ) async {
     final reply = _next(request);
     if (reply.error case final error?) throw error;
+    if (reply.hangs) await _hang(request);
     if (reply.toolCalls.isNotEmpty) {
       return GenerationResponse<T>.toolCalls(
         toolCalls: reply.toolCalls,
@@ -109,6 +130,7 @@ final class ScriptedProvider implements SeiseiProvider {
       yield GenerationChunk<T>(providerId: id, delta: delta, rawValue: delta);
     }
     if (reply.error case final error?) throw error;
+    if (reply.hangs) await _hang(request);
     yield GenerationChunk<T>(
       providerId: id,
       value: reply.toolCalls.isEmpty ? request.decode(reply.rawValue) : null,
@@ -118,7 +140,25 @@ final class ScriptedProvider implements SeiseiProvider {
     );
   }
 
+  /// Waits until [request] times out or is cancelled, then throws.
+  Future<Never> _hang<T>(GenerationRequest<T> request) async {
+    final abort = GenerationAbort(
+      timeout: request.timeout,
+      cancellation: request.cancellation,
+    );
+    try {
+      // Without a timeout or cancellation the reply never arrives.
+      await (abort.trigger ?? Completer<void>().future);
+      throw abort.exception;
+    } finally {
+      abort.close();
+    }
+  }
+
   ScriptedReply _next<T>(GenerationRequest<T> request) {
+    GenerationAbort(cancellation: request.cancellation)
+      ..throwIfAborted()
+      ..close();
     requests.add(request);
     final unsupported = request.requiredCapabilities.difference(capabilities);
     if (unsupported.isNotEmpty) {

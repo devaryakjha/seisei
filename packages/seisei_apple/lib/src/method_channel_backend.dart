@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 import 'package:seisei_apple/src/backend.dart';
@@ -22,6 +24,7 @@ final class MethodChannelAppleFoundationModelsBackend
 
   final MethodChannel _channel;
   final EventChannel _streamChannel;
+  int _nextRequestId = 0;
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
@@ -56,16 +59,35 @@ final class MethodChannelAppleFoundationModelsBackend
       );
     }
 
-    return _channel.invokeMethod<Object?>('respond', {
-      'prompt': request.prompt,
-      'mode': request.mode.name,
-      'schemaPath': ?request.schemaPath,
-      'instructions': ?request.instructions,
-      'temperature': ?request.temperature,
-      'maximumResponseTokens': ?request.maximumResponseTokens,
-    });
+    final requestId = _nextRequestId++;
+    var finished = false;
+    unawaited(
+      request.abortTrigger?.then((_) async {
+        if (finished) return;
+        try {
+          await _channel.invokeMethod<void>('cancel', {'requestId': requestId});
+        } on Object {
+          // Cancelling is best effort; an older plugin has no cancel method.
+        }
+      }),
+    );
+    try {
+      return await _channel.invokeMethod<Object?>('respond', {
+        'requestId': requestId,
+        'prompt': request.prompt,
+        'mode': request.mode.name,
+        'schemaPath': ?request.schemaPath,
+        'instructions': ?request.instructions,
+        'temperature': ?request.temperature,
+        'maximumResponseTokens': ?request.maximumResponseTokens,
+      });
+    } finally {
+      finished = true;
+    }
   }
 
+  /// Streams native chunks. Cancelling the subscription, which the provider
+  /// does on abort, stops the native task.
   @override
   Stream<Object?> stream(AppleFoundationModelsRequest request) {
     if (request.mode == AppleFoundationModelsMode.pcc) {

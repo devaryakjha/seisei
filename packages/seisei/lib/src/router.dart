@@ -58,6 +58,12 @@ typedef RoutingDecisionCallback = void Function(RoutingDecision decision);
 ///   unless [allowCloudFallback] is `true`.
 /// - [PrivacyPolicy.cloudAllowed] routes to any provider.
 ///
+/// A failure with [SeiseiErrorCode.cancelled] or [SeiseiErrorCode.refused]
+/// stops routing: the app cancelled, or a model refused, so no other
+/// provider should be asked. Every other failure, including
+/// [SeiseiErrorCode.unauthorized], [SeiseiErrorCode.rateLimited] and
+/// [SeiseiErrorCode.timeout], moves on to the next provider.
+///
 /// [stream] falls back to the next provider only until the first chunk is
 /// emitted. A failure after that is passed on to the listener, since the
 /// app may already have shown partial output.
@@ -166,6 +172,7 @@ final class SeiseiRouter implements SeiseiProvider {
       } on SeiseiException catch (error) {
         lastFailure = error;
         onDecision?.call(_failed(provider, error));
+        if (_stopsRouting(error)) rethrow;
       }
     }
 
@@ -202,6 +209,7 @@ final class SeiseiRouter implements SeiseiProvider {
       } on SeiseiException catch (error) {
         lastFailure = error;
         onDecision?.call(_failed(provider, error));
+        if (_stopsRouting(error)) rethrow;
         continue;
       }
       try {
@@ -210,6 +218,7 @@ final class SeiseiRouter implements SeiseiProvider {
         await chunks.cancel();
         lastFailure = error;
         onDecision?.call(_failed(provider, error));
+        if (_stopsRouting(error)) rethrow;
         continue;
       }
 
@@ -264,6 +273,11 @@ final class SeiseiRouter implements SeiseiProvider {
     }
 
     return decisions;
+  }
+
+  static bool _stopsRouting(SeiseiException error) {
+    return error.code == SeiseiErrorCode.cancelled ||
+        error.code == SeiseiErrorCode.refused;
   }
 
   RoutingDecision _failed(SeiseiProvider provider, SeiseiException error) {

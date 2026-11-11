@@ -18,6 +18,20 @@ changes listed under it too.
   arguments of `requestMetadata`. They still work in this release and are
   removed in `0.4.0`. `requestOptions` stays for body fields without a typed
   option.
+- Map failures to typed errors ([#27](https://github.com/devaryakjha/seisei/issues/27)): HTTP 401 and 403 are
+  `unauthorized`, 429 is a `RateLimitedException` with `Retry-After`, 408
+  and 504 are `timeout`, a refusal or an empty content-filter reply is
+  `refused`, a structured reply cut off by `max_tokens` is `truncated`, a
+  connection lost mid-stream is `providerUnavailable`, and decoder errors
+  become `DecodeException`.
+- Honour `GenerationRequest.timeout` and `cancellation` by aborting the HTTP
+  request. Requires `http` 1.5.0 or newer. ([#28](https://github.com/devaryakjha/seisei/issues/28))
+- Report `finishReason` and token `usage` on responses and the final
+  chunk.
+- Add `runsOnDevice` for servers on the same device, such as Ollama or LM
+  Studio on loopback. The provider then reports `onDeviceInference` and
+  serves `onDeviceOnly` and `onDevicePreferred` requests; it asserts that
+  the base URL is a loopback address. ([#29](https://github.com/devaryakjha/seisei/issues/29))
 
 ## 0.2.0-dev.0
 

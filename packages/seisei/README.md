@@ -58,6 +58,31 @@ final answer = await client.runTools(
 It tries providers in order, applies the request's `PrivacyPolicy`, and for
 `stream` falls back only until the first chunk is emitted.
 
+## Errors, timeouts and cancellation
+
+Providers fail with a `SeiseiException` whose `code` says what went wrong:
+`unauthorized`, `rateLimited` (a `RateLimitedException` with an optional
+`retryAfter`), `timeout`, `refused`, `truncated`, `decodeFailed`,
+`cancelled`, `providerUnavailable` and so on. The router falls back on most
+codes but stops on `cancelled` and `refused`.
+
+```dart
+final token = CancellationToken();
+final request = GenerationRequest<String>(
+  prompt: 'Summarise this note.',
+  decode: (raw) => raw! as String,
+  timeout: const Duration(seconds: 20),
+  cancellation: token,
+);
+// Later, for example when the user leaves the screen:
+token.cancel();
+```
+
+Responses and final chunks carry a `finishReason` and, where the provider
+reports it, token `usage`. Provider authors can use `GenerationAbort` to
+honour `timeout` and `cancellation`, and `testProviderErrorConformance` from
+`seisei_test` to check it.
+
 ## Streaming
 
 Streamed chunks distinguish complete output from structured snapshots:

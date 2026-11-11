@@ -16,6 +16,4 @@ resolution: workspace
 
 dependencies:
   seisei: ^0.3.0-dev.0
-
-dev_dependencies:
   test: ^1.26.0

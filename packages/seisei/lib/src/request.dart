@@ -1,3 +1,4 @@
+import 'package:seisei/src/cancellation.dart';
 import 'package:seisei/src/capability.dart';
 import 'package:seisei/src/error.dart';
 import 'package:seisei/src/message.dart';
@@ -28,6 +29,8 @@ final class GenerationRequest<T> {
     PrivacyPolicy privacyPolicy = PrivacyPolicy.onDevicePreferred,
     List<ToolDefinition> tools = const [],
     Map<String, Object?> metadata = const {},
+    Duration? timeout,
+    CancellationToken? cancellation,
   }) : this.conversation(
          messages: [GenerationMessage.user(prompt)],
          decode: decode,
@@ -38,6 +41,8 @@ final class GenerationRequest<T> {
          privacyPolicy: privacyPolicy,
          tools: tools,
          metadata: metadata,
+         timeout: timeout,
+         cancellation: cancellation,
        );
 
   /// Creates a request from a conversation.
@@ -55,6 +60,8 @@ final class GenerationRequest<T> {
     this.privacyPolicy = PrivacyPolicy.onDevicePreferred,
     this.tools = const [],
     this.metadata = const {},
+    this.timeout,
+    this.cancellation,
   }) : messages = List.unmodifiable(messages),
        capabilities = capabilities ?? {ModelCapability.structuredGeneration} {
     if (messages.isEmpty) {
@@ -77,6 +84,8 @@ final class GenerationRequest<T> {
     PrivacyPolicy privacyPolicy = PrivacyPolicy.onDevicePreferred,
     List<ToolDefinition> tools = const [],
     Map<String, Object?> metadata = const {},
+    Duration? timeout,
+    CancellationToken? cancellation,
   }) {
     return GenerationRequest<T>(
       prompt: prompt,
@@ -95,6 +104,8 @@ final class GenerationRequest<T> {
       privacyPolicy: privacyPolicy,
       tools: tools,
       metadata: metadata,
+      timeout: timeout,
+      cancellation: cancellation,
     );
   }
 
@@ -128,6 +139,14 @@ final class GenerationRequest<T> {
 
   /// Converts raw provider output into the requested type.
   final GenerationDecoder<T> decode;
+
+  /// Longest the whole request may take, including a stream. Past it the
+  /// provider stops the request and fails with [SeiseiErrorCode.timeout].
+  final Duration? timeout;
+
+  /// Cancels the request. The provider stops it and fails with
+  /// [SeiseiErrorCode.cancelled].
+  final CancellationToken? cancellation;
 
   /// Text of the last user message, or an empty string when there is none.
   ///
@@ -179,6 +198,8 @@ final class GenerationRequest<T> {
     List<ToolDefinition>? tools,
     Map<String, Object?>? metadata,
     GenerationDecoder<T>? decode,
+    Duration? timeout,
+    CancellationToken? cancellation,
   }) {
     var nextMessages = messages ?? this.messages;
     if (prompt != null) {
@@ -203,6 +224,8 @@ final class GenerationRequest<T> {
       privacyPolicy: privacyPolicy ?? this.privacyPolicy,
       tools: tools ?? this.tools,
       metadata: metadata ?? this.metadata,
+      timeout: timeout ?? this.timeout,
+      cancellation: cancellation ?? this.cancellation,
     );
   }
 
