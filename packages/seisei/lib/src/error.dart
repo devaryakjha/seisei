@@ -21,6 +21,28 @@ enum SeiseiErrorCode {
   /// `SeiseiClient.runTools` reached its step limit while the model was
   /// still calling tools.
   toolStepLimitExceeded,
+
+  /// The credentials were missing, wrong or not allowed to use the model.
+  /// Ask the user to sign in again; retrying does not help.
+  unauthorized,
+
+  /// The provider is rate limiting this app. See
+  /// [RateLimitedException.retryAfter].
+  rateLimited,
+
+  /// The request took longer than `GenerationRequest.timeout`, or the
+  /// provider timed out.
+  timeout,
+
+  /// The model or its safety system refused to answer.
+  refused,
+
+  /// The reply was cut off, usually at the output token limit, and could not
+  /// be decoded.
+  truncated,
+
+  /// The request was cancelled through its `CancellationToken`.
+  cancelled,
 }
 
 /// Base exception for Seisei failures.
@@ -100,4 +122,17 @@ final class ToolRejectedException extends SeiseiException {
 
   /// The rejected call.
   final ToolCall call;
+}
+
+/// Thrown when a provider rate limits the app.
+final class RateLimitedException extends SeiseiException {
+  /// Creates a rate limit failure.
+  const RateLimitedException(
+    String message, {
+    this.retryAfter,
+    Object? source,
+  }) : super(SeiseiErrorCode.rateLimited, message, source: source);
+
+  /// How long the provider asked the app to wait, when it said.
+  final Duration? retryAfter;
 }

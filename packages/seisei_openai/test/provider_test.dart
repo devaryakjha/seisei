@@ -426,8 +426,8 @@ void main() {
     test('should report HTTP errors as provider unavailable', () async {
       server.enqueue(
         const JsonReply({
-          'error': {'message': 'Incorrect API key provided.'},
-        }, statusCode: 401),
+          'error': {'message': 'The server is overloaded.'},
+        }, statusCode: 503),
       );
 
       await expectLater(
@@ -442,7 +442,7 @@ void main() {
               .having(
                 (error) => error.message,
                 'message',
-                allOf(contains('401'), contains('Incorrect API key')),
+                allOf(contains('503'), contains('overloaded')),
               ),
         ),
       );

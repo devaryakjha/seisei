@@ -2,6 +2,7 @@
 /// and provider routing for Dart and Flutter apps.
 library;
 
+export 'src/cancellation.dart';
 export 'src/capability.dart';
 export 'src/client.dart';
 export 'src/error.dart';

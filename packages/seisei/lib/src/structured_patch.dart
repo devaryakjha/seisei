@@ -63,6 +63,16 @@ final class StructuredPatch {
 }
 
 /// Computes stable path-level patches between two JSON-like values.
+///
+/// Maps are diffed key by key. Lists are diffed this way:
+///
+/// - Same length: element by element.
+/// - [next] starts with all of [previous]: one `add` per appended element,
+///   at its index.
+/// - [previous] starts with all of [next]: one `remove` per dropped element,
+///   from the last index down, so the patches can be applied in order.
+/// - Any other change, such as an insert in the middle or an append that
+///   also edits an earlier element: one `replace` of the whole list.
 List<StructuredPatch> diffStructuredValues(Object? previous, Object? next) {
   final patches = <StructuredPatch>[];
   _diffStructuredValue(previous, next, const [], patches);
@@ -84,14 +94,30 @@ void _diffStructuredValue(
     return;
   }
 
-  if (previous is List && next is List && previous.length == next.length) {
-    for (var index = 0; index < previous.length; index += 1) {
-      _diffStructuredValue(previous[index], next[index], [
-        ...path,
-        index,
-      ], patches);
+  if (previous is List && next is List) {
+    if (previous.length == next.length) {
+      for (var index = 0; index < previous.length; index += 1) {
+        _diffStructuredValue(previous[index], next[index], [
+          ...path,
+          index,
+        ], patches);
+      }
+      return;
     }
-    return;
+    if (next.length > previous.length && _startsWith(next, previous)) {
+      for (var index = previous.length; index < next.length; index += 1) {
+        patches.add(
+          StructuredPatch.add(path: [...path, index], value: next[index]),
+        );
+      }
+      return;
+    }
+    if (previous.length > next.length && _startsWith(previous, next)) {
+      for (var index = previous.length - 1; index >= next.length; index -= 1) {
+        patches.add(StructuredPatch.remove(path: [...path, index]));
+      }
+      return;
+    }
   }
 
   patches.add(StructuredPatch.replace(path: path, value: next));
@@ -166,6 +192,15 @@ bool _structuredEquals(Object? left, Object? right) {
   return left == right;
 }
 
+bool _startsWith(List<Object?> list, List<Object?> prefix) {
+  for (var index = 0; index < prefix.length; index += 1) {
+    if (!_structuredEquals(list[index], prefix[index])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 bool _listEquals(List<Object> left, List<Object> right) {
   if (left.length != right.length) {
     return false;
@@ -180,7 +215,8 @@ bool _listEquals(List<Object> left, List<Object> right) {
 
 int _structuredHash(Object? value) {
   return switch (value) {
-    final Map<Object?, Object?> map => Object.hashAll(
+    // Unordered, because equality ignores the order of map entries.
+    final Map<Object?, Object?> map => Object.hashAllUnordered(
       map.entries.map(
         (entry) => Object.hash(entry.key, _structuredHash(entry.value)),
       ),

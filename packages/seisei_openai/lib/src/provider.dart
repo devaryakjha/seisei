@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' as http_parser;
 import 'package:seisei/seisei.dart';
 import 'package:seisei_openai/src/completion.dart';
 import 'package:seisei_openai/src/json_schema.dart';
@@ -12,9 +13,10 @@ import 'package:seisei_openai/src/partial_json.dart';
 /// One provider covers OpenAI, Azure OpenAI, OpenRouter, Ollama, LM Studio,
 /// and any other server that implements `POST {baseUrl}/chat/completions`.
 ///
-/// Requests are sent to a remote server, so this provider never reports
-/// [ModelCapability.onDeviceInference] and only serves requests whose
-/// [GenerationRequest.privacyPolicy] is [PrivacyPolicy.cloudAllowed].
+/// By default requests count as leaving the device: the provider does not
+/// report [ModelCapability.onDeviceInference] and only serves requests whose
+/// [GenerationRequest.privacyPolicy] is [PrivacyPolicy.cloudAllowed]. Set
+/// `runsOnDevice` for a server on the same device.
 final class OpenAiCompatibleProvider implements SeiseiProvider {
   /// Creates a provider.
   ///
@@ -27,7 +29,14 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   /// [capabilities] lists what the configured model supports. It defaults to
   /// [defaultCapabilities]; remove any the model or server lacks so routing
   /// can skip this provider.
-  /// [ModelCapability.onDeviceInference] is always removed.
+  ///
+  /// Set [runsOnDevice] only when the server runs on the same device as the
+  /// app, for example an inference server on `localhost` or inside the app.
+  /// The provider then reports [ModelCapability.onDeviceInference] and
+  /// serves every [PrivacyPolicy]. This is the app's claim: the library
+  /// cannot verify where the server runs. Debug builds assert that
+  /// [baseUrl] is a loopback address when it is set. Without it,
+  /// [ModelCapability.onDeviceInference] is removed from [capabilities].
   OpenAiCompatibleProvider({
     required this.model,
     Uri? baseUrl,
@@ -36,16 +45,33 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     this.queryParameters = const {},
     this.id = 'openai_compatible',
     this.strictSchemas = true,
+    this.runsOnDevice = false,
     Set<ModelCapability>? capabilities,
     http.Client? httpClient,
-  }) : baseUrl = baseUrl ?? defaultBaseUrl,
-       capabilities = Set.unmodifiable(
-         (capabilities ?? defaultCapabilities).difference({
+  }) : assert(
+         !runsOnDevice || isLoopback(baseUrl ?? defaultBaseUrl),
+         'runsOnDevice is set but the base URL is not a loopback address.',
+       ),
+       baseUrl = baseUrl ?? defaultBaseUrl,
+       capabilities = Set.unmodifiable({
+         ...(capabilities ?? defaultCapabilities).difference({
            ModelCapability.onDeviceInference,
          }),
-       ),
+         if (runsOnDevice) ModelCapability.onDeviceInference,
+       }),
        _client = httpClient ?? http.Client(),
        _ownsClient = httpClient == null;
+
+  /// Whether [url] points at this device: `localhost`, `127.0.0.0/8` or
+  /// `::1`.
+  static bool isLoopback(Uri url) {
+    final host = url.host.toLowerCase();
+    return host == 'localhost' ||
+        host.endsWith('.localhost') ||
+        host == '::1' ||
+        host == '[::1]' ||
+        RegExp(r'^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$').hasMatch(host);
+  }
 
   /// The OpenAI API base URL.
   static final Uri defaultBaseUrl = Uri.parse('https://api.openai.com/v1');
@@ -137,6 +163,11 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   /// Extra query parameters added to every request URL.
   final Map<String, String> queryParameters;
 
+  /// Whether the app declared that the server runs on this device.
+  ///
+  /// See the constructor for what this changes.
+  final bool runsOnDevice;
+
   /// Whether response schemas use OpenAI strict mode.
   ///
   /// Turn this off for servers that reject `strict: true`.
@@ -190,21 +221,30 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     GenerationRequest<T> request,
   ) async {
     await _check(request);
+    final abort = GenerationAbort(
+      timeout: request.timeout,
+      cancellation: request.cancellation,
+    );
     final http.Response response;
     try {
-      response = await _client.post(
-        chatCompletionsUrl,
-        headers: _headers(),
-        body: jsonEncode(_body(request, stream: false)),
+      abort.throwIfAborted();
+      final streamed = await abort.guard(
+        _client.send(_httpRequest(request, stream: false, abort: abort)),
       );
+      response = await abort.guard(http.Response.fromStream(streamed));
+    } on SeiseiException {
+      rethrow;
     } on Object catch (error) {
-      throw _unreachable(error);
+      throw abort.isAborted ? abort.exception : _unreachable(error);
+    } finally {
+      abort.close();
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _httpError(response.statusCode, response.body);
+      throw _httpError(response.statusCode, response.body, response.headers);
     }
 
     final completion = _parseCompletion(_decodeJson(response.body));
+    _throwIfRefused(completion);
     final metadata = {
       // ignore: deprecated_member_use_from_same_package, kept for one release.
       toolCallsMetadataKey: completion.toolCalls,
@@ -215,6 +255,8 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
       return GenerationResponse<T>.toolCalls(
         toolCalls: completion.toolCalls,
         providerId: id,
+        finishReason: _finishReason(completion.finishReason),
+        usage: _usage(completion.usage),
         rawValue: completion,
         metadata: metadata,
       );
@@ -223,6 +265,8 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
       value: _decodeValue(request, completion),
       toolCalls: completion.toolCalls,
       providerId: id,
+      finishReason: _finishReason(completion.finishReason),
+      usage: _usage(completion.usage),
       rawValue: completion,
       metadata: metadata,
     );
@@ -231,31 +275,64 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   @override
   Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
     await _check(request, additionalCapabilities: {ModelCapability.streaming});
-    final httpRequest = http.Request('POST', chatCompletionsUrl)
-      ..headers.addAll(_headers())
-      ..body = jsonEncode(_body(request, stream: true));
+    final abort = GenerationAbort(
+      timeout: request.timeout,
+      cancellation: request.cancellation,
+    );
+    try {
+      yield* _stream(request, abort);
+    } finally {
+      abort.close();
+    }
+  }
+
+  Stream<GenerationChunk<T>> _stream<T>(
+    GenerationRequest<T> request,
+    GenerationAbort abort,
+  ) async* {
     final http.StreamedResponse response;
     try {
-      response = await _client.send(httpRequest);
+      abort.throwIfAborted();
+      response = await abort.guard(
+        _client.send(_httpRequest(request, stream: true, abort: abort)),
+      );
+    } on SeiseiException {
+      rethrow;
     } on Object catch (error) {
-      throw _unreachable(error);
+      throw abort.isAborted ? abort.exception : _unreachable(error);
     }
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _httpError(
-        response.statusCode,
-        await response.stream.bytesToString(),
-      );
+      final String body;
+      try {
+        body = await abort.guard(response.stream.bytesToString());
+      } on SeiseiException {
+        rethrow;
+      } on Object catch (error) {
+        throw abort.isAborted ? abort.exception : _unreachable(error);
+      }
+      throw _httpError(response.statusCode, body, response.headers);
     }
 
     final schema = _responseSchema(request);
     final content = StringBuffer();
+    final refusal = StringBuffer();
     final toolCalls = <int, _ToolCallBuilder>{};
     String? finishReason;
     String? responseModel;
     var usage = const <String, Object?>{};
     Object? previousSnapshot;
 
-    await for (final data in _serverSentData(response.stream)) {
+    await for (final data in _serverSentData(
+      response.stream,
+      onError: (error) => abort.isAborted
+          ? abort.exception
+          : SeiseiException(
+              SeiseiErrorCode.providerUnavailable,
+              'The connection to $chatCompletionsUrl was lost while '
+              'streaming.',
+              source: error,
+            ),
+    )) {
       if (data == '[DONE]') {
         break;
       }
@@ -276,6 +353,9 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
       final delta = choice['delta'];
       if (delta is! Map) {
         continue;
+      }
+      if (delta['refusal'] case final String text when text.isNotEmpty) {
+        refusal.write(text);
       }
       _collectToolCallDeltas(delta['tool_calls'], toolCalls);
 
@@ -316,13 +396,17 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
       finishReason: finishReason,
       model: responseModel,
       usage: usage,
+      refusal: refusal.isEmpty ? null : refusal.toString(),
     );
+    _throwIfRefused(completion);
     yield GenerationChunk<T>(
       providerId: id,
       value: _onlyCallsTools(completion)
           ? null
           : _decodeValue(request, completion),
       toolCalls: completion.toolCalls,
+      finishReason: _finishReason(completion.finishReason),
+      usage: _usage(completion.usage),
       rawValue: completion,
       isDone: true,
     );
@@ -352,8 +436,61 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
       );
     }
 
-    if (request.privacyPolicy != PrivacyPolicy.cloudAllowed) {
+    if (!runsOnDevice && request.privacyPolicy != PrivacyPolicy.cloudAllowed) {
       throw PrivacyPolicyRejectedException(request.privacyPolicy, id);
+    }
+  }
+
+  http.BaseRequest _httpRequest<T>(
+    GenerationRequest<T> request, {
+    required bool stream,
+    required GenerationAbort abort,
+  }) {
+    return http.AbortableRequest(
+        'POST',
+        chatCompletionsUrl,
+        abortTrigger: abort.trigger,
+      )
+      ..headers.addAll(_headers())
+      ..body = jsonEncode(_body(request, stream: stream));
+  }
+
+  FinishReason? _finishReason(String? reason) {
+    return switch (reason) {
+      null => null,
+      'stop' => FinishReason.stop,
+      'length' => FinishReason.length,
+      'tool_calls' || 'function_call' => FinishReason.toolCalls,
+      'content_filter' => FinishReason.contentFilter,
+      _ => FinishReason.other,
+    };
+  }
+
+  GenerationUsage? _usage(Map<String, Object?> usage) {
+    if (usage.isEmpty) return null;
+    return GenerationUsage(
+      inputTokens: (usage['prompt_tokens'] as num?)?.toInt(),
+      outputTokens: (usage['completion_tokens'] as num?)?.toInt(),
+    );
+  }
+
+  void _throwIfRefused(OpenAiCompletion completion) {
+    final refusal = completion.refusal;
+    if (refusal != null) {
+      throw SeiseiException(
+        SeiseiErrorCode.refused,
+        'The model refused: $refusal',
+        source: completion,
+      );
+    }
+    if (completion.finishReason == 'content_filter' &&
+        completion.content == null &&
+        completion.toolCalls.isEmpty) {
+      throw SeiseiException(
+        SeiseiErrorCode.refused,
+        'The reply was blocked by the content filter.',
+        source: completion,
+      );
     }
   }
 
@@ -459,6 +596,31 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   /// When the model only called tools there is no reply, and the decoder
   /// receives null without schema validation.
   T _decodeValue<T>(GenerationRequest<T> request, OpenAiCompletion completion) {
+    try {
+      return _decodeContent(request, completion);
+    } on SeiseiException catch (error) {
+      if (completion.finishReason == 'length' &&
+          error.code == SeiseiErrorCode.decodeFailed) {
+        throw SeiseiException(
+          SeiseiErrorCode.truncated,
+          'The reply hit the output token limit before it was complete: '
+          '${error.message}',
+          source: error,
+        );
+      }
+      rethrow;
+    } on Object catch (error) {
+      throw DecodeException(
+        'The response decoder failed: $error',
+        source: error,
+      );
+    }
+  }
+
+  T _decodeContent<T>(
+    GenerationRequest<T> request,
+    OpenAiCompletion completion,
+  ) {
     final content = completion.content;
     final schema = _responseSchema(request);
     if (schema == null) {
@@ -511,6 +673,7 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     final rawToolCalls = message['tool_calls'];
     return OpenAiCompletion(
       content: message['content'] as String?,
+      refusal: message['refusal'] as String?,
       toolCalls: [
         if (rawToolCalls is List)
           for (final call in rawToolCalls.whereType<Map<Object?, Object?>>())
@@ -560,7 +723,11 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     );
   }
 
-  SeiseiException _httpError(int statusCode, String body) {
+  SeiseiException _httpError(
+    int statusCode,
+    String body, [
+    Map<String, String> headers = const {},
+  ]) {
     String? detail;
     try {
       final decoded = jsonDecode(body);
@@ -570,12 +737,39 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     } on FormatException {
       detail = null;
     }
+    final message =
+        'The OpenAI-compatible endpoint returned HTTP $statusCode'
+        '${detail == null ? '.' : ': $detail'}';
+    if (statusCode == 429) {
+      return RateLimitedException(
+        message,
+        retryAfter: _retryAfter(headers['retry-after']),
+        source: body,
+      );
+    }
     return SeiseiException(
-      SeiseiErrorCode.providerUnavailable,
-      'The OpenAI-compatible endpoint returned HTTP $statusCode'
-      '${detail == null ? '.' : ': $detail'}',
+      switch (statusCode) {
+        401 || 403 => SeiseiErrorCode.unauthorized,
+        408 || 504 => SeiseiErrorCode.timeout,
+        _ => SeiseiErrorCode.providerUnavailable,
+      },
+      message,
       source: body,
     );
+  }
+
+  /// Parses a `Retry-After` header: seconds, or an HTTP date.
+  Duration? _retryAfter(String? value) {
+    if (value == null) return null;
+    final seconds = int.tryParse(value.trim());
+    if (seconds != null) return Duration(seconds: seconds);
+    try {
+      final date = http_parser.parseHttpDate(value);
+      final wait = date.difference(DateTime.now());
+      return wait.isNegative ? Duration.zero : wait;
+    } on FormatException {
+      return null;
+    }
   }
 
   SeiseiException _unreachable(Object error) {
@@ -588,10 +782,21 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
 }
 
 /// Splits a `text/event-stream` body into the `data` of each event.
-Stream<String> _serverSentData(Stream<List<int>> bytes) async* {
+///
+/// Transport errors are passed to [onError] and the result is thrown.
+Stream<String> _serverSentData(
+  Stream<List<int>> bytes, {
+  required SeiseiException Function(Object error) onError,
+}) async* {
   final data = <String>[];
-  await for (final line
-      in bytes.transform(utf8.decoder).transform(const LineSplitter())) {
+  final lines = bytes
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .handleError(
+        (Object error) => throw onError(error),
+        test: (error) => error is! SeiseiException,
+      );
+  await for (final line in lines) {
     if (line.isEmpty) {
       if (data.isNotEmpty) {
         yield data.join('\n');

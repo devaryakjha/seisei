@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/services.dart';
 import 'package:seisei/seisei.dart';
 
 import 'package:seisei_apple/src/backend.dart';
@@ -65,28 +67,86 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     GenerationRequest<T> request,
   ) async {
     await _check(request);
+    final abort = GenerationAbort(
+      timeout: request.timeout,
+      cancellation: request.cancellation,
+    );
     final schema = await _SchemaFile.open(request);
     try {
-      final rawValue = await backend.respond(
-        _backendRequest(request, schemaPath: schema.path),
-      );
+      abort.throwIfAborted();
+      final Object? rawValue;
+      try {
+        rawValue = await abort.guard(
+          backend.respond(
+            _backendRequest(
+              request,
+              schemaPath: schema.path,
+              abortTrigger: abort.trigger,
+            ),
+          ),
+        );
+      } on Object catch (error) {
+        throw _seiseiError(error, abort);
+      }
       return GenerationResponse<T>(
         value: _decode(request, rawValue),
         providerId: id,
+        finishReason: FinishReason.stop,
         rawValue: rawValue,
       );
     } finally {
+      abort.close();
       await schema.close();
     }
+  }
+
+  /// Maps a backend failure onto a [SeiseiException].
+  ///
+  /// Native errors arrive as a [PlatformException] whose code the plugin
+  /// derives from the FoundationModels error; the message is checked too, for
+  /// the CLI backend and older plugins.
+  SeiseiException _seiseiError(Object error, GenerationAbort abort) {
+    if (error is SeiseiException) return error;
+    if (abort.isAborted) return abort.exception;
+    final (code, message) = switch (error) {
+      PlatformException(:final code, :final message) => (
+        code,
+        message ?? code,
+      ),
+      ProcessException(:final message) => ('', message),
+      _ => ('', '$error'),
+    };
+    final text = '$code $message';
+    bool has(List<String> needles) => needles.any(text.contains);
+    final description = 'Apple Foundation Models failed: $message';
+    if (has(['rate_limited', 'rateLimited', 'concurrentRequests'])) {
+      return RateLimitedException(description, source: error);
+    }
+    final seiseiCode = switch (text) {
+      _ when has(['cancelled', 'CancellationError']) =>
+        SeiseiErrorCode.cancelled,
+      _ when has(['refused', 'guardrailViolation', 'refusal']) =>
+        SeiseiErrorCode.refused,
+      _ when has(['decode_failed', 'decodingFailure']) =>
+        SeiseiErrorCode.decodeFailed,
+      _ => SeiseiErrorCode.providerUnavailable,
+    };
+    return SeiseiException(seiseiCode, description, source: error);
   }
 
   @override
   Stream<GenerationChunk<T>> stream<T>(GenerationRequest<T> request) async* {
     await _check(request, additionalCapabilities: {ModelCapability.streaming});
+    final abort = GenerationAbort(
+      timeout: request.timeout,
+      cancellation: request.cancellation,
+    );
     final schema = await _SchemaFile.open(request);
     try {
-      yield* _stream(request, schema.path);
+      abort.throwIfAborted();
+      yield* _stream(request, schema.path, abort);
     } finally {
+      abort.close();
       await schema.close();
     }
   }
@@ -94,35 +154,67 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
   Stream<GenerationChunk<T>> _stream<T>(
     GenerationRequest<T> request,
     String? schemaPath,
+    GenerationAbort abort,
   ) async* {
     Object? previousStructuredSnapshot;
-    await for (final rawValue in backend.stream(
-      _backendRequest(request, schemaPath: schemaPath, stream: true),
-    )) {
-      final done = _isDone(rawValue);
-      final structuredPatches = _structuredPatches(
-        rawValue,
-        schemaPath: schemaPath,
-        previous: previousStructuredSnapshot,
-        done: done,
-      );
-      yield GenerationChunk<T>(
-        providerId: id,
-        delta: rawValue is String && !done ? rawValue : null,
-        partialValue: _partialValue(
+    final Stream<Object?> source;
+    try {
+      source = backend.stream(
+        _backendRequest(
           request,
-          rawValue,
-          done: done,
-          structured: schemaPath != null,
+          schemaPath: schemaPath,
+          stream: true,
+          abortTrigger: abort.trigger,
         ),
-        structuredPatches: structuredPatches,
-        value: done ? _decode(request, _doneValue(rawValue)) : null,
-        rawValue: rawValue,
-        isDone: done,
       );
-      if (!done && schemaPath != null && rawValue is! String) {
-        previousStructuredSnapshot = rawValue;
+    } on Object catch (error) {
+      throw _seiseiError(error, abort);
+    }
+    final values = StreamIterator(source);
+    try {
+      while (await _next(values, abort)) {
+        final rawValue = values.current;
+        final done = _isDone(rawValue);
+        final structuredPatches = _structuredPatches(
+          rawValue,
+          schemaPath: schemaPath,
+          previous: previousStructuredSnapshot,
+          done: done,
+        );
+        yield GenerationChunk<T>(
+          providerId: id,
+          delta: rawValue is String && !done ? rawValue : null,
+          partialValue: _partialValue(
+            request,
+            rawValue,
+            done: done,
+            structured: schemaPath != null,
+          ),
+          structuredPatches: structuredPatches,
+          value: done ? _decode(request, _doneValue(rawValue)) : null,
+          finishReason: done ? FinishReason.stop : null,
+          rawValue: rawValue,
+          isDone: done,
+        );
+        if (!done && schemaPath != null && rawValue is! String) {
+          previousStructuredSnapshot = rawValue;
+        }
       }
+    } finally {
+      // Cancelling the subscription stops the native task.
+      await values.cancel();
+    }
+  }
+
+  /// Moves to the next backend value, or throws once the request aborts.
+  Future<bool> _next(
+    StreamIterator<Object?> values,
+    GenerationAbort abort,
+  ) async {
+    try {
+      return await abort.guard(values.moveNext());
+    } on Object catch (error) {
+      throw _seiseiError(error, abort);
     }
   }
 
@@ -165,6 +257,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
     GenerationRequest<T> request, {
     required String? schemaPath,
     bool stream = false,
+    Future<void>? abortTrigger,
   }) {
     final instructions = [
       ?request.instructions,
@@ -179,6 +272,7 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
       temperature: request.options.temperature,
       maximumResponseTokens: request.options.maxOutputTokens,
       stream: stream,
+      abortTrigger: abortTrigger,
     );
   }
 
@@ -194,7 +288,16 @@ final class AppleFoundationModelsProvider implements SeiseiProvider {
         );
       }
     }
-    return request.decode(rawValue);
+    try {
+      return request.decode(rawValue);
+    } on SeiseiException {
+      rethrow;
+    } on Object catch (error) {
+      throw DecodeException(
+        'The response decoder failed: $error',
+        source: error,
+      );
+    }
   }
 
   bool _isDone(Object? rawValue) {

@@ -863,7 +863,11 @@ void main() {
         call,
       ) async {
         expect(call.method, 'respond');
-        expect(call.arguments, {'prompt': 'Hello', 'mode': 'system'});
+        expect(call.arguments, {
+          'requestId': 0,
+          'prompt': 'Hello',
+          'mode': 'system',
+        });
         return 'native-ok';
       });
       addTearDown(() {
@@ -895,6 +899,7 @@ void main() {
       ) async {
         expect(call.method, 'respond');
         expect(call.arguments, {
+          'requestId': 0,
           'prompt': 'Reply as JSON.',
           'mode': 'system',
           'schemaPath': '/tmp/schema.json',

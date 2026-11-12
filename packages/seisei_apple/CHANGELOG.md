@@ -15,6 +15,17 @@ changes listed under it too.
 - Deprecate `AppleFoundationModelsProvider.schemaPathMetadataKey` and
   `FoundationModelsSchemaEncoder.metadataForFile`. They still work in this
   release and are removed in `0.4.0`.
+- Map native failures to typed errors ([#27](https://github.com/devaryakjha/seisei/issues/27)): guardrail
+  violations and refusals are `refused`, rate limits and concurrent request
+  limits are `rateLimited`, decoding failures are `decodeFailed`, and
+  everything else is `providerUnavailable`, instead of raw
+  `PlatformException`s. The native plugin now sends a specific error code.
+- Honour `GenerationRequest.timeout` and `cancellation`
+  ([#28](https://github.com/devaryakjha/seisei/issues/28)). The method channel backend asks the native plugin to
+  cancel the `respond` task, a cancelled stream stops the native task, and
+  the `fm` CLI backend kills a streaming process.
+  `AppleFoundationModelsRequest.abortTrigger` carries the signal to custom
+  backends.
 
 ## 0.2.0-dev.0
 

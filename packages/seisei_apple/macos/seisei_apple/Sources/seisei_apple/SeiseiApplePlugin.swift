@@ -4,6 +4,7 @@ import FoundationModels
 
 public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
   private var streamTask: Task<Void, Never>?
+  private var respondTasks: [Int: Task<Void, Never>] = [:]
 
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(
@@ -26,6 +27,9 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       result(availability())
     case "respond":
       respond(call, result: result)
+    case "cancel":
+      cancel(call)
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -121,11 +125,7 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         }
       } catch {
         await MainActor.run {
-          events(FlutterError(
-            code: "generation_failed",
-            message: String(describing: error),
-            details: nil
-          ))
+          events(self.flutterError(for: error))
         }
       }
     }
@@ -193,7 +193,13 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
       return
     }
 
-    Task {
+    let requestId = (arguments["requestId"] as? NSNumber)?.intValue
+    let task = Task {
+      defer {
+        if let requestId {
+          Task { @MainActor in self.respondTasks[requestId] = nil }
+        }
+      }
       do {
         let session = self.makeSession(arguments)
         let options = self.generationOptions(arguments)
@@ -216,14 +222,47 @@ public class SeiseiApplePlugin: NSObject, FlutterPlugin, FlutterStreamHandler {
         }
       } catch {
         await MainActor.run {
-          result(FlutterError(
-            code: "generation_failed",
-            message: String(describing: error),
-            details: nil
-          ))
+          result(self.flutterError(for: error))
         }
       }
     }
+    if let requestId {
+      respondTasks[requestId] = task
+    }
+  }
+
+  /// Cancels the in-flight `respond` call with the given `requestId`.
+  private func cancel(_ call: FlutterMethodCall) {
+    guard let arguments = call.arguments as? [String: Any],
+          let requestId = (arguments["requestId"] as? NSNumber)?.intValue else {
+      return
+    }
+    respondTasks.removeValue(forKey: requestId)?.cancel()
+  }
+
+  /// A Flutter error whose code names the failure, so Dart can map it.
+  ///
+  /// Matches on the error's description rather than on enum cases, so the
+  /// plugin builds against SDKs that add or rename generation errors.
+  private func flutterError(for error: Error) -> FlutterError {
+    let description = String(describing: error)
+    let code: String
+    if error is CancellationError {
+      code = "cancelled"
+    } else if description.contains("guardrailViolation")
+      || description.contains("refusal") {
+      code = "refused"
+    } else if description.contains("rateLimited")
+      || description.contains("concurrentRequests") {
+      code = "rate_limited"
+    } else if description.contains("exceededContextWindowSize") {
+      code = "context_window_exceeded"
+    } else if description.contains("decodingFailure") {
+      code = "decode_failed"
+    } else {
+      code = "generation_failed"
+    }
+    return FlutterError(code: code, message: description, details: nil)
   }
 
   /// A session with the request's system instructions, if any.

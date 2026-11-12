@@ -13,6 +13,7 @@ final class OpenAiCompletion {
     this.finishReason,
     this.model,
     this.usage = const {},
+    this.refusal,
     this.raw,
   });
 
@@ -30,6 +31,9 @@ final class OpenAiCompletion {
 
   /// Token usage reported by the endpoint, when present.
   final Map<String, Object?> usage;
+
+  /// The model's refusal message, when it declined to answer.
+  final String? refusal;
 
   /// Raw response body for a non-streamed completion.
   ///

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:seisei_apple/src/backend.dart';
@@ -10,7 +11,9 @@ typedef ProcessRunner =
 ///
 /// The CLI has no flags for instructions or sampling options. Instructions
 /// are sent as a paragraph before the prompt, and temperature and the output
-/// limit are not applied; use the method channel backend in apps.
+/// limit are not applied; use the method channel backend in apps. An abort
+/// kills a streaming `fm` process; a non-streamed call runs to completion in
+/// the background.
 final class FmCliBackend implements AppleFoundationModelsBackend {
   /// Creates an `fm` CLI backend.
   FmCliBackend({this.executable = '/usr/bin/fm', ProcessRunner? processRunner})
@@ -54,6 +57,7 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
   Stream<Object?> stream(AppleFoundationModelsRequest request) async* {
     final args = _respondArgs(request, stream: true);
     final process = await Process.start(executable, args);
+    unawaited(request.abortTrigger?.then((_) => process.kill()));
     final chunks = <String>[];
 
     await for (final text in process.stdout.transform(systemEncoding.decoder)) {

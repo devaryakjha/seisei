@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -23,10 +24,23 @@ sealed class FakeReply {
 
 /// Replies with a JSON body.
 final class JsonReply extends FakeReply {
-  const JsonReply(this.body, {this.statusCode = 200});
+  const JsonReply(this.body, {this.statusCode = 200, this.headers = const {}});
 
   final Object? body;
   final int statusCode;
+  final Map<String, String> headers;
+}
+
+/// Never replies, until the server closes.
+final class HangingReply extends FakeReply {
+  const HangingReply();
+}
+
+/// Sends [events] as server-sent events, then drops the connection.
+final class DroppedSseReply extends FakeReply {
+  const DroppedSseReply(this.events);
+
+  final List<Object?> events;
 }
 
 /// Replies with server-sent events, one per data payload.
@@ -57,7 +71,12 @@ final class FakeOpenAiServer {
 
   void enqueue(FakeReply reply) => _replies.add(reply);
 
-  Future<void> close() => _server.close(force: true);
+  final Completer<void> _closed = Completer<void>();
+
+  Future<void> close() {
+    if (!_closed.isCompleted) _closed.complete();
+    return _server.close(force: true);
+  }
 
   Future<void> _handle(HttpRequest request) async {
     final source = await utf8.decoder.bind(request).join();
@@ -78,11 +97,30 @@ final class FakeOpenAiServer {
       return;
     }
     switch (_replies.removeAt(0)) {
-      case JsonReply(:final body, :final statusCode):
+      case JsonReply(:final body, :final statusCode, :final headers):
         response
           ..statusCode = statusCode
-          ..headers.contentType = ContentType.json
-          ..write(jsonEncode(body));
+          ..headers.contentType = ContentType.json;
+        headers.forEach(response.headers.set);
+        response.write(jsonEncode(body));
+      case HangingReply():
+        await _closed.future;
+        return;
+      case DroppedSseReply(:final events):
+        response.headers
+          ..contentType = ContentType('text', 'event-stream')
+          ..chunkedTransferEncoding = true;
+        final socket = await response.detachSocket();
+        for (final event in events) {
+          final data = utf8.encode('data: ${jsonEncode(event)}\n\n');
+          socket
+            ..write('${data.length.toRadixString(16)}\r\n')
+            ..add(data)
+            ..write('\r\n');
+        }
+        await socket.flush();
+        socket.destroy();
+        return;
       case SseReply(:final events):
         response.headers.contentType = ContentType('text', 'event-stream');
         for (final event in events) {
@@ -100,6 +138,7 @@ Map<String, Object?> completionBody({
   String? content,
   List<Map<String, Object?>>? toolCalls,
   String finishReason = 'stop',
+  String? refusal,
 }) {
   return {
     'id': 'chatcmpl-1',
@@ -112,6 +151,7 @@ Map<String, Object?> completionBody({
           'role': 'assistant',
           'content': content,
           'tool_calls': ?toolCalls,
+          'refusal': ?refusal,
         },
         'finish_reason': finishReason,
       },

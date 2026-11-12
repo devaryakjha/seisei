@@ -32,6 +32,20 @@ changes listed under it too.
   ([#26](https://github.com/devaryakjha/seisei/issues/26))
 - `ToolCall`, `ToolDefinition` and `ToolResult` are `@immutable`, and
   `ToolCall` and `ToolResult` compare by value.
+- Typed failures ([#27](https://github.com/devaryakjha/seisei/issues/27)): new error codes `unauthorized`,
+  `rateLimited` (thrown as `RateLimitedException` with an optional
+  `retryAfter`), `timeout`, `refused`, `truncated` and `cancelled`.
+  `SeiseiRouter` does not fall back after `cancelled` or `refused`.
+- Timeouts and cancellation ([#28](https://github.com/devaryakjha/seisei/issues/28)): `GenerationRequest.timeout`
+  and `GenerationRequest.cancellation` take a `CancellationToken`.
+  `GenerationAbort` is the helper providers use to honour both.
+- `GenerationResponse.finishReason` and `GenerationChunk.finishReason`
+  (`FinishReason`), and `usage` (`GenerationUsage`) where the provider
+  reports it.
+- `diffStructuredValues` compares maps by value regardless of key order,
+  turns list appends and truncations into `add` and `remove` patches, and
+  replaces a list whole only when items change in place and the length
+  changes too. ([#30](https://github.com/devaryakjha/seisei/issues/30))
 
 ## 0.2.0-dev.0
 

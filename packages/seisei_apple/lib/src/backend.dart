@@ -30,6 +30,7 @@ final class AppleFoundationModelsRequest {
     this.temperature,
     this.maximumResponseTokens,
     this.stream = false,
+    this.abortTrigger,
   });
 
   /// Prompt text.
@@ -52,6 +53,10 @@ final class AppleFoundationModelsRequest {
 
   /// Whether streaming is requested.
   final bool stream;
+
+  /// Completes when the caller gives up on the request, after a timeout or
+  /// a cancellation. Backends should stop native work when it completes.
+  final Future<void>? abortTrigger;
 }
 
 /// Availability of Apple Foundation Models modes.

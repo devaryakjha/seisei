@@ -113,7 +113,7 @@ void main() {
 
     expect(patches, [
       const StructuredPatch.replace(path: ['title'], value: 'Final'),
-      const StructuredPatch.replace(path: ['tags'], value: ['a', 'b', 'c']),
+      const StructuredPatch.add(path: ['tags', 2], value: 'c'),
       const StructuredPatch.remove(path: ['author', 'role']),
       const StructuredPatch.add(path: ['published'], value: true),
     ]);
