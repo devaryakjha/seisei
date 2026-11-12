@@ -60,6 +60,9 @@ final class MethodChannelAppleFoundationModelsBackend
       'prompt': request.prompt,
       'mode': request.mode.name,
       'schemaPath': ?request.schemaPath,
+      'instructions': ?request.instructions,
+      'temperature': ?request.temperature,
+      'maximumResponseTokens': ?request.maximumResponseTokens,
     });
   }
 
@@ -75,6 +78,9 @@ final class MethodChannelAppleFoundationModelsBackend
       'prompt': request.prompt,
       'mode': request.mode.name,
       'schemaPath': ?request.schemaPath,
+      'instructions': ?request.instructions,
+      'temperature': ?request.temperature,
+      'maximumResponseTokens': ?request.maximumResponseTokens,
     });
   }
 }

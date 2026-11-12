@@ -77,7 +77,7 @@ final class FakeProvider implements SeiseiProvider {
   }
 
   void _checkCapabilities<T>(GenerationRequest<T> request) {
-    final unsupported = request.capabilities.difference(capabilities);
+    final unsupported = request.requiredCapabilities.difference(capabilities);
     if (unsupported.isNotEmpty) {
       throw UnsupportedCapabilityException(
         providerId: id,

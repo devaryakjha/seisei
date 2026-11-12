@@ -1,6 +1,6 @@
 name: seisei_flutter
 description: Renderer-neutral UI block contracts for Seisei with Tagflow as the default Flutter renderer.
-version: 0.2.0-dev.0
+version: 0.3.0-dev.0
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:

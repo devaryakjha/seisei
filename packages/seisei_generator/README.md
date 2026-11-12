@@ -8,11 +8,11 @@ need hand-written schema trees.
 
 ```yaml
 dependencies:
-  seisei: ^0.2.0-dev.0
+  seisei: ^0.3.0-dev.0
 
 dev_dependencies:
   build_runner: ^2.15.0
-  seisei_generator: ^0.2.0-dev.0
+  seisei_generator: ^0.3.0-dev.0
 ```
 
 Annotate classes with `@GenerateSchema()` from `package:seisei/seisei.dart`,

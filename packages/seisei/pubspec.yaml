@@ -1,6 +1,6 @@
 name: seisei
 description: Provider-neutral typed generation contracts, structured output schemas, and provider routing for Dart and Flutter apps.
-version: 0.2.0-dev.0
+version: 0.3.0-dev.0
 repository: https://github.com/devaryakjha/seisei
 issue_tracker: https://github.com/devaryakjha/seisei/issues
 topics:
@@ -18,5 +18,5 @@ dependencies:
   meta: ^1.15.0
 
 dev_dependencies:
-  seisei_test: ^0.2.0-dev.0
+  seisei_test: ^0.3.0-dev.0
   test: ^1.26.0

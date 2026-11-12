@@ -128,11 +128,11 @@ final response = await backend.respond(
 );
 ```
 
-For schema-backed generation, encode the generic Seisei object schema into a
-FoundationModels schema file and pass that file through provider metadata:
+For schema-backed generation, set the request's `schema`. The provider
+encodes it as a FoundationModels schema file, deletes the file afterwards,
+and validates the reply against the schema before decoding:
 
 ```dart
-const encoder = FoundationModelsSchemaEncoder();
 const schema = ObjectSchema(
   name: 'Draft',
   fields: {
@@ -150,15 +150,15 @@ const schema = ObjectSchema(
     'title': ObjectField.string(),
   },
 );
-final schemaFile = await encoder.writeObjectFile(schema);
-
 final provider = AppleFoundationModelsProvider(
   backend: MethodChannelAppleFoundationModelsBackend(),
 );
 final response = await SeiseiClient(provider: provider).generate(
   GenerationRequest<String>(
     prompt: 'Reply as JSON with title, count, and published fields.',
-    metadata: encoder.metadataForFile(schemaFile),
+    schema: schema,
+    instructions: 'Keep titles under five words.',
+    options: const GenerationOptions(temperature: 0.2),
     decode: (rawValue) {
       final object = schema.decode(rawValue, (value) => value);
       return object['title']! as String;
@@ -168,10 +168,13 @@ final response = await SeiseiClient(provider: provider).generate(
 ```
 
 The native bridge is intentionally narrow. It checks system-model availability
-and sends plain system-model prompts through
-`FoundationModels.LanguageModelSession`. It can also send schema-backed system
-model requests when `schemaPath` points to a JSON-encoded FoundationModels
-schema file, and it streams system-model text through a Flutter event channel.
+and sends single-turn system-model prompts through
+`FoundationModels.LanguageModelSession`, with the request's instructions,
+temperature and output limit. It sends schema-backed requests with the schema
+file the provider writes, and it streams system-model text through a Flutter
+event channel. Conversations with earlier turns, stop sequences, seeds and
+tools are rejected as unsupported capabilities, so a `SeiseiRouter` moves
+those requests to another provider.
 Schema-backed streams preserve raw intermediate structured snapshots and decode
 safe partial snapshots into `GenerationChunk.partialValue`. They also derive
 path-level `GenerationChunk.structuredPatches` from consecutive structured
@@ -189,9 +192,9 @@ type that Seisei can compile against.
 If you want the typed Seisei client layer, add a direct `seisei` dependency in
 the host app and build `AppleFoundationModelsProvider` on top of the native
 backend. Keep the request in system mode and avoid PCC settings.
-For schema-backed requests outside `FoundationModelsSchemaEncoder`, use
-`AppleFoundationModelsProvider.schemaPathMetadataKey` with a provider-specific
-FoundationModels schema file.
+`AppleFoundationModelsProvider.schemaPathMetadataKey` and
+`FoundationModelsSchemaEncoder.metadataForFile` are deprecated and removed in
+`0.4.0`; set `GenerationRequest.schema` instead.
 
 CI tests use fake and mocked method-channel backends; `/usr/bin/fm` and local
 Apple Foundation Models are optional validation only.

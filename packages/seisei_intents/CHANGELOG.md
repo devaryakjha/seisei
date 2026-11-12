@@ -1,3 +1,12 @@
+## 0.3.0-dev.0
+
+`0.2.0-dev.0` was never published, so this is the first release with the
+changes listed under it too.
+
+- Add `AppActionBridge.toolDefinitions()` and `toolHandlers()`, which turn
+  tool-callable app actions into tools and `SeiseiClient.runTools`
+  handlers. ([#25](https://github.com/devaryakjha/seisei/issues/25))
+
 ## 0.2.0-dev.0
 
 - Merge `seisei_flutter_intents` into this package. It is now a Flutter
