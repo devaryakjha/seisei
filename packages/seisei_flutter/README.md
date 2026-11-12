@@ -74,6 +74,29 @@ final document = adapter.render(
 Tagflow.document(document);
 ```
 
+### Content policy
+
+Blocks usually come from model output, so the adapter applies a
+`TagflowContentPolicy` to link and image URLs, the same as Tagflow's own
+adapters. The default allows `http`, `https` and `mailto` links and remote
+images, and rejects `data:` images and other schemes. A rejected link renders
+its text without the link; a rejected image is dropped. Pass a policy to
+loosen or tighten this:
+
+```dart
+const adapter = SeiseiTagflowAdapter(
+  policy: TagflowContentPolicy(
+    allowDataImages: true,
+    unsupportedBehavior: TagflowUnsupportedBehavior.preservePlaceholder,
+  ),
+);
+```
+
+`SeiseiBlock.fromJson` throws a `FormatException` naming the field and block
+path when the JSON is malformed, so catch that around model output.
+
+### Document IDs
+
 Set `SeiseiTagflowAdapter.documentIdMetadataKey` in
 `SeiseiBlockRenderContext.metadata` when the output document ID should differ
 from the root block ID.
