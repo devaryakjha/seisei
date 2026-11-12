@@ -3,6 +3,8 @@
 `0.2.0-dev.0` was never published, so this is the first release with the
 changes listed under it too.
 
+- Add a getting-started section to the README, and tests for every fake
+  and matcher. ([#34](https://github.com/devaryakjha/seisei/issues/34))
 - Add `ScriptedProvider` and `ScriptedReply` for multi-step tests: tool
   calls, errors before or after the first streamed chunk, and a record of
   every request.

@@ -8,6 +8,46 @@ This package contains:
 - `FmCliBackend`, a local `/usr/bin/fm` backend for development probes.
 - `MethodChannelAppleFoundationModelsBackend`, a Flutter method-channel backend for iOS and macOS apps.
 
+## Getting started
+
+Foundation Models needs iOS 26 or macOS 26 on a device with Apple
+Intelligence turned on.
+
+```sh
+flutter pub add seisei:^0.3.0-dev.0 seisei_apple:^0.3.0-dev.0
+```
+
+<!-- readme-snippet: check -->
+```dart
+import 'package:seisei/seisei.dart';
+import 'package:seisei_apple/seisei_apple.dart';
+
+final provider = AppleFoundationModelsProvider(
+  backend: MethodChannelAppleFoundationModelsBackend(),
+);
+
+Future<String> summarise(String note) async {
+  final availability = await provider.availability();
+  if (!availability.isAvailable) {
+    // For example Apple Intelligence is off; fall back or explain.
+    return 'Unavailable: ${availability.reason}';
+  }
+  final response = await SeiseiClient(provider: provider).generate(
+    GenerationRequest<String>(
+      prompt: 'Summarise in one line: $note',
+      privacyPolicy: PrivacyPolicy.onDeviceOnly,
+      decode: (raw) => raw! as String,
+    ),
+  );
+  return response.value;
+}
+```
+
+Structured output works the same as on any provider: pass a schema with
+`GenerationRequest.structured`. To fall back to a cloud model when the
+device has no Foundation Models, put both providers in a `SeiseiRouter`.
+
+
 ## First Run
 
 On macOS 27 machines that provide `/usr/bin/fm`, the fastest smoke path is:

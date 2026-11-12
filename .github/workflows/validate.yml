@@ -42,3 +42,52 @@ jobs:
       # --require-swift makes the run fail if the Swift steps are skipped.
       - name: Validate with Swift and plugin builds
         run: dart tool/validate.dart --require-swift --build-plugins
+
+  minimum-sdk:
+    name: Minimum Flutter (analyze and test)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      # The oldest Flutter that ships the Dart SDK lower bound in the
+      # package pubspecs (sdk: ">=3.9.0", flutter: ">=3.35.0"). Raise them
+      # together.
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.35.0
+
+      # The workspace's dev tooling (very_good_analysis, the generator's
+      # analyzer and the examples) needs a newer SDK than the published
+      # packages do, so this job resolves a workspace without them and pins
+      # an older lint set. Lint infos differ between analyzer versions, so
+      # only errors and warnings fail here; the main job keeps infos fatal.
+      - name: Resolve the published packages
+        run: |
+          sed -i '/packages\/seisei_generator/d;/examples\//d' pubspec.yaml
+          printf 'dependency_overrides:\n  very_good_analysis: 10.0.0\n' \
+            > pubspec_overrides.yaml
+          flutter pub get
+
+      - name: Analyze and test
+        run: |
+          set -e
+          for package in seisei seisei_test seisei_openai; do
+            (cd "packages/$package" && dart analyze . && dart test)
+          done
+          for package in seisei_apple seisei_intents seisei_flutter; do
+            (cd "packages/$package" && flutter analyze --no-fatal-infos && flutter test)
+          done
+
+      # The generator resolves on its own, against the local seisei.
+      - name: Analyze and test seisei_generator
+        working-directory: packages/seisei_generator
+        run: |
+          sed -i '/^resolution: workspace/d' pubspec.yaml
+          printf 'dependency_overrides:\n  seisei:\n    path: ../seisei\n' \
+            > pubspec_overrides.yaml
+          dart pub get
+          dart analyze .
+          dart test

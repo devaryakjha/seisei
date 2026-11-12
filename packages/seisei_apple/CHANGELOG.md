@@ -3,6 +3,9 @@
 `0.2.0-dev.0` was never published, so this is the first release with the
 changes listed under it too.
 
+- Raise the Flutter lower bound to `3.35.0`, the oldest release that ships
+  the Dart `3.9` the package needs; CI now tests that minimum.
+  ([#34](https://github.com/devaryakjha/seisei/issues/34))
 - **Breaking:** remove `AppleFoundationModelsMode.pcc` and
   `AppleFoundationModelsAvailability.pccAvailable`. The native bridge cannot
   reach Private Cloud Compute through a public FoundationModels API, so the
