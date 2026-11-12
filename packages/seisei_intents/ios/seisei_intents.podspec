@@ -15,5 +15,7 @@ Flutter runtime bridge and iOS headless engine helper for Seisei app actions and
     'DEFINES_MODULE' => 'YES',
     'EXCLUDED_ARCHS[sdk=iphonesimulator*]' => 'i386',
   }
-  s.swift_version = '6.0'
+  # Swift 5 language mode, as in Package.swift: Flutter's FlutterMethodNotImplemented
+  # is a mutable global that Swift 6 mode rejects.
+  s.swift_version = '5.0'
 end

@@ -16,5 +16,7 @@ Apple Foundation Models provider and native Flutter bridge for Seisei.
   s.ios.deployment_target = '13.0'
   s.osx.deployment_target = '10.15'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
-  s.swift_version = '6.0'
+  # Swift 5 language mode, as in Package.swift: Flutter's FlutterMethodNotImplemented
+  # is a mutable global that Swift 6 mode rejects.
+  s.swift_version = '5.0'
 end
