@@ -13,11 +13,11 @@ fi
 
 print "AFM/PCC context matrix"
 print
-print "This script proves four separate things:"
+print "This script proves three separate things:"
 print "1. Direct system-model fm access works."
 print "2. Direct PCC fm access works from this terminal context."
-print "3. Seisei's current Dart backend can use the system model."
-print "4. Seisei's current Dart backend still cannot use PCC in its captured subprocess context."
+print "3. Seisei's Dart backend can use the system model."
+print "Seisei has no PCC mode until its native bridge can reach PCC."
 print
 
 print "> fm available --model system"
@@ -53,23 +53,5 @@ print "> dart run bin/local_afm_smoke.dart"
 )
 
 print
-print "> dart run bin/local_afm_smoke.dart --mode pcc"
-print "  expected: current Seisei FmCliBackend reports PCC unavailable"
-pcc_backend_output="$(
-  cd "${root}/packages/seisei_apple"
-  dart run bin/local_afm_smoke.dart --mode pcc 2>&1
-)" && {
-  print -u2 "${pcc_backend_output}"
-  print -u2 "Expected Seisei's current PCC backend check to fail in this context."
-  exit 1
-}
-
-print "${pcc_backend_output}"
-if ! print "${pcc_backend_output}" | grep -q "PCC mode is unavailable"; then
-  print -u2 "Expected backend output to explain PCC mode is unavailable."
-  exit 1
-fi
-
-print
 print "AFM/PCC context matrix passed."
-print "Direct PCC is usable from this terminal; Seisei's current Dart subprocess backend is still PCC-negative."
+print "Direct PCC is usable from this terminal; Seisei uses the system model only."

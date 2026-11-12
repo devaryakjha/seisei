@@ -214,10 +214,7 @@ final class _ScriptedBackend implements AppleFoundationModelsBackend {
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
-    return const AppleFoundationModelsAvailability(
-      systemAvailable: true,
-      pccAvailable: false,
-    );
+    return const AppleFoundationModelsAvailability(systemAvailable: true);
   }
 
   void _watch(AppleFoundationModelsRequest request) {
@@ -256,4 +253,7 @@ final class _ScriptedBackend implements AppleFoundationModelsBackend {
     );
     return controller.stream;
   }
+
+  @override
+  Future<void> closeSession(String sessionId) async {}
 }

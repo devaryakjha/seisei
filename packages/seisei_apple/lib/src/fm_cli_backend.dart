@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:seisei_apple/src/backend.dart';
@@ -11,7 +12,9 @@ typedef ProcessRunner =
 ///
 /// The CLI has no flags for instructions or sampling options. Instructions
 /// are sent as a paragraph before the prompt, and temperature and the output
-/// limit are not applied; use the method channel backend in apps. An abort
+/// limit are not applied, and there are no sessions; use the method channel
+/// backend in apps. A structured request's schema is written to a temporary
+/// file for `--schema` and deleted afterwards. An abort
 /// kills a streaming `fm` process; a non-streamed call runs to completion in
 /// the background.
 final class FmCliBackend implements AppleFoundationModelsBackend {
@@ -26,115 +29,93 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
-    final system = await _availabilityProbe(AppleFoundationModelsMode.system);
-    final pcc = await _availabilityProbe(AppleFoundationModelsMode.pcc);
-
+    final result = await _processRunner(executable, [
+      'available',
+      '--model',
+      'system',
+    ]);
+    final output = _normalizeOutput('${result.stdout}\n${result.stderr}');
     return AppleFoundationModelsAvailability(
-      systemAvailable: system.isAvailable,
-      pccAvailable: pcc.isAvailable,
-      reason: _availabilityReason(system: system, pcc: pcc),
+      systemAvailable: output.contains('System model available'),
+      reason: result.exitCode == 0 ? null : output,
     );
   }
 
   @override
   Future<Object?> respond(AppleFoundationModelsRequest request) async {
-    final args = _respondArgs(request, stream: false);
-
-    final result = await _processRunner(executable, args);
-    if (result.exitCode != 0) {
-      throw ProcessException(
-        executable,
-        args,
-        '${result.stdout}\n${result.stderr}',
-        result.exitCode,
-      );
+    final schema = await _SchemaFile.open(request);
+    try {
+      final args = _respondArgs(request, schema.path, stream: false);
+      final result = await _processRunner(executable, args);
+      if (result.exitCode != 0) {
+        throw ProcessException(
+          executable,
+          args,
+          '${result.stdout}\n${result.stderr}',
+          result.exitCode,
+        );
+      }
+      return '${result.stdout}'.trim();
+    } finally {
+      await schema.close();
     }
-
-    return '${result.stdout}'.trim();
   }
 
   @override
   Stream<Object?> stream(AppleFoundationModelsRequest request) async* {
-    final args = _respondArgs(request, stream: true);
-    final process = await Process.start(executable, args);
-    unawaited(request.abortTrigger?.then((_) => process.kill()));
-    final chunks = <String>[];
+    final schema = await _SchemaFile.open(request);
+    try {
+      final args = _respondArgs(request, schema.path, stream: true);
+      final process = await Process.start(executable, args);
+      unawaited(request.abortTrigger?.then((_) => process.kill()));
+      final chunks = <String>[];
 
-    await for (final text in process.stdout.transform(systemEncoding.decoder)) {
-      chunks.add(text);
-      yield text;
+      await for (final text in process.stdout.transform(
+        systemEncoding.decoder,
+      )) {
+        chunks.add(text);
+        yield text;
+      }
+
+      final stderr = await process.stderr
+          .transform(systemEncoding.decoder)
+          .join();
+      final exitCode = await process.exitCode;
+      if (exitCode != 0) {
+        throw ProcessException(executable, args, stderr, exitCode);
+      }
+
+      yield {'done': true, 'value': chunks.join().trim()};
+    } finally {
+      await schema.close();
     }
-
-    final stderr = await process.stderr
-        .transform(systemEncoding.decoder)
-        .join();
-    final exitCode = await process.exitCode;
-    if (exitCode != 0) {
-      throw ProcessException(executable, args, stderr, exitCode);
-    }
-
-    yield {'done': true, 'value': chunks.join().trim()};
   }
 
+  /// The CLI keeps no sessions, so there is nothing to close.
+  @override
+  Future<void> closeSession(String sessionId) async {}
+
   List<String> _respondArgs(
-    AppleFoundationModelsRequest request, {
+    AppleFoundationModelsRequest request,
+    String? schemaPath, {
     required bool stream,
   }) {
+    if (request.sessionId != null) {
+      throw UnsupportedError(
+        'The fm CLI backend has no sessions; use the method channel backend '
+        'for AppleFoundationModelsProvider.openSession.',
+      );
+    }
     return [
       'respond',
       if (stream) '--stream' else '--no-stream',
-      if (request.mode == AppleFoundationModelsMode.pcc) ...['--model', 'pcc'],
-      if (request.schemaPath case final schemaPath?) ...[
-        '--schema',
-        schemaPath,
-      ],
+      if (schemaPath != null) ...['--schema', schemaPath],
       // The CLI has no instructions flag, so they lead the prompt.
       if (request.instructions case final instructions?)
         '$instructions\n\n${request.prompt}'
       else
         request.prompt,
     ];
-  }
-
-  Future<_AvailabilityProbe> _availabilityProbe(
-    AppleFoundationModelsMode mode,
-  ) async {
-    final result = await _processRunner(executable, [
-      'available',
-      '--model',
-      mode.name,
-    ]);
-    final output = _normalizeOutput('${result.stdout}\n${result.stderr}');
-    final successToken = switch (mode) {
-      AppleFoundationModelsMode.system => 'System model available',
-      AppleFoundationModelsMode.pcc => 'PCC model available',
-    };
-
-    return _AvailabilityProbe(
-      mode: mode,
-      isAvailable: output.contains(successToken),
-      reason: result.exitCode == 0 ? null : output,
-    );
-  }
-
-  String? _availabilityReason({
-    required _AvailabilityProbe system,
-    required _AvailabilityProbe pcc,
-  }) {
-    if (!system.isAvailable && !pcc.isAvailable) {
-      final reasons = [
-        if (system.reason case final reason?) 'system: $reason',
-        if (pcc.reason case final reason?) 'pcc: $reason',
-      ];
-      return reasons.isEmpty ? null : reasons.join('\n');
-    }
-    if (!system.isAvailable) {
-      return system.reason;
-    }
-    if (!pcc.isAvailable) {
-      return pcc.reason;
-    }
-    return null;
   }
 
   String _normalizeOutput(String output) {
@@ -147,16 +128,33 @@ final class FmCliBackend implements AppleFoundationModelsBackend {
   }
 }
 
-final class _AvailabilityProbe {
-  const _AvailabilityProbe({
-    required this.mode,
-    required this.isAvailable,
-    required this.reason,
-  });
+/// The schema file the CLI reads: written from
+/// [AppleFoundationModelsRequest.schema] and deleted afterwards, or the
+/// legacy [AppleFoundationModelsRequest.schemaPath], left alone.
+final class _SchemaFile {
+  const _SchemaFile(this.path, this._directory);
 
-  final AppleFoundationModelsMode mode;
-  final bool isAvailable;
-  final String? reason;
+  static Future<_SchemaFile> open(AppleFoundationModelsRequest request) async {
+    final schema = request.schema;
+    if (schema == null) return _SchemaFile(request.schemaPath, null);
+    final directory = await Directory.systemTemp.createTemp(
+      'seisei_afm_schema_',
+    );
+    final file = File.fromUri(directory.uri.resolve('schema.json'));
+    await file.writeAsString(jsonEncode(schema));
+    return _SchemaFile(file.path, directory);
+  }
+
+  final String? path;
+  final Directory? _directory;
+
+  Future<void> close() async {
+    try {
+      await _directory?.delete(recursive: true);
+    } on FileSystemException {
+      // The OS cleans the temp directory eventually.
+    }
+  }
 }
 
 final _ansiEscapePattern = RegExp(r'\x1B\[[0-9;]*m');

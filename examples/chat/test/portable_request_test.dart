@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -33,15 +32,12 @@ final class _AppleBackend implements AppleFoundationModelsBackend {
 
   @override
   Future<AppleFoundationModelsAvailability> availability() async {
-    return const AppleFoundationModelsAvailability(
-      systemAvailable: true,
-      pccAvailable: false,
-    );
+    return const AppleFoundationModelsAvailability(systemAvailable: true);
   }
 
   @override
   Future<Object?> respond(AppleFoundationModelsRequest request) async {
-    schemaJson = await File(request.schemaPath!).readAsString();
+    schemaJson = jsonEncode(request.schema);
     return _city;
   }
 
@@ -49,6 +45,9 @@ final class _AppleBackend implements AppleFoundationModelsBackend {
   Stream<Object?> stream(AppleFoundationModelsRequest request) {
     throw UnimplementedError();
   }
+
+  @override
+  Future<void> closeSession(String sessionId) async {}
 }
 
 void main() {

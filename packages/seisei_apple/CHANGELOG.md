@@ -3,6 +3,22 @@
 `0.2.0-dev.0` was never published, so this is the first release with the
 changes listed under it too.
 
+- **Breaking:** remove `AppleFoundationModelsMode.pcc` and
+  `AppleFoundationModelsAvailability.pccAvailable`. The native bridge cannot
+  reach Private Cloud Compute through a public FoundationModels API, so the
+  option is gone until it can. ([#31](https://github.com/devaryakjha/seisei/issues/31))
+- **Breaking:** `AppleFoundationModelsBackend` gains `closeSession`, and
+  `AppleFoundationModelsRequest` gains `schema` and `sessionId`. Custom
+  backends need a `closeSession` (a no-op is fine).
+- Pass the schema to the native bridge with the request instead of through a
+  temporary file. `FmCliBackend` writes the file `fm --schema` needs itself.
+- Run several streams at once: streams share one event channel and carry a
+  request id, and cancelling one stops only its native task.
+- Add opt-in multi-turn sessions with
+  `AppleFoundationModelsProvider.openSession()`.
+- Share one Swift source between iOS and macOS (`darwin/`, with
+  `sharedDarwinSource`), and add Swift tests for the bridge logic.
+
 - Honour `GenerationRequest.schema`: the provider writes the
   FoundationModels schema file, deletes it afterwards, and validates the
   reply against the schema before decoding.

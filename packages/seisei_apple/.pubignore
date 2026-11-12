@@ -1,2 +1,4 @@
 build/
 .dart_tool/
+darwin/seisei_apple/.build/
+darwin/seisei_apple/.swiftpm/

@@ -29,6 +29,11 @@ Future<void> main(List<String> args) async {
     checks.addAll([
       _Check('$root/packages/seisei_apple_intents', ['swift', 'build']),
       _Check('$root/packages/seisei_apple_intents', ['swift', 'test']),
+      // The plugin's bridge logic, without Flutter or FoundationModels.
+      _Check('$root/packages/seisei_apple/darwin/seisei_apple', [
+        'swift',
+        'test',
+      ]),
     ]);
   } else if (requireSwift) {
     stderr.writeln(
@@ -38,8 +43,8 @@ Future<void> main(List<String> args) async {
     exit(1);
   } else {
     stdout.writeln(
-      'Skipping SeiseiAppleIntents Swift tests on '
-      '${Platform.operatingSystem}; AppIntents is Apple-platform only.',
+      'Skipping the SeiseiAppleIntents and seisei_apple Swift tests on '
+      '${Platform.operatingSystem}; they run on macOS.',
     );
   }
 
@@ -122,12 +127,10 @@ Future<void> main(List<String> args) async {
 
   if (includeLocalPcc) {
     stdout.writeln(
-      "\nPCC validation target: Seisei's current Dart `FmCliBackend` "
-      'subprocess context. This is a real backend smoke check, but it is not '
-      'a general machine capability probe. To prove interactive PCC access, '
-      'run `tool/local_pcc_interactive_smoke.zsh` from a real terminal PTY.\n'
-      'A passing interactive PTY `fm` check does not prove this Seisei '
-      'subprocess context can use PCC.',
+      '\nPCC validation probes the `fm` CLI from a Dart subprocess. Seisei '
+      'has no PCC mode until the native bridge can reach PCC, so this only '
+      'checks the machine. To prove interactive PCC access, run '
+      '`tool/local_pcc_interactive_smoke.zsh` from a real terminal PTY.',
     );
     checks.addAll([
       _Check(root, [
@@ -143,13 +146,6 @@ Future<void> main(List<String> args) async {
         'pcc',
         '--no-stream',
         'Reply with exactly: seisei-pcc-ok',
-      ], failureHint: _pccContextFailureHint),
-      _Check('$root/packages/seisei_apple', [
-        'dart',
-        'run',
-        'bin/local_afm_smoke.dart',
-        '--mode',
-        'pcc',
       ], failureHint: _pccContextFailureHint),
     ]);
   }
