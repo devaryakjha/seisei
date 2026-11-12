@@ -4,8 +4,16 @@ import 'package:seisei_flutter/src/schema.dart';
 import 'package:tagflow/tagflow.dart';
 
 /// Fails when a Seisei block tree cannot be mapped to Tagflow safely.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiTagflowRenderException implements Exception {
   /// Creates a new render exception.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiTagflowRenderException(this.issues);
 
   /// Stable validation issues collected before render.
@@ -24,9 +32,17 @@ final class SeiseiTagflowRenderException implements Exception {
 /// rejected link keeps its children as plain content. A rejected image is
 /// dropped, or kept as an unsupported placeholder when the policy uses
 /// [TagflowUnsupportedBehavior.preservePlaceholder].
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiTagflowAdapter
     implements SeiseiBlockAdapter<TagflowDocument> {
   /// Creates a Tagflow adapter that applies [policy] to block URLs.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiTagflowAdapter({this.policy = TagflowContentPolicy.defaults});
 
   /// Content policy applied to link and image URLs.

@@ -4,5 +4,6 @@ library;
 
 export 'src/adapter.dart';
 export 'src/block.dart';
+export 'src/native_blocks.dart';
 export 'src/schema.dart';
 export 'src/seisei_tagflow_adapter.dart';

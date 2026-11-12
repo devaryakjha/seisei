@@ -20,8 +20,9 @@ packages for typed AI contracts in Flutter apps:
 - `packages/seisei_intents`: app-action contracts, App Intent codegen, and the
   Flutter App Intents runtime bridge (Flutter plugin; `lib/codegen.dart` stays
   Flutter-free for the `generate_apple_intents` CLI)
-- `packages/seisei_flutter`: UI block contracts and the default Tagflow
-  renderer adapter (Flutter)
+- `packages/seisei_flutter`: Tagflow native blocks for model output, with
+  streaming patches (Flutter); the old `SeiseiBlock` vocabulary is a
+  deprecated shim until 0.4.0
 - `packages/seisei_apple_intents`: `SeiseiAppleIntents` Swift package
 - `packages/discontinued/*`: final re-export releases of the retired
   `seisei_schema`, `seisei_router`, `seisei_flutter_intents`, `seisei_ui`, and
@@ -65,8 +66,12 @@ CI gates.
 
 - Keep core packages provider-neutral. Apple, Flutter runtime, and renderer
   code belongs in the optional packages.
-- Only `seisei_flutter` may depend on `tagflow`; `seisei` stays free of
-  Flutter and renderer dependencies.
+- Only `seisei_flutter` (and the chat example) may depend on `tagflow`.
+  It needs the Tagflow release with native inline semantics and
+  `append-root` (`1.0.0-beta.2`). To work against a local Tagflow checkout,
+  put a git-ignored `pubspec_overrides.yaml` at the repo root that
+  overrides `tagflow` with a path.
+- `seisei` stays free of Flutter and renderer dependencies.
 - Prefer spec-driven changes: update or add a spec in `docs/specs/` for new
   behaviour.
 - Use conventional commits, scoped when a scope fits, e.g. `feat(router): x`

@@ -2,6 +2,12 @@ import 'package:seisei_flutter/src/block.dart';
 import 'package:seisei_flutter/src/schema.dart';
 
 /// Renderer adapter for validated UI block trees.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 abstract interface class SeiseiBlockAdapter<TOutput> {
   /// Stable adapter identifier.
   String get id;
@@ -17,8 +23,16 @@ abstract interface class SeiseiBlockAdapter<TOutput> {
 }
 
 /// Rendering context supplied by the host app.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiBlockRenderContext {
   /// Creates a render context.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiBlockRenderContext({this.metadata = const {}});
 
   /// Host-app metadata.
@@ -26,8 +40,16 @@ final class SeiseiBlockRenderContext {
 }
 
 /// Capabilities declared by a renderer adapter.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiBlockAdapterCapabilities {
   /// Creates adapter capabilities.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiBlockAdapterCapabilities({
     required this.blockTypes,
     required this.actionTypes,

@@ -1,5 +1,9 @@
 # UI Block Adapter Architecture
 
+> **Superseded in `0.3.0-dev.0`.** `seisei_flutter` now uses Tagflow native
+> blocks; see [native-blocks.md](../specs/native-blocks.md). The `SeiseiBlock` vocabulary below
+> is deprecated and removed in `0.4.0`.
+
 ## Goal
 
 Seisei must let model workflows produce typed UI descriptions that Flutter apps can render through the UI system they already use. The core contract is renderer-agnostic. Tagflow can become an adapter target later, but Seisei must not require Tagflow.

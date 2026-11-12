@@ -1,102 +1,114 @@
 # seisei_flutter
 
-Renderer-neutral UI block contracts for Seisei, with
-[Tagflow](https://pub.dev/packages/tagflow) as the default Flutter renderer.
+Structured model output as Flutter widgets, through
+[Tagflow](https://pub.dev/packages/tagflow) native blocks.
 
-UI blocks are data: `SeiseiBlock` trees with props, children, and declared
-actions, plus `SeiseiBlockSchema` validation. Adapters implement
-`SeiseiBlockAdapter<T>` and declare which block types and actions they render,
-so apps can plug in another renderer when Tagflow does not fit.
+A model replies with Tagflow's native block JSON (paragraphs, headings,
+lists, tables, callouts, inline styles and so on). `SeiseiNativeBlocks`
+gives you the schema to ask for, and turns the reply into a
+`TagflowDocument` under Tagflow's content policy. `SeiseiNativeBlockStream`
+renders the reply while it streams, patching the document so finished blocks
+keep their widget state.
 
-`SeiseiTagflowAdapter` is the default adapter. It returns `TagflowDocument`
-values so apps keep control of `Tagflow.document(...)` rendering, registries,
-and view options.
+This package replaces `seisei_ui` and `seisei_tagflow`.
 
-This package replaces `seisei_ui` and `seisei_tagflow`. Public class names did
-not change, so migrating is an import change.
+## Getting started
 
-## Status
+```sh
+flutter pub add seisei:^0.3.0-dev.0 seisei_flutter:^0.3.0-dev.0 \
+  seisei_openai:^0.3.0-dev.0 tagflow:^1.0.0-beta.2
+```
 
-Experimental. The adapter targets `tagflow: ^1.0.0-beta.0` and supports a
-small content-oriented block vocabulary only.
-
-## Supported Blocks
-
-- `root`
-- `document`
-- `container`
-- `paragraph`
-- `heading`
-- `text`
-- `link`
-- `list`
-- `listItem`
-- `blockquote`
-- `codeBlock`
-- `inlineCode`
-- `image`
-- `horizontalRule`
-
-Actions are not supported. The adapter fails before render when a block tree
-contains unsupported block types, unsupported actions, duplicate block IDs, or
-invalid required props.
-
-## Usage
-
+<!-- readme-snippet: check -->
 ```dart
+import 'package:flutter/widgets.dart';
+import 'package:seisei/seisei.dart';
 import 'package:seisei_flutter/seisei_flutter.dart';
 import 'package:tagflow/tagflow.dart';
 
-const adapter = SeiseiTagflowAdapter();
+const blocks = SeiseiNativeBlocks();
 
-final document = adapter.render(
-  const SeiseiBlock(
-    id: 'article',
-    type: 'root',
-    children: [
-      SeiseiBlock(
-        id: 'article.title',
-        type: 'heading',
-        props: {'level': 1},
-        children: [
-          SeiseiBlock(
-            id: 'article.title.text',
-            type: 'text',
-            props: {'value': 'Hello from Seisei'},
-          ),
-        ],
-      ),
-    ],
-  ),
-  const SeiseiBlockRenderContext(),
-);
-
-Tagflow.document(document);
+/// Asks [client] for release notes and renders them.
+Future<Widget> releaseNotes(SeiseiClient client) async {
+  final response = await client.generate(
+    GenerationRequest<TagflowDocument>.structured(
+      prompt: 'Summarise what changed in Flutter 3.35 as rich content: a '
+          'heading, a short paragraph and a list of highlights.',
+      schema: blocks.schema,
+      fromJson: (json) => blocks.toDocument(json, documentId: 'notes'),
+    ),
+  );
+  return Tagflow.document(response.value);
+}
 ```
 
-### Content policy
+`blocks.schema` is an `ObjectSchema`, so the same request works on any
+Seisei provider. `SeiseiNativeBlocks(kinds: {...})` narrows the block kinds
+the model may use, and `policy:` sets the `TagflowContentPolicy` applied to
+links and images.
 
-Blocks usually come from model output, so the adapter applies a
-`TagflowContentPolicy` to link and image URLs, the same as Tagflow's own
-adapters. The default allows `http`, `https` and `mailto` links and remote
-images, and rejects `data:` images and other schemes. A rejected link renders
-its text without the link; a rejected image is dropped. Pass a policy to
-loosen or tighten this:
+### Streaming
 
+Ask for the same schema with `client.stream` and feed each structured
+snapshot to a `SeiseiNativeBlockStream`:
+
+<!-- readme-snippet: check -->
 ```dart
-const adapter = SeiseiTagflowAdapter(
-  policy: TagflowContentPolicy(
-    allowDataImages: true,
-    unsupportedBehavior: TagflowUnsupportedBehavior.preservePlaceholder,
-  ),
-);
+import 'package:flutter/widgets.dart';
+import 'package:seisei/seisei.dart';
+import 'package:seisei_flutter/seisei_flutter.dart';
+import 'package:tagflow/tagflow.dart';
+
+Stream<TagflowDocument> streamNotes(SeiseiClient client) async* {
+  final stream = SeiseiNativeBlockStream(documentId: 'notes');
+  await for (final chunk in client.stream(
+    GenerationRequest<Object?>(
+      prompt: 'Explain Dart records as rich content.',
+      schema: stream.blocks.schema,
+      decode: (raw) => raw,
+    ),
+  )) {
+    if (chunk.isDone) {
+      stream.close(chunk.value);
+    } else if (stream.add(chunk.partialValue).isEmpty) {
+      continue;
+    }
+    yield stream.document;
+  }
+}
+
+Widget view(TagflowDocument document) => Tagflow.document(document);
 ```
 
-`SeiseiBlock.fromJson` throws a `FormatException` naming the field and block
-path when the JSON is malformed, so catch that around model output.
+New blocks are appended, a block that grew is replaced, and a block still
+being written waits until it is complete. Because Tagflow keys nodes by id,
+the blocks that did not change keep their state, such as an open
+disclosure.
 
-### Document IDs
+## Migrating from SeiseiBlock
 
-Set `SeiseiTagflowAdapter.documentIdMetadataKey` in
-`SeiseiBlockRenderContext.metadata` when the output document ID should differ
-from the root block ID.
+`SeiseiBlock`, `SeiseiBlockSchema`, `SeiseiTagflowAdapter` and the rest of
+the old block vocabulary are deprecated and removed in `0.4.0`. Every
+`SeiseiBlock` type has a native kind with the same meaning, so stored trees
+convert directly:
+
+<!-- readme-snippet: check -->
+```dart
+// ignore_for_file: deprecated_member_use
+import 'package:seisei_flutter/seisei_flutter.dart';
+import 'package:tagflow/tagflow.dart';
+
+TagflowDocument migrate(Map<String, Object?> storedJson) {
+  final blocks = SeiseiBlock.fromJson(storedJson).toNativeBlocks();
+  return const TagflowNativeBlockAdapter().adapt(
+    TagflowNativeBlockDocument(id: 'doc', schemaVersion: 1, blocks: blocks),
+  );
+}
+```
+
+`text`, `codeBlock` and `inlineCode` move `props.value` to the native
+`text`; other props become attributes. Block actions have no native form
+and are dropped: for an interactive block, emit a `custom` block and render
+it with a `TagflowComponentRegistry` override that calls your
+`seisei_intents` action. The full mapping is in
+[`docs/specs/native-blocks.md`](../../docs/specs/native-blocks.md).

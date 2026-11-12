@@ -31,7 +31,7 @@ final class AnswerMessage extends ChatMessage {
   String? error;
 }
 
-/// A structured task card rendered from Seisei UI blocks.
+/// A structured task card rendered from Tagflow native blocks.
 final class CardMessage extends ChatMessage {
   /// Creates a card message.
   CardMessage({required this.card, required this.document});
@@ -39,7 +39,7 @@ final class CardMessage extends ChatMessage {
   /// Decoded structured output.
   final TaskCard card;
 
-  /// Tagflow document produced by `SeiseiTagflowAdapter`.
+  /// Tagflow document built from the card's native blocks.
   final TagflowDocument document;
 
   /// Whether the add task action ran for this card.
@@ -131,9 +131,10 @@ final class ChatController extends ChangeNotifier {
     try {
       final response = await _client.generate(request);
       final card = response.value;
-      final document = const SeiseiTagflowAdapter().render(
-        card.toBlock('card-${_nextId++}'),
-        const SeiseiBlockRenderContext(),
+      final id = 'card-${_nextId++}';
+      final document = const SeiseiNativeBlocks().toDocument(
+        card.toBlocks(id),
+        documentId: id,
       );
       _messages.add(CardMessage(card: card, document: document));
     } on Object catch (error) {

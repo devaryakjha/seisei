@@ -1,5 +1,9 @@
 # Optional Tagflow Adapter SPEC
 
+> **Superseded in `0.3.0-dev.0`.** `seisei_flutter` now uses Tagflow native
+> blocks; see [native-blocks.md](native-blocks.md). The `SeiseiBlock` vocabulary below
+> is deprecated and removed in `0.4.0`.
+
 ## Status
 
 Active, implemented as an experimental adapter. Since `0.2.0-dev.0` it ships

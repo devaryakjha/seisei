@@ -1,6 +1,16 @@
+import 'package:tagflow/tagflow.dart';
+
 /// A serializable UI block node.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiBlock {
   /// Creates a UI block.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiBlock({
     required this.id,
     required this.type,
@@ -14,10 +24,14 @@ final class SeiseiBlock {
   /// Block JSON usually comes from a model, so the shape is checked. Throws a
   /// [FormatException] that names the field and the path to the block, such
   /// as `$.children[1].id`, when a field is missing or has the wrong type.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   factory SeiseiBlock.fromJson(Map<String, Object?> json) {
     return SeiseiBlock._decode(json, r'$');
   }
 
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   factory SeiseiBlock._decode(Map<Object?, Object?> json, String path) {
     final children = _optionalList(json, 'children', path);
     final actions = _optionalList(json, 'actions', path);
@@ -57,6 +71,61 @@ final class SeiseiBlock {
   /// Declared user actions.
   final List<SeiseiBlockAction> actions;
 
+  /// The same content as Tagflow native blocks, for moving stored block
+  /// trees to the native vocabulary.
+  ///
+  /// A `root` or `document` block becomes its children; every other block
+  /// becomes one native block. Each type maps one to one: `text`,
+  /// `codeBlock` and `inlineCode` move `props.value` to `text`, and the
+  /// other props become attributes. Actions have no native form and are
+  /// dropped. Throws a [FormatException] for a type the vocabulary never
+  /// had.
+  List<TagflowNativeBlock> toNativeBlocks() {
+    return switch (type) {
+      'root' || 'document' => [
+        for (final child in children) child.toNativeBlock(),
+      ],
+      _ => [toNativeBlock()],
+    };
+  }
+
+  /// This block as one Tagflow native block. A `root` or `document` block
+  /// becomes a container. See [toNativeBlocks].
+  TagflowNativeBlock toNativeBlock() {
+    final kind = switch (type) {
+      'root' || 'document' || 'container' => TagflowNativeBlockKind.container,
+      'paragraph' => TagflowNativeBlockKind.paragraph,
+      'heading' => TagflowNativeBlockKind.heading,
+      'text' => TagflowNativeBlockKind.text,
+      'link' => TagflowNativeBlockKind.link,
+      'list' => TagflowNativeBlockKind.list,
+      'listItem' => TagflowNativeBlockKind.listItem,
+      'blockquote' => TagflowNativeBlockKind.blockquote,
+      'codeBlock' => TagflowNativeBlockKind.codeBlock,
+      'inlineCode' => TagflowNativeBlockKind.inlineCode,
+      'image' => TagflowNativeBlockKind.image,
+      'horizontalRule' => TagflowNativeBlockKind.horizontalRule,
+      _ => throw FormatException(
+        'Block "$id" has type "$type", which has no native block kind.',
+      ),
+    };
+    final carriesText = const {
+      'text',
+      'codeBlock',
+      'inlineCode',
+    }.contains(type);
+    return TagflowNativeBlock(
+      id: id,
+      kind: kind,
+      text: carriesText ? props['value'] as String? : null,
+      attributes: {
+        for (final entry in props.entries)
+          if (!(carriesText && entry.key == 'value')) entry.key: entry.value,
+      },
+      children: [for (final child in children) child.toNativeBlock()],
+    );
+  }
+
   /// Converts the block to JSON-compatible data.
   Map<String, Object?> toJson() {
     return {
@@ -70,18 +139,30 @@ final class SeiseiBlock {
 }
 
 /// User action declared by a block.
+// ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+@Deprecated(
+  'Use Tagflow native blocks: SeiseiNativeBlocks for model output and '
+  'SeiseiBlock.toNativeBlocks to migrate stored trees. Removed in '
+  'seisei_flutter 0.4.0.',
+)
 final class SeiseiBlockAction {
   /// Creates a block action.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   const SeiseiBlockAction({required this.type, this.payload = const {}});
 
   /// Creates an action from JSON-compatible data.
   ///
   /// Throws a [FormatException] that names the field and its path when a
   /// field is missing or has the wrong type.
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   factory SeiseiBlockAction.fromJson(Map<String, Object?> json) {
     return SeiseiBlockAction._decode(json, r'$');
   }
 
+  // ignore: remove_deprecations_in_breaking_versions, removed in 0.4.0.
+  @Deprecated('Use Tagflow native blocks. Removed in seisei_flutter 0.4.0.')
   factory SeiseiBlockAction._decode(Map<Object?, Object?> json, String path) {
     return SeiseiBlockAction(
       type: _requiredString(json, 'type', path),
