@@ -12,5 +12,7 @@ Flutter runtime bridge and Apple-platform headless engine helpers for Seisei app
   s.dependency 'FlutterMacOS'
   s.platform = :osx, '10.15'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
-  s.swift_version = '6.0'
+  # Swift 5 language mode, as in Package.swift: Flutter's FlutterMethodNotImplemented
+  # is a mutable global that Swift 6 mode rejects.
+  s.swift_version = '5.0'
 end
