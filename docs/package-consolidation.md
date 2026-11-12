@@ -1,7 +1,7 @@
 # Package consolidation
 
-Seisei `0.2.0-dev.0` merges nine Dart packages into five. Every package now
-shares one version, and every package uses the `very_good_analysis` lint set
+Seisei `0.2.0-dev.0` merges nine Dart packages into five and adds two new
+ones, for seven published packages. Every package now shares one version, and every package uses the `very_good_analysis` lint set
 (the same set as Tagflow).
 
 ## Layout
@@ -13,6 +13,8 @@ shares one version, and every package uses the `very_good_analysis` lint set
 | `seisei_apple` | Apple Foundation Models provider | unchanged |
 | `seisei_intents` | App action contracts, App Intents codegen CLI, Flutter runtime bridge | `seisei_intents`, `seisei_flutter_intents` |
 | `seisei_flutter` | UI block contracts with Tagflow as the default renderer | `seisei_ui`, `seisei_tagflow` |
+| `seisei_openai` | OpenAI-compatible provider (OpenAI, Ollama, other compatible servers) | new |
+| `seisei_generator` | Generates schemas and decoders from annotated classes | new |
 
 ## Migrating
 
@@ -55,15 +57,9 @@ No new code goes into these packages.
 
 ## Publishing (owner)
 
-Publish in dependency order, then mark the retired packages discontinued on
-pub.dev:
-
-1. `seisei`
-2. `seisei_test`
-3. `seisei_apple`, `seisei_intents`, `seisei_flutter`
-4. `seisei_schema`, `seisei_router`, `seisei_flutter_intents`, `seisei_ui`,
-   `seisei_tagflow` (from `packages/discontinued/`)
-5. On pub.dev, mark each package from step 4 discontinued, with its new home as
-   the replacement.
-
-Run `dart tool/validate.dart --release` before step 1.
+Release steps, including the publish order, are in
+[releasing.md](releasing.md). The order is derived from the pubspec
+dependencies by `dart tool/publish.dart --order`, so it includes every
+package. After the first release that includes `packages/discontinued/`, mark
+each retired package discontinued on pub.dev with its new home as the
+replacement.
