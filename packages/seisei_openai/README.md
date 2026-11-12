@@ -14,7 +14,13 @@ import 'package:seisei_openai/seisei_openai.dart';
 
 final provider = OpenAiCompatibleProvider(
   model: 'gpt-4.1-mini',
-  apiKey: const String.fromEnvironment('OPENAI_API_KEY'),
+  // Your backend: it adds the API key and forwards to OpenAI.
+  baseUrl: Uri.parse('https://api.example.com/llm/v1'),
+  // A short-lived token for your backend, fetched before each request.
+  headersProvider: () async => {
+    'authorization': 'Bearer ${await session.accessToken()}',
+  },
+  retry: const OpenAiRetryPolicy(),
 );
 final client = SeiseiClient(provider: provider);
 
@@ -23,9 +29,40 @@ final reply = await client.generate(
     prompt: 'Summarise this note in one line.',
     decode: (raw) => raw! as String,
     privacyPolicy: PrivacyPolicy.cloudAllowed,
+    timeout: const Duration(seconds: 30),
   ),
 );
 ```
+
+### Keeping the API key secret
+
+An API key inside a mobile, desktop or web app is not secret: anyone with the
+app can pull it out of the binary or watch it on the network. In apps, call
+the model through a backend you control, as above, and authenticate to that
+backend with a short-lived token through `headersProvider`. Pass `apiKey`
+directly only from code that never ships to users, such as a server or a
+command-line tool:
+
+```dart
+// Server or CLI only. Never ship this in an app.
+final provider = OpenAiCompatibleProvider(
+  model: 'gpt-4.1-mini',
+  apiKey: Platform.environment['OPENAI_API_KEY'],
+);
+```
+
+### Retries and usage
+
+`retry: OpenAiRetryPolicy()` retries rate limits (honouring `Retry-After`),
+HTTP 408, 500, 502, 503 and 504, and failed connections, with exponential
+backoff. A stream is only retried before its first event. Without a policy
+the first failure is reported. Failures are typed `SeiseiException`s:
+`unauthorized`, `rateLimited`, `timeout`, `refused`, `truncated` and
+`providerUnavailable`.
+
+Responses and the final stream chunk carry `finishReason` and token `usage`.
+Streams ask for usage with `stream_options.include_usage`; pass
+`streamUsage: false` for a server that rejects it.
 
 The provider sends data to a remote server, so it only serves requests whose
 privacy policy is `PrivacyPolicy.cloudAllowed`, and it never reports

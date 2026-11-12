@@ -7,6 +7,7 @@ import 'package:seisei/seisei.dart';
 import 'package:seisei_openai/src/completion.dart';
 import 'package:seisei_openai/src/json_schema.dart';
 import 'package:seisei_openai/src/partial_json.dart';
+import 'package:seisei_openai/src/retry.dart';
 
 /// Seisei provider for OpenAI-compatible chat completions endpoints.
 ///
@@ -46,6 +47,9 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     this.id = 'openai_compatible',
     this.strictSchemas = true,
     this.runsOnDevice = false,
+    this.headersProvider,
+    this.retry,
+    this.streamUsage = true,
     Set<ModelCapability>? capabilities,
     http.Client? httpClient,
   }) : assert(
@@ -160,6 +164,28 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
   /// Extra headers sent with every request.
   final Map<String, String> headers;
 
+  /// Returns headers for each request, such as a short-lived token from
+  /// your backend: `{'authorization': 'Bearer $token'}`.
+  ///
+  /// It runs before every attempt, after [apiKey] and [headers] are applied,
+  /// so its values win. An error it throws fails the request with
+  /// [SeiseiErrorCode.unauthorized].
+  ///
+  /// An API key compiled into a client app can be extracted from the binary.
+  /// In apps, prefer a backend proxy, or this callback with a token your
+  /// backend issues, over [apiKey].
+  final FutureOr<Map<String, String>> Function()? headersProvider;
+
+  /// Retries for rate limits and transient server errors, or `null` to fail
+  /// on the first error.
+  final OpenAiRetryPolicy? retry;
+
+  /// Whether streams ask for token usage (`stream_options.include_usage`),
+  /// reported on the final chunk.
+  ///
+  /// Turn this off for servers that reject `stream_options`.
+  final bool streamUsage;
+
   /// Extra query parameters added to every request URL.
   final Map<String, String> queryParameters;
 
@@ -225,13 +251,10 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
       timeout: request.timeout,
       cancellation: request.cancellation,
     );
-    final http.Response response;
+    final String body;
     try {
-      abort.throwIfAborted();
-      final streamed = await abort.guard(
-        _client.send(_httpRequest(request, stream: false, abort: abort)),
-      );
-      response = await abort.guard(http.Response.fromStream(streamed));
+      final streamed = await _send(request, stream: false, abort: abort);
+      body = await abort.guard(streamed.stream.bytesToString());
     } on SeiseiException {
       rethrow;
     } on Object catch (error) {
@@ -239,11 +262,8 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     } finally {
       abort.close();
     }
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _httpError(response.statusCode, response.body, response.headers);
-    }
 
-    final completion = _parseCompletion(_decodeJson(response.body));
+    final completion = _parseCompletion(_decodeJson(body));
     _throwIfRefused(completion);
     final metadata = {
       // ignore: deprecated_member_use_from_same_package, kept for one release.
@@ -290,28 +310,7 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     GenerationRequest<T> request,
     GenerationAbort abort,
   ) async* {
-    final http.StreamedResponse response;
-    try {
-      abort.throwIfAborted();
-      response = await abort.guard(
-        _client.send(_httpRequest(request, stream: true, abort: abort)),
-      );
-    } on SeiseiException {
-      rethrow;
-    } on Object catch (error) {
-      throw abort.isAborted ? abort.exception : _unreachable(error);
-    }
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final String body;
-      try {
-        body = await abort.guard(response.stream.bytesToString());
-      } on SeiseiException {
-        rethrow;
-      } on Object catch (error) {
-        throw abort.isAborted ? abort.exception : _unreachable(error);
-      }
-      throw _httpError(response.statusCode, body, response.headers);
-    }
+    final response = await _send(request, stream: true, abort: abort);
 
     final schema = _responseSchema(request);
     final content = StringBuffer();
@@ -441,19 +440,52 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     }
   }
 
-  http.BaseRequest _httpRequest<T>(
+  /// Sends [request] and returns a successful response, retrying under
+  /// [retry]. Fails with a [SeiseiException].
+  Future<http.StreamedResponse> _send<T>(
     GenerationRequest<T> request, {
     required bool stream,
     required GenerationAbort abort,
-  }) {
-    return http.AbortableRequest(
-        'POST',
-        chatCompletionsUrl,
-        abortTrigger: abort.trigger,
-      )
-      ..headers.addAll(_headers())
-      ..body = jsonEncode(_body(request, stream: stream));
+  }) async {
+    final body = jsonEncode(_body(request, stream: stream));
+    for (var attempt = 1; ; attempt++) {
+      SeiseiException failure;
+      var retryable = false;
+      Duration? retryAfter;
+      try {
+        abort.throwIfAborted();
+        final httpRequest =
+            http.AbortableRequest(
+                'POST',
+                chatCompletionsUrl,
+                abortTrigger: abort.trigger,
+              )
+              ..headers.addAll(await _headers())
+              ..body = body;
+        final response = await abort.guard(_client.send(httpRequest));
+        final status = response.statusCode;
+        if (status >= 200 && status < 300) return response;
+        final errorBody = await abort.guard(response.stream.bytesToString());
+        failure = _httpError(status, errorBody, response.headers);
+        retryable = _retryableStatuses.contains(status);
+        if (failure is RateLimitedException) retryAfter = failure.retryAfter;
+      } on SeiseiException {
+        if (abort.isAborted) throw abort.exception;
+        rethrow;
+      } on Object catch (error) {
+        if (abort.isAborted) throw abort.exception;
+        failure = _unreachable(error);
+        retryable = true;
+      }
+      final delay = retryable
+          ? retry?.delayAfter(attempt, retryAfter: retryAfter)
+          : null;
+      if (delay == null) throw failure;
+      await abort.guard(Future<void>.delayed(delay));
+    }
   }
+
+  static const _retryableStatuses = {408, 429, 500, 502, 503, 504};
 
   FinishReason? _finishReason(String? reason) {
     return switch (reason) {
@@ -494,13 +526,26 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
     }
   }
 
-  Map<String, String> _headers() {
+  Future<Map<String, String>> _headers() async {
+    var provided = const <String, String>{};
+    if (headersProvider case final provider?) {
+      try {
+        provided = await provider();
+      } on Object catch (error) {
+        throw SeiseiException(
+          SeiseiErrorCode.unauthorized,
+          'The headers provider failed: $error',
+          source: error,
+        );
+      }
+    }
     return {
       'content-type': 'application/json',
       'accept': 'application/json, text/event-stream',
       if (apiKey case final key? when key.isNotEmpty)
         'authorization': 'Bearer $key',
       ...headers,
+      ...provided,
     };
   }
 
@@ -549,6 +594,7 @@ final class OpenAiCompatibleProvider implements SeiseiProvider {
             },
         ],
       'stream': stream,
+      if (stream && streamUsage) 'stream_options': {'include_usage': true},
     };
   }
 

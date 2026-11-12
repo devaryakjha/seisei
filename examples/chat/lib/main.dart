@@ -28,6 +28,8 @@ void main() {
           '' => null,
           final url => Uri.parse(url),
         },
+        // Local development only: a dart-define is compiled into the app,
+        // so a release build must use a backend proxy instead.
         apiKey: switch (const String.fromEnvironment('OPENAI_API_KEY')) {
           '' => null,
           final key => key,
